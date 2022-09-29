@@ -1,0 +1,3 @@
+is_global = true
+build_property.RootNamespace = SomePlugin
+build_property.ProjectDir = C:\git\PlateUp_Mods\SomePlugin\
