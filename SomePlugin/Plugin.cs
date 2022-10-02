@@ -6,6 +6,8 @@ using HarmonyLib;
 using Kitchen.Layouts;
 using System.Collections.Generic;
 using Kitchen.Layouts.Modules;
+using System;
+using HarmonyLib.Tools;
 
 namespace SomePlugin
 {
@@ -26,6 +28,26 @@ namespace SomePlugin
         }
     }
 
+    [HarmonyPatch(typeof(LayoutBlueprint), MethodType.Constructor, new Type[] { typeof(LayoutBlueprint) })]
+    public static class LayoutBlueprintPatch
+    {
+        [HarmonyPrefix]
+        // ReSharper disable once UnusedMember.Local
+        static void StartPatch(ref LayoutBlueprint source)
+        {
+            if (source != null)
+            {
+                string output = String.Empty;
+                foreach (KeyValuePair<LayoutPosition, Room> tile in source.Tiles)
+                {
+                    output += tile.Key.x.ToString() + tile.Key.y.ToString() + tile.Value.Type.ToString();
+                }
+                Plugin.Log.LogInfo(output);
+            }
+        }
+    }
+
+    #region DebugLog
     [HarmonyPatch(typeof(RoomGrid), "ActOn")]
     public static class RoomGridPatch
     {
@@ -47,6 +69,7 @@ namespace SomePlugin
             Plugin.Log.LogInfo("W: " + w + "; H: " + h);
         }
     }
+    #endregion
 
     #region TextInjection
     [HarmonyPatch(typeof(NewspaperSubview), "SetLossReason")]
