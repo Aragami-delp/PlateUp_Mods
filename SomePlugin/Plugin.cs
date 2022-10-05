@@ -28,36 +28,71 @@ namespace SomePlugin
         }
     }
 
-    [HarmonyPatch(typeof(LayoutBlueprint), MethodType.Constructor, new Type[] { typeof(LayoutBlueprint) })]
-    public static class LayoutBlueprintPatch
+    //[HarmonyPatch(typeof(LayoutBlueprint), MethodType.Constructor, new Type[] { typeof(LayoutBlueprint) })]
+    //public static class LayoutBlueprintPatch
+    //{
+    //    [HarmonyPrefix]
+    //    // ReSharper disable once UnusedMember.Local
+    //    static void StartPatch(ref LayoutBlueprint source)
+    //    {
+    //        if (source != null)
+    //        {
+    //            string output = String.Empty;
+    //            foreach (KeyValuePair<LayoutPosition, Room> tile in source.Tiles)
+    //            {
+    //                output += tile.Key.x.ToString() + tile.Key.y.ToString() + tile.Value.Type.ToString();
+    //            }
+    //            Plugin.Log.LogInfo(output);
+    //        }
+    //    }
+    //}
+
+    //[HarmonyPatch(typeof(LayoutBlueprint), MethodType.Constructor, new Type[] { typeof(LayoutBlueprint) })]
+    //public static class LayoutBlueprintConstructorPatch
+    //{
+    //    [HarmonyPrefix]
+    //    // ReSharper disable once UnusedMember.Local
+    //    static void StartPatch()
+    //    {
+    //        Plugin.Log.LogInfo("Is loaded");
+    //    }
+    //}
+
+    [HarmonyPatch(typeof(LayoutBlueprint), nameof(LayoutBlueprint.Blank))]
+    public static class LayoutBlueprintBlankPatch
     {
         [HarmonyPrefix]
         // ReSharper disable once UnusedMember.Local
-        static void StartPatch(ref LayoutBlueprint source)
+        static void StartPatch(ref int width, ref int height, ref RoomType type)
         {
-            if (source != null)
-            {
-                string output = String.Empty;
-                foreach (KeyValuePair<LayoutPosition, Room> tile in source.Tiles)
-                {
-                    output += tile.Key.x.ToString() + tile.Key.y.ToString() + tile.Value.Type.ToString();
-                }
-                Plugin.Log.LogInfo(output);
-            }
+            Plugin.Log.LogInfo("Width: " + width.ToString() + ", Height: " + height + ", Type: " + type);
+        }
+    }
+
+    [HarmonyPatch(typeof(RoomGrid), "Generate")]
+    public static class RoomGridGeneratePatch
+    {
+        [HarmonyPrefix]
+        // ReSharper disable once UnusedMember.Local
+        static void StartPatch(ref int ___Width, ref int ___Height)
+        {
+            Plugin.Log.LogInfo("Width: " + ___Width.ToString() + ", Height: " + ___Height);
+            ___Width = 7;
+            ___Height = 5;
         }
     }
 
     #region DebugLog
-    [HarmonyPatch(typeof(RoomGrid), "ActOn")]
-    public static class RoomGridPatch
-    {
-        [HarmonyPrefix]
-        // ReSharper disable once UnusedMember.Local
-        static void StartPatch(ref RoomGrid __instance)
-        {
-            Plugin.Log.LogInfo("Width: " + __instance.Width + "; Height: " + __instance.Height);
-        }
-    }
+    //[HarmonyPatch(typeof(RoomGrid), "ActOn")]
+    //public static class RoomGridPatch
+    //{
+    //    [HarmonyPrefix]
+    //    // ReSharper disable once UnusedMember.Local
+    //    static void StartPatch(ref RoomGrid __instance)
+    //    {
+    //        Plugin.Log.LogInfo("Width: " + __instance.Width + "; Height: " + __instance.Height);
+    //    }
+    //}
 
     [HarmonyPatch(typeof(LayoutDesign), "Resize")]
     public static class LayoutDesignPatch2
