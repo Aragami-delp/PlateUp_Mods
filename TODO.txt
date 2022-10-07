@@ -1,0 +1,3 @@
+- Make sure old save won't be lost
+- NTH: name of save
+- Save current active save
