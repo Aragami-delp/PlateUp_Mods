@@ -10,6 +10,8 @@ using Kitchen.Layouts.Modules;
 using System;
 using System.Reflection;
 using HarmonyLib.Tools;
+using System.Linq;
+using System.Reflection.Emit;
 
 namespace SomePlugin
 {
@@ -19,6 +21,7 @@ namespace SomePlugin
     {
         internal static ManualLogSource Log;
 
+        public static Option<float> SaveSystemOption;
         public static IModule SaveSystemModule;
 
         private readonly Harmony m_harmony = new Harmony("com.aragami.plateup.mods.harmony");
@@ -31,6 +34,33 @@ namespace SomePlugin
         }
     }
 
+    public static class Helper
+    {
+        public static MethodInfo GetMethod(Type _t, string _name, Type _genericT = null)
+        {
+            MethodInfo retVal = _t.GetMethod(_name, BindingFlags.NonPublic | BindingFlags.Instance);
+            if (_genericT != null)
+            {
+                retVal = retVal.MakeGenericMethod(_genericT);
+            }
+            return retVal;
+        }
+
+        public static MethodInfo GetMethod(Type _t, string _name, Type[] _paramTypes, Type _genericT = null)
+        {
+            if (_t == null) Plugin.Log.LogInfo("t");
+            if (_name == null) Plugin.Log.LogInfo("t");
+            if (_paramTypes == null) Plugin.Log.LogInfo("t");
+            if (_genericT == null) Plugin.Log.LogInfo("t");
+            MethodInfo retVal = _t.GetMethod(_name, BindingFlags.NonPublic | BindingFlags.Instance, Type.DefaultBinder, _paramTypes, new ParameterModifier[0]);
+            if (_genericT != null)
+            {
+                retVal = retVal.MakeGenericMethod(_genericT);
+            }
+            return retVal;
+        }
+    }
+
     #region Add options in menu
     [HarmonyPatch(typeof(OptionsMenu<PauseMenuAction>), nameof(OptionsMenu<PauseMenuAction>.Setup))]
     public static class OptionsMenuSetupPatch
@@ -39,7 +69,21 @@ namespace SomePlugin
         // ReSharper disable once UnusedMember.Local
         static void StartPatch(OptionsMenu<PauseMenuAction> __instance)
         {
-            typeof(OptionsMenu<PauseMenuAction>).GetMethod("AddLabel", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(__instance, new string[] { "Hi" });
+            MethodInfo m_newMethod = Helper.GetMethod(typeof(OptionsMenu<PauseMenuAction>), "New", typeof(SpacerElement));
+            MethodInfo m_addLabelMethod = Helper.GetMethod(typeof(OptionsMenu<PauseMenuAction>), "AddLabel");
+            MethodInfo m_addSelectMethod = Helper.GetMethod(typeof(OptionsMenu<PauseMenuAction>), "AddSelect", new Type[] { typeof(Option<float>) }, typeof(float));
+            m_newMethod.Invoke(__instance, new object[1] { true }); // No idea why true is required value, but there was always a bool missing for no parameters
+            m_addLabelMethod.Invoke(__instance, new string[] { "Save System" });
+
+            // Select
+            Plugin.SaveSystemOption = new Option<float>(new List<float> { 0f, 1f, 2f }, 0f, new List<string> { "Save0", "Save1", "Save2" });
+            Plugin.SaveSystemOption.OnChanged += (EventHandler<float>)((_, f) =>
+            {
+                Plugin.Log.LogInfo(f.ToString());
+            });
+            /*Plugin.SaveSystemModule = (IModule) */
+            m_addSelectMethod.Invoke(__instance, new object[] { Plugin.SaveSystemOption });
+
         }
     }
     #endregion
