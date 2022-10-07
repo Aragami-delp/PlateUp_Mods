@@ -25,10 +25,10 @@ public class BackupSystem : MonoBehaviour {
     }
 
     private void AddSaveFolder(string _filePath) {
-        if (File.Exists(path))
-        {
-            m_saves.Add(new SaveFolder(_filePath));
-        }
+        //if (File.Exists(path))
+        //{
+        //    m_saves.Add(new SaveFolder(_filePath));
+        //}
     }
 }
 
@@ -41,8 +41,8 @@ public class SaveFolder : IComparable<SaveFolder> {
     }
 
     public SaveFolder(string _saveFolder) {
-        if (!File.Exists(path))
-            throw new ArgumentNullException();
+        //if (!File.Exists(path))
+        //    throw new ArgumentNullException();
         name = Path.GetFileName(_saveFolder);
         modifiedTime = File.GetLastWriteTime(_saveFolder);
     }
