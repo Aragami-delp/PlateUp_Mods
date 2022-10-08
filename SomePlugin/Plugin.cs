@@ -70,6 +70,7 @@ namespace SomePlugin
             MethodInfo m_newMethod = Helper.GetMethod(typeof(OptionsMenu<PauseMenuAction>), "New", typeof(SpacerElement));
             MethodInfo m_addLabelMethod = Helper.GetMethod(typeof(OptionsMenu<PauseMenuAction>), "AddLabel");
             MethodInfo m_addSelectMethod = Helper.GetMethod(typeof(OptionsMenu<PauseMenuAction>), "AddSelect", new Type[] { typeof(List<string>), typeof(Action<int>), typeof(int) });
+            MethodInfo m_addButton = Helper.GetMethod(typeof(OptionsMenu<PauseMenuAction>), "AddButton", new Type[] { typeof(string), typeof(Action<int>), typeof(int), typeof(float), typeof(float)});
             m_newMethod.Invoke(__instance, new object[1] { true }); // Default parameter bool = true
             m_addLabelMethod.Invoke(__instance, new string[] { "Save System" });
 
@@ -78,12 +79,18 @@ namespace SomePlugin
             if (BackupSystem.SaveFileNames.Count > 0)
             {
                 Plugin.SaveSystemOption = new Option<string>(BackupSystem.SaveFileNames, BackupSystem.SaveFileNames[0],BackupSystem.SaveFileDisplayNames);
-                Plugin.SaveSystemOption.OnChanged += (EventHandler<string>)((_, f) =>
+                Plugin.SaveSystemOption.OnChanged += (EventHandler<string>)((_, selectedSaveSlotIndex) =>
                 {
-                    Plugin.Log.LogInfo(f.ToString());
+                    BackupSystem.SelectedSaveSlotName = selectedSaveSlotIndex;
+                    Plugin.Log.LogInfo("Selected save slot: " + selectedSaveSlotIndex);
                 });
                 /*Plugin.SaveSystemModule = (IModule) */ // Not sure yet, what this is used for
                 m_addSelectMethod.Invoke(__instance, new object[] { Plugin.SaveSystemOption.Names, new Action<int>(Plugin.SaveSystemOption.SetChosen), Plugin.SaveSystemOption.Chosen }); // All 3 parameters (since it is inline with only one)
+                m_addButton.Invoke(__instance, new object[] { "Save Now", (Action<int>)(_ =>
+                {
+                    BackupSystem.SaveCurrentRun();
+                }), 0, 1f, 0.2f });
+                Plugin.Log.LogInfo(BackupSystem.GetCurrentRunName());
             }
         }
     }
