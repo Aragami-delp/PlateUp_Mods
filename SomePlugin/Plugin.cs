@@ -23,7 +23,7 @@ namespace SomePlugin
     {
         internal static ManualLogSource Log;
 
-        public static Option<float> SaveSystemOption;
+        public static Option<string> SaveSystemOption;
         public static IModule SaveSystemModule;
 
         private readonly Harmony m_harmony = new Harmony("com.aragami.plateup.mods.harmony");
@@ -74,14 +74,17 @@ namespace SomePlugin
             m_addLabelMethod.Invoke(__instance, new string[] { "Save System" });
 
             // Select
-            Plugin.SaveSystemOption = new Option<float>(new List<float> { 0f, 1f, 2f }, 0, new List<string> { "Save0", "Save1", "Save2" });
-            Plugin.SaveSystemOption.OnChanged += (EventHandler<float>)((_, f) =>
+            BackupSystem.ReloadSaveFileNames();
+            if (BackupSystem.SaveFileNames.Count > 0)
             {
-                Plugin.Log.LogInfo(f.ToString());
-            });
-            /*Plugin.SaveSystemModule = (IModule) */
-            m_addSelectMethod.Invoke(__instance, new object[] { Plugin.SaveSystemOption.Names, new Action<int>(Plugin.SaveSystemOption.SetChosen), Plugin.SaveSystemOption.Chosen }); // All 3 parameters (since it is inline with only one)
-
+                Plugin.SaveSystemOption = new Option<string>(BackupSystem.SaveFileNames, BackupSystem.SaveFileNames[0],BackupSystem.SaveFileDisplayNames);
+                Plugin.SaveSystemOption.OnChanged += (EventHandler<string>)((_, f) =>
+                {
+                    Plugin.Log.LogInfo(f.ToString());
+                });
+                /*Plugin.SaveSystemModule = (IModule) */ // Not sure yet, what this is used for
+                m_addSelectMethod.Invoke(__instance, new object[] { Plugin.SaveSystemOption.Names, new Action<int>(Plugin.SaveSystemOption.SetChosen), Plugin.SaveSystemOption.Chosen }); // All 3 parameters (since it is inline with only one)
+            }
         }
     }
     #endregion
