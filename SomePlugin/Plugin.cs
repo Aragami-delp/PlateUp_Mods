@@ -2,6 +2,8 @@
 using BepInEx.Logging;
 using Kitchen;
 using Kitchen.Modules;
+using KitchenData;
+using UnityEngine;
 using TMPro;
 using HarmonyLib;
 using Kitchen.Layouts;
@@ -36,9 +38,9 @@ namespace SomePlugin
 
     public static class Helper
     {
-        public static MethodInfo GetMethod(Type _t, string _name, Type _genericT = null)
+        public static MethodInfo GetMethod(Type _typeOfOriginal, string _name, Type _genericT = null)
         {
-            MethodInfo retVal = _t.GetMethod(_name, BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo retVal = _typeOfOriginal.GetMethod(_name, BindingFlags.NonPublic | BindingFlags.Instance);
             if (_genericT != null)
             {
                 retVal = retVal.MakeGenericMethod(_genericT);
@@ -46,13 +48,9 @@ namespace SomePlugin
             return retVal;
         }
 
-        public static MethodInfo GetMethod(Type _t, string _name, Type[] _paramTypes, Type _genericT = null)
+        public static MethodInfo GetMethod(Type _typeOfOriginal, string _name, Type[] _paramTypes, Type _genericT = null)
         {
-            if (_t == null) Plugin.Log.LogInfo("t");
-            if (_name == null) Plugin.Log.LogInfo("t");
-            if (_paramTypes == null) Plugin.Log.LogInfo("t");
-            if (_genericT == null) Plugin.Log.LogInfo("t");
-            MethodInfo retVal = _t.GetMethod(_name, BindingFlags.NonPublic | BindingFlags.Instance, Type.DefaultBinder, _paramTypes, new ParameterModifier[0]);
+            MethodInfo retVal = _typeOfOriginal.GetMethod(_name, BindingFlags.NonPublic | BindingFlags.Instance, null, _paramTypes, null);
             if (_genericT != null)
             {
                 retVal = retVal.MakeGenericMethod(_genericT);
@@ -71,18 +69,18 @@ namespace SomePlugin
         {
             MethodInfo m_newMethod = Helper.GetMethod(typeof(OptionsMenu<PauseMenuAction>), "New", typeof(SpacerElement));
             MethodInfo m_addLabelMethod = Helper.GetMethod(typeof(OptionsMenu<PauseMenuAction>), "AddLabel");
-            MethodInfo m_addSelectMethod = Helper.GetMethod(typeof(OptionsMenu<PauseMenuAction>), "AddSelect", new Type[] { typeof(Option<float>) }, typeof(float));
-            m_newMethod.Invoke(__instance, new object[1] { true }); // No idea why true is required value, but there was always a bool missing for no parameters
+            MethodInfo m_addSelectMethod = Helper.GetMethod(typeof(OptionsMenu<PauseMenuAction>), "AddSelect", new Type[] { typeof(List<string>), typeof(Action<int>), typeof(int) });
+            m_newMethod.Invoke(__instance, new object[1] { true }); // Default parameter bool = true
             m_addLabelMethod.Invoke(__instance, new string[] { "Save System" });
 
             // Select
-            Plugin.SaveSystemOption = new Option<float>(new List<float> { 0f, 1f, 2f }, 0f, new List<string> { "Save0", "Save1", "Save2" });
+            Plugin.SaveSystemOption = new Option<float>(new List<float> { 0f, 1f, 2f }, 0, new List<string> { "Save0", "Save1", "Save2" });
             Plugin.SaveSystemOption.OnChanged += (EventHandler<float>)((_, f) =>
             {
                 Plugin.Log.LogInfo(f.ToString());
             });
             /*Plugin.SaveSystemModule = (IModule) */
-            m_addSelectMethod.Invoke(__instance, new object[] { Plugin.SaveSystemOption });
+            m_addSelectMethod.Invoke(__instance, new object[] { Plugin.SaveSystemOption.Names, new Action<int>(Plugin.SaveSystemOption.SetChosen), Plugin.SaveSystemOption.Chosen }); // All 3 parameters (since it is inline with only one)
 
         }
     }
