@@ -1,4 +1,6 @@
 - Make sure old save won't be lost
 - NTH: name of save
-- Save current active save
+- Save current active save - DONE
 - Maybe only save the newest file of the current run, not every save for every day
+- What if no backup exists exists? - Prop an excpetion right now
+- Change load button multiple times, if current run is not saved yet

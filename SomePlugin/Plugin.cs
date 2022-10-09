@@ -70,7 +70,7 @@ namespace SomePlugin
             MethodInfo m_newMethod = Helper.GetMethod(typeof(OptionsMenu<PauseMenuAction>), "New", typeof(SpacerElement));
             MethodInfo m_addLabelMethod = Helper.GetMethod(typeof(OptionsMenu<PauseMenuAction>), "AddLabel");
             MethodInfo m_addSelectMethod = Helper.GetMethod(typeof(OptionsMenu<PauseMenuAction>), "AddSelect", new Type[] { typeof(List<string>), typeof(Action<int>), typeof(int) });
-            MethodInfo m_addButton = Helper.GetMethod(typeof(OptionsMenu<PauseMenuAction>), "AddButton", new Type[] { typeof(string), typeof(Action<int>), typeof(int), typeof(float), typeof(float)});
+            MethodInfo m_addButton = Helper.GetMethod(typeof(OptionsMenu<PauseMenuAction>), "AddButton", new Type[] { typeof(string), typeof(Action<int>), typeof(int), typeof(float), typeof(float) });
             m_newMethod.Invoke(__instance, new object[1] { true }); // Default parameter bool = true
             m_addLabelMethod.Invoke(__instance, new string[] { "Save System" });
 
@@ -78,20 +78,22 @@ namespace SomePlugin
             BackupSystem.ReloadSaveFileNames();
             if (BackupSystem.SaveFileNames.Count > 0)
             {
-                Plugin.SaveSystemOption = new Option<string>(BackupSystem.SaveFileNames, BackupSystem.SaveFileNames[0],BackupSystem.SaveFileDisplayNames);
+                Plugin.SaveSystemOption = new Option<string>(BackupSystem.SaveFileNames, BackupSystem.CurrentSaveExists ? BackupSystem.GetCurrentRunName() : BackupSystem.SaveFileNames[0], BackupSystem.SaveFileDisplayNames);
+                BackupSystem.SelectedSaveSlotName = BackupSystem.CurrentSaveExists ? BackupSystem.GetCurrentRunName() : BackupSystem.SaveFileNames[0];
                 Plugin.SaveSystemOption.OnChanged += (EventHandler<string>)((_, selectedSaveSlotIndex) =>
                 {
                     BackupSystem.SelectedSaveSlotName = selectedSaveSlotIndex;
-                    Plugin.Log.LogInfo("Selected save slot: " + selectedSaveSlotIndex);
                 });
                 /*Plugin.SaveSystemModule = (IModule) */ // Not sure yet, what this is used for
                 m_addSelectMethod.Invoke(__instance, new object[] { Plugin.SaveSystemOption.Names, new Action<int>(Plugin.SaveSystemOption.SetChosen), Plugin.SaveSystemOption.Chosen }); // All 3 parameters (since it is inline with only one)
-                m_addButton.Invoke(__instance, new object[] { "Save Now", (Action<int>)(_ =>
-                {
-                    BackupSystem.SaveCurrentRun();
-                }), 0, 1f, 0.2f });
-                Plugin.Log.LogInfo(BackupSystem.GetCurrentRunName());
             }
+            ButtonElement SaveButton = null;
+            SaveButton = (ButtonElement) m_addButton.Invoke(__instance, new object[] { "Save Now", (Action<int>)(_ =>
+            {
+                BackupSystem.SaveCurrentRun();
+                SaveButton.SetLabel("Current run saved!");
+                //__instance.Setup(); TODO: Reload UI with player_id
+            }), 0, 1f, 0.2f });
         }
     }
     #endregion
@@ -136,16 +138,16 @@ namespace SomePlugin
     #endregion
 
     #region TextInjection
-    [HarmonyPatch(typeof(NewspaperSubview), "SetLossReason")]
-    public static class NewspaperSubviewPatch
-    {
-        [HarmonyPostfix]
-        // ReSharper disable once UnusedMember.Local
-        static void StartPatch(ref NewspaperSubview __instance, LossReason reason)
-        {
-            __instance.Tagline.text += " -- Aragami was here";
-        }
-    }
+    //[HarmonyPatch(typeof(NewspaperSubview), "SetLossReason")]
+    //public static class NewspaperSubviewPatch
+    //{
+    //    [HarmonyPostfix]
+    //    // ReSharper disable once UnusedMember.Local
+    //    static void StartPatch(ref NewspaperSubview __instance, LossReason reason)
+    //    {
+    //        __instance.Tagline.text += " -- Aragami was here";
+    //    }
+    //}
 
     [HarmonyPatch(typeof(DisplayVersion), "Awake")]
     public static class DisplayVersionPatch
@@ -154,7 +156,7 @@ namespace SomePlugin
         // ReSharper disable once UnusedMember.Local
         static void StartPatch(ref DisplayVersion __instance)
         {
-            __instance.Text.text = "Aragami was here\n" + __instance.Text.text;
+            __instance.Text.text = "Mod loaded: SaveSystem\n" + __instance.Text.text;
         }
     }
     #endregion

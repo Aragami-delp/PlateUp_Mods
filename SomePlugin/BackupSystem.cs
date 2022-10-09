@@ -10,62 +10,18 @@ using SomePlugin;
 
 public static class BackupSystem
 {
-    public static List<SaveFolder> m_saves;
-
-    //public static void Init()
-    //{
-    //    m_gameDataPath = Application.persistentDataPath /*+ "\\It's Happening\\PlateUp"*/;
-    //    foreach (string folder in LoadSaveNames())
-    //    {
-    //        Debug.Log(folder);
-    //    }
-    //    //LoadSaveFolders();
-    //}
-
-    //public static void SelectSaveFolder(SaveFolder _selected)
-    //{
-    //    // TODO: Load save list into game
-    //}
-
-    //public void LoadSaveFolders() {
-    //    if (Directory.Exists(m_gameDataPath + "\\Full") && Directory.GetFiles(m_gameDataPath + "\\Full").Length >= 0)
-    //    foreach(string filePath in Directory.GetFiles("{Application.persistentDataPath.SaveFiles}\\It's Happening\\PlateUp")) // TODO: Find correct path of backups
-    //        AddSaveFolder(filePath);
-    //    m_saves.Sort();
-    //}
-
-    //private static string[] LoadSaveNames()
-    //{
-    //    if (Directory.Exists(m_gameDataPath + "/SaveSystem"))
-    //    {
-    //        return Directory.GetDirectories(m_gameDataPath + "/SaveSystem");
-    //    }
-    //    return new string[0];
-    //}
-
-    //private static void AddSaveFolder(string _filePath)
-    //{
-    //    //if (File.Exists(path))
-    //    //{
-    //    //    m_saves.Add(new SaveFolder(_filePath));
-    //    //}
-    //}
-
-    //public static List<string> GetSaveFileNames()
-    //{
-    //    if (Directory.Exists(m_gameDataPath + "/SaveSystem"))
-    //    {
-    //        return Directory.GetDirectories(m_gameDataPath + "/SaveSystem").ToList();
-    //    }
-    //    return new List<string>();
-    //}
-
     public static List<string> SaveFileNames = new List<string>();
     public static List<string> SaveFileDisplayNames = new List<string>();
-    public static string SelectedSaveSlotName = String.Empty;
+    public static string SelectedSaveSlotName = null;
 
     public static void ReloadSaveFileNames()
     {
+        // TODO: Create SaveSystem folder if not there yet
+        if (!Directory.Exists(Application.persistentDataPath + "\\SaveSystem"))
+        {
+            Directory.CreateDirectory(Application.persistentDataPath + "\\SaveSystem\\");
+        }
+
         SaveFileNames.Clear();
         SaveFileDisplayNames.Clear();
         List<string> foundFullPathes = new List<string>();
@@ -97,9 +53,14 @@ public static class BackupSystem
         return Epoch.AddSeconds(seconds);
     }
 
-    public static void LoadSaveSlot(string _saveSlotIndex)
+    public static void LoadSaveSlot()
     {
+        if (!String.IsNullOrEmpty(SelectedSaveSlotName) && SelectedSaveSlotName != GetCurrentRunName())
+        {
 
+        }
+        else
+            throw new DirectoryNotFoundException("Can't find backup save");
     }
 
     public static void SaveCurrentRun()
@@ -116,7 +77,7 @@ public static class BackupSystem
         }
     }
 
-    private static bool CurrentSaveExists
+    public static bool CurrentSaveExists
     {
         get
         {
@@ -149,24 +110,5 @@ public static class BackupSystem
             return convertedNames.Max().ToString(); // Convert twice, but so be it
         }
         return String.Empty;
-    }
-}
-
-public class SaveFolder : IComparable<SaveFolder>
-{
-    public readonly string name;
-    public readonly DateTime modifiedTime;
-
-    public int CompareTo(SaveFolder _other)
-    {
-        return modifiedTime.CompareTo(_other.modifiedTime);
-    }
-
-    public SaveFolder(string _saveFolder)
-    {
-        //if (!File.Exists(path))
-        //    throw new ArgumentNullException();
-        name = Path.GetFileName(_saveFolder);
-        modifiedTime = File.GetLastWriteTime(_saveFolder);
     }
 }
