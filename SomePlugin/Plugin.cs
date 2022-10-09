@@ -26,6 +26,9 @@ namespace SomePlugin
         public static Option<string> SaveSystemOption;
         public static IModule SaveSystemModule;
 
+        public static ButtonElement SaveButton = null;
+        public static ButtonElement LoadButton = null;
+
         private readonly Harmony m_harmony = new Harmony("com.aragami.plateup.mods.harmony");
 
         private void Awake()
@@ -65,13 +68,13 @@ namespace SomePlugin
     {
         [HarmonyPostfix]
         // ReSharper disable once UnusedMember.Local
-        static void StartPatch(OptionsMenu<PauseMenuAction> __instance)
+        static void StartPatch(OptionsMenu<PauseMenuAction> __instance, int player_id)
         {
-            MethodInfo m_newMethod = Helper.GetMethod(typeof(OptionsMenu<PauseMenuAction>), "New", typeof(SpacerElement));
+            MethodInfo m_newSpacer = Helper.GetMethod(typeof(OptionsMenu<PauseMenuAction>), "New", typeof(SpacerElement));
             MethodInfo m_addLabelMethod = Helper.GetMethod(typeof(OptionsMenu<PauseMenuAction>), "AddLabel");
             MethodInfo m_addSelectMethod = Helper.GetMethod(typeof(OptionsMenu<PauseMenuAction>), "AddSelect", new Type[] { typeof(List<string>), typeof(Action<int>), typeof(int) });
             MethodInfo m_addButton = Helper.GetMethod(typeof(OptionsMenu<PauseMenuAction>), "AddButton", new Type[] { typeof(string), typeof(Action<int>), typeof(int), typeof(float), typeof(float) });
-            m_newMethod.Invoke(__instance, new object[1] { true }); // Default parameter bool = true
+            m_newSpacer.Invoke(__instance, new object[1] { true }); // Default parameter bool = true
             m_addLabelMethod.Invoke(__instance, new string[] { "Save System" });
 
             // Select
@@ -79,21 +82,41 @@ namespace SomePlugin
             if (BackupSystem.SaveFileNames.Count > 0)
             {
                 Plugin.SaveSystemOption = new Option<string>(BackupSystem.SaveFileNames, BackupSystem.CurrentSaveExists ? BackupSystem.GetCurrentRunName() : BackupSystem.SaveFileNames[0], BackupSystem.SaveFileDisplayNames);
-                BackupSystem.SelectedSaveSlotName = BackupSystem.CurrentSaveExists ? BackupSystem.GetCurrentRunName() : BackupSystem.SaveFileNames[0];
+                BackupSystem.SelectedSaveSlotName = BackupSystem.SaveFileNames.Contains(BackupSystem.GetCurrentRunName()) ? BackupSystem.GetCurrentRunName() : BackupSystem.SaveFileNames[0];
                 Plugin.SaveSystemOption.OnChanged += (EventHandler<string>)((_, selectedSaveSlotIndex) =>
                 {
                     BackupSystem.SelectedSaveSlotName = selectedSaveSlotIndex;
+                    Plugin.LoadButton?.SetLabel(BackupSystem.CurrentSelectionLoaded ? "Selection already loaded" : "Press to load!");
+                    //SaveButton?.SetLabel(BackupSystem.CurrentSaveExists ? "Run already saved" : "Press to save!"); // Do I need both to be set? - prob only load
                 });
                 /*Plugin.SaveSystemModule = (IModule) */ // Not sure yet, what this is used for
                 m_addSelectMethod.Invoke(__instance, new object[] { Plugin.SaveSystemOption.Names, new Action<int>(Plugin.SaveSystemOption.SetChosen), Plugin.SaveSystemOption.Chosen }); // All 3 parameters (since it is inline with only one)
+                Plugin.LoadButton = (ButtonElement) m_addButton.Invoke(__instance, new object[] { BackupSystem.CurrentSelectionLoaded ? "Selection already loaded" : "Press to load!", (Action<int>)(_ =>
+                {
+                    if (!BackupSystem.CurrentSelectionLoaded)
+                    {
+                        BackupSystem.LoadSaveSlot();
+                        __instance.ModuleList.Clear();
+                        __instance.Setup(player_id);
+                        __instance.ModuleList.Select(Plugin.LoadButton);
+                    }
+                }), 0, 1f, 0.2f });
             }
-            ButtonElement SaveButton = null;
-            SaveButton = (ButtonElement) m_addButton.Invoke(__instance, new object[] { BackupSystem.CurrentSaveExists ? "Run already saved" : "Press to save!", (Action<int>)(_ =>
+
+            // SaveButton
+            if (BackupSystem.CurrentlyAnyRunLoaded)
             {
-                BackupSystem.SaveCurrentRun();
-                SaveButton.SetLabel("Current run saved!");
-                //__instance.Setup(); TODO: Reload UI with player_id
-            }), 0, 1f, 0.2f });
+                Plugin.SaveButton = (ButtonElement)m_addButton.Invoke(__instance, new object[] { BackupSystem.CurrentSaveExists ? "Run already saved" : "Press to save!", (Action<int>)(_ =>
+                {
+                    if (!BackupSystem.CurrentSaveExists)
+                    {
+                        BackupSystem.SaveCurrentRun();
+                        __instance.ModuleList.Clear();
+                        __instance.Setup(player_id);
+                        __instance.ModuleList.Select(Plugin.SaveButton);
+                    }
+                }), 0, 1f, 0.2f });
+            }
         }
     }
     #endregion

@@ -36,31 +36,55 @@ public static class BackupSystem
         }
         foreach (string name in foundNames)
         {
-            if (Regex.IsMatch(name, "^[0-9]+$")) // Is unix timestamp
+            if (IsUnixTimestamp(name))
             {
                 SaveFileNames.Add(name);
-                DateTimeFormatInfo formatInfo = CultureInfo.CurrentCulture.DateTimeFormat;
-                string convertedName = UnixTimeToDateTime(name).ToLocalTime().ToString(formatInfo);
-                SaveFileDisplayNames.Add(convertedName);
+                SaveFileDisplayNames.Add(UnixTimeToLocalDateTimeFormat(name));
             }
         }
     }
 
-    private static DateTime UnixTimeToDateTime(string text)
+    private static bool IsUnixTimestamp(string _timestamp)
+    {
+        return Regex.IsMatch(_timestamp, "^[0-9]+$"); // Is unix timestamp
+    }
+
+    private static string UnixTimeToLocalDateTimeFormat(string text)
     {
         DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        DateTimeFormatInfo formatInfo = CultureInfo.CurrentCulture.DateTimeFormat;
         double seconds = double.Parse(text, CultureInfo.InvariantCulture);
-        return Epoch.AddSeconds(seconds);
+        return Epoch.AddSeconds(seconds).ToLocalTime().ToString(formatInfo);
     }
 
     public static void LoadSaveSlot()
     {
-        if (!String.IsNullOrEmpty(SelectedSaveSlotName) && SelectedSaveSlotName != GetCurrentRunName())
+        Plugin.Log.LogInfo("Load started");
+        if (!String.IsNullOrEmpty(SelectedSaveSlotName) && !CurrentSelectionLoaded)
         {
+            Plugin.Log.LogInfo("Load really started");
+            // TODO: Backup current run
 
+            string[] removeFiles = Directory.GetFiles(Application.persistentDataPath + "\\Full", "*.plateupsave");
+            foreach (string removeFile in removeFiles)
+            {
+                File.Delete(removeFile);
+            }
+
+            string[] currentFiles = Directory.GetFiles(Application.persistentDataPath + "\\SaveSystem\\" + SelectedSaveSlotName, "*.plateupsave");
+            foreach (string saveFile in currentFiles)
+            {
+                File.Copy(saveFile, Path.Combine(Application.persistentDataPath + "\\Full", Path.GetFileName(saveFile)));
+            }
+            Plugin.Log.LogInfo("Copy finished");
         }
         else
             throw new DirectoryNotFoundException("Can't find backup save");
+    }
+
+    public static void BackupCurrentRun()
+    {
+        throw new NotImplementedException();
     }
 
     public static void SaveCurrentRun()
@@ -77,11 +101,29 @@ public static class BackupSystem
         }
     }
 
+    public static bool CurrentSelectionLoaded
+    {
+        get
+        {
+            return (!String.IsNullOrEmpty(GetCurrentRunName())) && (SelectedSaveSlotName == GetCurrentRunName());
+        }
+    }
+
     public static bool CurrentSaveExists
     {
         get
         {
+            if (String.IsNullOrEmpty(GetCurrentRunName()))
+                return false;
             return Directory.Exists(Application.persistentDataPath + "\\SaveSystem\\" + GetCurrentRunName());
+        }
+    }
+
+    public static bool CurrentlyAnyRunLoaded
+    {
+        get
+        {
+            return !String.IsNullOrEmpty(GetCurrentRunName());
         }
     }
 
@@ -90,7 +132,7 @@ public static class BackupSystem
         List<string> foundFullPathNames = new List<string>();
         if (Directory.Exists(Application.persistentDataPath + "\\Full"))
         {
-            foundFullPathNames = Directory.GetFiles(Application.persistentDataPath + "\\Full").ToList();
+            foundFullPathNames = Directory.GetFiles(Application.persistentDataPath + "\\Full", "*.plateupsave").ToList();
         }
         List<string> foundNames = new List<string>();
         foreach (string fullpath in foundFullPathNames)
@@ -100,7 +142,7 @@ public static class BackupSystem
         List<long> convertedNames = new List<long>(); // Int is prob enough, but to be sure
         foreach (string name in foundNames)
         {
-            if (Regex.IsMatch(name, "^[0-9]+$")) // Is unix timestamp
+            if (IsUnixTimestamp(name))
             {
                 convertedNames.Add(long.Parse(name));
             }
