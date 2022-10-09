@@ -88,7 +88,7 @@ namespace SomePlugin
                 m_addSelectMethod.Invoke(__instance, new object[] { Plugin.SaveSystemOption.Names, new Action<int>(Plugin.SaveSystemOption.SetChosen), Plugin.SaveSystemOption.Chosen }); // All 3 parameters (since it is inline with only one)
             }
             ButtonElement SaveButton = null;
-            SaveButton = (ButtonElement) m_addButton.Invoke(__instance, new object[] { "Save Now", (Action<int>)(_ =>
+            SaveButton = (ButtonElement) m_addButton.Invoke(__instance, new object[] { BackupSystem.CurrentSaveExists ? "Run already saved" : "Press to save!", (Action<int>)(_ =>
             {
                 BackupSystem.SaveCurrentRun();
                 SaveButton.SetLabel("Current run saved!");
