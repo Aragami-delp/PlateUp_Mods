@@ -15,7 +15,7 @@ using HarmonyLib.Tools;
 using System.Linq;
 using System.Reflection.Emit;
 
-namespace SomePlugin
+namespace SaveSystem
 {
     [BepInPlugin("com.aragami.plateup.mods", "SaveSystem", "0.1.0")]
     [BepInProcess("PlateUp.exe")]
@@ -23,11 +23,23 @@ namespace SomePlugin
     {
         internal static ManualLogSource Log;
 
+        /// <summary>
+        /// Select menu options
+        /// </summary>
         public static Option<string> SaveSystemOption;
-        public static IModule SaveSystemModule;
 
+        /// <summary>
+        /// Button to save the current run
+        /// </summary>
         public static ButtonElement SaveButton = null;
+        /// <summary>
+        /// Button to load the selected save file
+        /// </summary>
         public static ButtonElement LoadButton = null;
+        /// <summary>
+        /// Confirmation trigger to avoid overriding the current run upon loading a new one
+        /// </summary>
+        public static bool TryLoadedOnce = false;
 
         private readonly Harmony m_harmony = new Harmony("com.aragami.plateup.mods.harmony");
 
@@ -39,8 +51,16 @@ namespace SomePlugin
         }
     }
 
+    #region Reflection GetMethod
     public static class Helper
     {
+        /// <summary>
+        /// Gets a MethodInfo of a given class using Reflection, that doesn't have parameters
+        /// </summary>
+        /// <param name="_typeOfOriginal">Type of class to find a Method on</param>
+        /// <param name="_name">Name of the Method to find</param>
+        /// <param name="_genericT">Type of Method</param>
+        /// <returns>MethodInfo if found</returns>
         public static MethodInfo GetMethod(Type _typeOfOriginal, string _name, Type _genericT = null)
         {
             MethodInfo retVal = _typeOfOriginal.GetMethod(_name, BindingFlags.NonPublic | BindingFlags.Instance);
@@ -51,6 +71,14 @@ namespace SomePlugin
             return retVal;
         }
 
+        /// <summary>
+        /// Gets a MethodInfo of a given class using Reflection, that has Parameters
+        /// </summary>
+        /// <param name="_typeOfOriginal">Type of class to find a Method on</param>
+        /// <param name="_name">Name of the Method to find</param>
+        /// <param name="_paramTypes">Types of parameters of the Method in right order</param>
+        /// <param name="_genericT">Type of Method</param>
+        /// <returns>MethodInfo if found</returns>
         public static MethodInfo GetMethod(Type _typeOfOriginal, string _name, Type[] _paramTypes, Type _genericT = null)
         {
             MethodInfo retVal = _typeOfOriginal.GetMethod(_name, BindingFlags.NonPublic | BindingFlags.Instance, null, _paramTypes, null);
@@ -61,6 +89,7 @@ namespace SomePlugin
             return retVal;
         }
     }
+    #endregion
 
     #region Add options in menu
     [HarmonyPatch(typeof(OptionsMenu<PauseMenuAction>), nameof(OptionsMenu<PauseMenuAction>.Setup))]
@@ -78,7 +107,7 @@ namespace SomePlugin
             m_addLabelMethod.Invoke(__instance, new string[] { "Save System" });
 
             // Select
-            BackupSystem.ReloadSaveFileNames();
+            BackupSystem.ReloadSaveSystem();
             if (BackupSystem.SaveFileNames.Count > 0)
             {
                 Plugin.SaveSystemOption = new Option<string>(BackupSystem.SaveFileNames, BackupSystem.CurrentSaveExists ? BackupSystem.GetCurrentRunName() : BackupSystem.SaveFileNames[0], BackupSystem.SaveFileDisplayNames);
@@ -91,14 +120,24 @@ namespace SomePlugin
                 });
                 /*Plugin.SaveSystemModule = (IModule) */ // Not sure yet, what this is used for
                 m_addSelectMethod.Invoke(__instance, new object[] { Plugin.SaveSystemOption.Names, new Action<int>(Plugin.SaveSystemOption.SetChosen), Plugin.SaveSystemOption.Chosen }); // All 3 parameters (since it is inline with only one)
-                Plugin.LoadButton = (ButtonElement) m_addButton.Invoke(__instance, new object[] { BackupSystem.CurrentSelectionLoaded ? "Selection already loaded" : "Press to load!", (Action<int>)(_ =>
+                Plugin.LoadButton = (ButtonElement)m_addButton.Invoke(__instance, new object[] { BackupSystem.CurrentSelectionLoaded ? "Selection already loaded" : "Press to load!", (Action<int>)(_ =>
                 {
                     if (!BackupSystem.CurrentSelectionLoaded)
                     {
-                        BackupSystem.LoadSaveSlot();
-                        __instance.ModuleList.Clear();
-                        __instance.Setup(player_id);
-                        __instance.ModuleList.Select(Plugin.LoadButton);
+                        if (!Plugin.TryLoadedOnce && !BackupSystem.CurrentSaveExists)
+                        {
+                            Plugin.TryLoadedOnce = true;
+                            Plugin.LoadButton.SetLabel("Override current run?");
+                        }
+                        else
+                        {
+                            Plugin.Log.LogInfo("Loading Save: " + BackupSystem.SelectedSaveSlotName);
+                            Plugin.TryLoadedOnce = false;
+                            BackupSystem.LoadSaveSlot();
+                            __instance.ModuleList.Clear();
+                            __instance.Setup(player_id);
+                            __instance.ModuleList.Select(Plugin.LoadButton);
+                        }
                     }
                 }), 0, 1f, 0.2f });
             }
@@ -110,6 +149,7 @@ namespace SomePlugin
                 {
                     if (!BackupSystem.CurrentSaveExists)
                     {
+                        Plugin.Log.LogInfo("Saving current run: " + BackupSystem.GetCurrentRunName());
                         BackupSystem.SaveCurrentRun();
                         __instance.ModuleList.Clear();
                         __instance.Setup(player_id);

@@ -6,15 +6,27 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Globalization;
-using SomePlugin;
+using SaveSystem;
 
 public static class BackupSystem
 {
+    /// <summary>
+    /// List of the names of all save folders
+    /// </summary>
     public static List<string> SaveFileNames = new List<string>();
+    /// <summary>
+    /// List of representation of the names of all save folders - localized to the local time format
+    /// </summary>
     public static List<string> SaveFileDisplayNames = new List<string>();
+    /// <summary>
+    /// Currently selected save slot
+    /// </summary>
     public static string SelectedSaveSlotName = null;
 
-    public static void ReloadSaveFileNames()
+    /// <summary>
+    /// Reloads the entire SaveSystem including the lists of save files currently backed up
+    /// </summary>
+    public static void ReloadSaveSystem()
     {
         // TODO: Create SaveSystem folder if not there yet
         if (!Directory.Exists(Application.persistentDataPath + "\\SaveSystem"))
@@ -44,11 +56,21 @@ public static class BackupSystem
         }
     }
 
+    /// <summary>
+    /// Checks whether the given timestamp is a vaild unix timestamp
+    /// </summary>
+    /// <param name="_timestamp">Timestamp to check</param>
+    /// <returns>True if valid, otherwise false</returns>
     private static bool IsUnixTimestamp(string _timestamp)
     {
         return Regex.IsMatch(_timestamp, "^[0-9]+$"); // Is unix timestamp
     }
 
+    /// <summary>
+    /// Converts a (string) unix timestamp into a localized string representation
+    /// </summary>
+    /// <param name="text">Timestamp to convert</param>
+    /// <returns>Localized timestamp</returns>
     private static string UnixTimeToLocalDateTimeFormat(string text)
     {
         DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -57,12 +79,14 @@ public static class BackupSystem
         return Epoch.AddSeconds(seconds).ToLocalTime().ToString(formatInfo);
     }
 
+    /// <summary>
+    /// Loads the currently selected save slot
+    /// </summary>
+    /// <exception cref="DirectoryNotFoundException">Thrown if selected save slot doesn't exists</exception>
     public static void LoadSaveSlot()
     {
-        Plugin.Log.LogInfo("Load started");
         if (!String.IsNullOrEmpty(SelectedSaveSlotName) && !CurrentSelectionLoaded)
         {
-            Plugin.Log.LogInfo("Load really started");
             // TODO: Backup current run
 
             string[] removeFiles = Directory.GetFiles(Application.persistentDataPath + "\\Full", "*.plateupsave");
@@ -76,17 +100,23 @@ public static class BackupSystem
             {
                 File.Copy(saveFile, Path.Combine(Application.persistentDataPath + "\\Full", Path.GetFileName(saveFile)));
             }
-            Plugin.Log.LogInfo("Copy finished");
         }
         else
             throw new DirectoryNotFoundException("Can't find backup save");
     }
 
+    /// <summary>
+    /// Backs up the current run into a backup folder
+    /// </summary>
+    /// <exception cref="NotImplementedException">TODO</exception>
     public static void BackupCurrentRun()
     {
         throw new NotImplementedException();
     }
 
+    /// <summary>
+    /// Makes a backup into the SaveSystem of the currently loaded run
+    /// </summary>
     public static void SaveCurrentRun()
     {
         if (!CurrentSaveExists)
@@ -101,6 +131,9 @@ public static class BackupSystem
         }
     }
 
+    /// <summary>
+    /// Whether the current selection is already loading into the game
+    /// </summary>
     public static bool CurrentSelectionLoaded
     {
         get
@@ -109,6 +142,9 @@ public static class BackupSystem
         }
     }
 
+    /// <summary>
+    /// Wheather the current selection already got a backup in the SaveSystem
+    /// </summary>
     public static bool CurrentSaveExists
     {
         get
@@ -119,6 +155,9 @@ public static class BackupSystem
         }
     }
 
+    /// <summary>
+    /// Wheather there is already a run loaded in/by the game
+    /// </summary>
     public static bool CurrentlyAnyRunLoaded
     {
         get
@@ -127,12 +166,26 @@ public static class BackupSystem
         }
     }
 
+    /// <summary>
+    /// Gets the name of the currently loaded run
+    /// </summary>
+    /// <returns>Name of the newset savefile of the currently loaded run</returns>
     public static string GetCurrentRunName()
     {
+        return GetRunNameAtPath(Application.persistentDataPath + "\\Full");
+    }
+
+    /// <summary>
+    /// Gets the newest save file at the given path
+    /// </summary>
+    /// <param name="_path">Path to search for save files</param>
+    /// <returns>Newest save file if any, otherwise String.Empty</returns>
+    public static string GetRunNameAtPath(string _path)
+    {
         List<string> foundFullPathNames = new List<string>();
-        if (Directory.Exists(Application.persistentDataPath + "\\Full"))
+        if (Directory.Exists(_path))
         {
-            foundFullPathNames = Directory.GetFiles(Application.persistentDataPath + "\\Full", "*.plateupsave").ToList();
+            foundFullPathNames = Directory.GetFiles(_path, "*.plateupsave").ToList();
         }
         List<string> foundNames = new List<string>();
         foreach (string fullpath in foundFullPathNames)
