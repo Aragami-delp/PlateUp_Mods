@@ -6,3 +6,4 @@
 - NTH: Resize of UI window on save (if no save exsitsed before)
 - Load Button: Text if already loaded - DONE
 - Only show when client is host
+- Only show when in the lobby
