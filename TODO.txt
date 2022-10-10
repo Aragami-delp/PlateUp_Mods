@@ -1,7 +1,8 @@
-- Make sure old save won't be lost - like moving it into a backup folder, but only if there is already a run - DONE: Confirmation button to override current run
+- Make sure old save won't be lost - like moving it into a backup folder, but only if there is already a run - "DONE": Confirmation button to override current run
 - NTH: name of save - text input like profile names
 - Save current active save - DONE
 - Maybe only save the newest file of the current run, not every save for every day
 - Change load button multiple times, if current run is not saved yet
 - NTH: Resize of UI window on save (if no save exsitsed before)
 - Load Button: Text if already loaded - DONE
+- Only show when client is host
