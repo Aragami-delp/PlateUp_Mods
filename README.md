@@ -21,7 +21,7 @@ If you already have other mods, that use BepInEx (like the ones mentioned below)
 
 ### Install Save System
 
-1. Download the newset version of the mod from here: [Save System Download]()
+1. Download the newset version of the mod from here: [Save System Download](https://github.com/Aragami-delp/PlateUp_Mods/releases/download/release/SaveSystem.dll)
 
 1. Find your plugin folder within the game folder. (`\PlateUp\BepInEx\plugins\`). If the folder doesn't exists make sure to run the game at least once after installing the mod loader.
 
