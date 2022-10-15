@@ -2,7 +2,7 @@
 
 A website with mods for the game "PlateUp!"
 
-Save System
+## Save System
 
 A mod that lets you save multiple runs at the same time. You can switch between those at will.
 While in the lobby, open up the settings menu and save/load the savegame you want.
