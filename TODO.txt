@@ -2,8 +2,9 @@
 - NTH: name of save - text input like profile names
 - Save current active save - DONE
 - Maybe only save the newest file of the current run, not every save for every day
-- Change load button multiple times, if current run is not saved yet
+- Change load button multiple times, if current run is not saved yet - DONE: Confirmation button to override current run
 - NTH: Resize of UI window on save (if no save exsitsed before)
 - Load Button: Text if already loaded - DONE
-- Only show when client is host
-- Only show when in the lobby
+- Only show when client is host - DONE
+- Only show when in the lobby - DONE
+- No loading warning if there is no run loaded

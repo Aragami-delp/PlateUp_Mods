@@ -99,6 +99,8 @@ namespace SaveSystem
         // ReSharper disable once UnusedMember.Local
         static void StartPatch(OptionsMenu<PauseMenuAction> __instance, int player_id)
         {
+            if (Session.CurrentGameNetworkMode != GameNetworkMode.Host || GameInfo.CurrentScene != SceneType.Franchise)
+                return;
             MethodInfo m_newSpacer = Helper.GetMethod(typeof(OptionsMenu<PauseMenuAction>), "New", typeof(SpacerElement));
             MethodInfo m_addLabelMethod = Helper.GetMethod(typeof(OptionsMenu<PauseMenuAction>), "AddLabel");
             MethodInfo m_addSelectMethod = Helper.GetMethod(typeof(OptionsMenu<PauseMenuAction>), "AddSelect", new Type[] { typeof(List<string>), typeof(Action<int>), typeof(int) });
