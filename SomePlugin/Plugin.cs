@@ -17,9 +17,9 @@ using System.Reflection.Emit;
 
 namespace SaveSystem
 {
-    [BepInPlugin("com.aragami.plateup.mods", "SaveSystem", "0.1.0")]
+    [BepInPlugin("com.aragami.plateup.mods", "SaveSystem", "1.0.0")]
     [BepInProcess("PlateUp.exe")]
-    public class Plugin : BaseUnityPlugin
+    public class SaveSystemPlugin : BaseUnityPlugin
     {
         internal static ManualLogSource Log;
 
@@ -36,6 +36,9 @@ namespace SaveSystem
         /// Button to load the selected save file
         /// </summary>
         public static ButtonElement LoadButton = null;
+
+        public static OptionsMenu<PauseMenuAction> CurrentMenu = null;
+        public static int CurrentPlayerID = 0;
         /// <summary>
         /// Confirmation trigger to avoid overriding the current run upon loading a new one
         /// </summary>
@@ -49,8 +52,19 @@ namespace SaveSystem
             m_harmony.PatchAll();
             Log.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
         }
-    }
 
+        public static void SaveRun(TextInputView.TextInputState _result, string _name)
+        {
+            if (_result != TextInputView.TextInputState.TextEntryComplete)
+                return;
+            _name = (String.IsNullOrWhiteSpace(_name) ? BackupSystem.GetCurrentRunUnixName() : _name);
+            SaveSystemPlugin.Log.LogInfo("Saving current run: " + _name);
+            BackupSystem.SaveCurrentRun(_name);
+            CurrentMenu.ModuleList.Clear();
+            CurrentMenu.Setup(CurrentPlayerID);
+            CurrentMenu.ModuleList.Select(SaveSystemPlugin.SaveButton);
+        }
+    }
     #region Reflection GetMethod
     public static class Helper
     {
@@ -112,33 +126,41 @@ namespace SaveSystem
             BackupSystem.ReloadSaveSystem();
             if (BackupSystem.SaveFileNames.Count > 0)
             {
-                Plugin.SaveSystemOption = new Option<string>(BackupSystem.SaveFileNames, BackupSystem.CurrentSaveExists ? BackupSystem.GetCurrentRunName() : BackupSystem.SaveFileNames[0], BackupSystem.SaveFileDisplayNames);
-                BackupSystem.SelectedSaveSlotName = BackupSystem.SaveFileNames.Contains(BackupSystem.GetCurrentRunName()) ? BackupSystem.GetCurrentRunName() : BackupSystem.SaveFileNames[0];
-                Plugin.SaveSystemOption.OnChanged += (EventHandler<string>)((_, selectedSaveSlotIndex) =>
+                List<string> unixNames = new List<string>();
+                List<string> displayNames = new List<string>();
+                foreach (KeyValuePair<string,string> saveNameEntry in BackupSystem.SaveFileNames)
                 {
-                    BackupSystem.SelectedSaveSlotName = selectedSaveSlotIndex;
-                    Plugin.LoadButton?.SetLabel(BackupSystem.CurrentSelectionLoaded ? "Selection already loaded" : "Press to load!");
-                    //SaveButton?.SetLabel(BackupSystem.CurrentSaveExists ? "Run already saved" : "Press to save!"); // Do I need both to be set? - prob only load
+                    unixNames.Add(saveNameEntry.Key);
+                    displayNames.Add(saveNameEntry.Value);
+                }
+
+                SaveSystemPlugin.SaveSystemOption = new Option<string>(unixNames, BackupSystem.CurrentSaveExists ? BackupSystem.GetCurrentRunUnixName() : unixNames[0], displayNames);
+                BackupSystem.SelectedSaveSlotUnixName = BackupSystem.CurrentSaveExists ? BackupSystem.GetCurrentRunUnixName() : unixNames[0];
+                SaveSystemPlugin.SaveSystemOption.OnChanged += (EventHandler<string>)((_, selectedSaveSlotIndex) =>
+                {
+                    BackupSystem.SelectedSaveSlotUnixName = selectedSaveSlotIndex;
+                    SaveSystemPlugin.LoadButton?.SetLabel(BackupSystem.CurrentSelectionLoaded ? "Selection already loaded" : "Press to load!");
+                        //SaveButton?.SetLabel(BackupSystem.CurrentSaveExists ? "Run already saved" : "Press to save!"); // Do I need both to be set? - prob only load
                 });
                 /*Plugin.SaveSystemModule = (IModule) */ // Not sure yet, what this is used for
-                m_addSelectMethod.Invoke(__instance, new object[] { Plugin.SaveSystemOption.Names, new Action<int>(Plugin.SaveSystemOption.SetChosen), Plugin.SaveSystemOption.Chosen }); // All 3 parameters (since it is inline with only one)
-                Plugin.LoadButton = (ButtonElement)m_addButton.Invoke(__instance, new object[] { BackupSystem.CurrentSelectionLoaded ? "Selection already loaded" : "Press to load!", (Action<int>)(_ =>
+                m_addSelectMethod.Invoke(__instance, new object[] { SaveSystemPlugin.SaveSystemOption.Names, new Action<int>(SaveSystemPlugin.SaveSystemOption.SetChosen), SaveSystemPlugin.SaveSystemOption.Chosen }); // All 3 parameters (since it is inline with only one)
+                SaveSystemPlugin.LoadButton = (ButtonElement)m_addButton.Invoke(__instance, new object[] { BackupSystem.CurrentSelectionLoaded ? "Selection already loaded" : "Press to load!", (Action<int>)(_ =>
                 {
                     if (!BackupSystem.CurrentSelectionLoaded)
                     {
-                        if (!Plugin.TryLoadedOnce && !BackupSystem.CurrentSaveExists)
+                        if (!SaveSystemPlugin.TryLoadedOnce && !BackupSystem.CurrentSaveExists)
                         {
-                            Plugin.TryLoadedOnce = true;
-                            Plugin.LoadButton.SetLabel("Override current run?");
+                            SaveSystemPlugin.TryLoadedOnce = true;
+                            SaveSystemPlugin.LoadButton.SetLabel("Override current run?");
                         }
                         else
                         {
-                            Plugin.Log.LogInfo("Loading Save: " + BackupSystem.SelectedSaveSlotName);
-                            Plugin.TryLoadedOnce = false;
+                            SaveSystemPlugin.Log.LogInfo("Loading Save: " + BackupSystem.SelectedSaveSlotUnixName);
+                            SaveSystemPlugin.TryLoadedOnce = false;
                             BackupSystem.LoadSaveSlot();
                             __instance.ModuleList.Clear();
                             __instance.Setup(player_id);
-                            __instance.ModuleList.Select(Plugin.LoadButton);
+                            __instance.ModuleList.Select(SaveSystemPlugin.LoadButton);
                         }
                     }
                 }), 0, 1f, 0.2f });
@@ -147,15 +169,13 @@ namespace SaveSystem
             // SaveButton
             if (BackupSystem.CurrentlyAnyRunLoaded)
             {
-                Plugin.SaveButton = (ButtonElement)m_addButton.Invoke(__instance, new object[] { BackupSystem.CurrentSaveExists ? "Run already saved" : "Press to save!", (Action<int>)(_ =>
+                SaveSystemPlugin.SaveButton = (ButtonElement)m_addButton.Invoke(__instance, new object[] { BackupSystem.CurrentSaveExists ? "Run already saved" : "Press to save!", (Action<int>)(_ =>
                 {
                     if (!BackupSystem.CurrentSaveExists)
                     {
-                        Plugin.Log.LogInfo("Saving current run: " + BackupSystem.GetCurrentRunName());
-                        BackupSystem.SaveCurrentRun();
-                        __instance.ModuleList.Clear();
-                        __instance.Setup(player_id);
-                        __instance.ModuleList.Select(Plugin.SaveButton);
+                        SaveSystemPlugin.CurrentMenu = __instance;
+                        SaveSystemPlugin.CurrentPlayerID = player_id;
+                        TextInputView.RequestTextInput("Enter save name:", /*TODO: Preset with franchise name*/"", 20 /*Maybe it won't fit within the TMP window, if it's longer*/, new Action<TextInputView.TextInputState, string>(SaveSystemPlugin.SaveRun));
                     }
                 }), 0, 1f, 0.2f });
             }
