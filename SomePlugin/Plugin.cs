@@ -128,10 +128,12 @@ namespace SaveSystem
             {
                 List<string> unixNames = new List<string>();
                 List<string> displayNames = new List<string>();
-                foreach (KeyValuePair<string,string> saveNameEntry in BackupSystem.SaveFileNames)
+                foreach (KeyValuePair<string, string> saveNameEntry in BackupSystem.SaveFileNames)
                 {
                     unixNames.Add(saveNameEntry.Key);
+                    SaveSystemPlugin.Log.LogInfo(saveNameEntry.Key);
                     displayNames.Add(saveNameEntry.Value);
+                    SaveSystemPlugin.Log.LogInfo(saveNameEntry.Value);
                 }
 
                 SaveSystemPlugin.SaveSystemOption = new Option<string>(unixNames, BackupSystem.CurrentSaveExists ? BackupSystem.GetCurrentRunUnixName() : unixNames[0], displayNames);
@@ -140,7 +142,7 @@ namespace SaveSystem
                 {
                     BackupSystem.SelectedSaveSlotUnixName = selectedSaveSlotIndex;
                     SaveSystemPlugin.LoadButton?.SetLabel(BackupSystem.CurrentSelectionLoaded ? "Selection already loaded" : "Press to load!");
-                        //SaveButton?.SetLabel(BackupSystem.CurrentSaveExists ? "Run already saved" : "Press to save!"); // Do I need both to be set? - prob only load
+                    //SaveButton?.SetLabel(BackupSystem.CurrentSaveExists ? "Run already saved" : "Press to save!"); // Do I need both to be set? - prob only load
                 });
                 /*Plugin.SaveSystemModule = (IModule) */ // Not sure yet, what this is used for
                 m_addSelectMethod.Invoke(__instance, new object[] { SaveSystemPlugin.SaveSystemOption.Names, new Action<int>(SaveSystemPlugin.SaveSystemOption.SetChosen), SaveSystemPlugin.SaveSystemOption.Chosen }); // All 3 parameters (since it is inline with only one)

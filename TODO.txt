@@ -1,6 +1,7 @@
 - Make sure old save won't be lost - like moving it into a backup folder, but only if there is already a run - "DONE": Confirmation button to override current run
-- NTH: name of save - text input like profile names - TODO: close ui while text input
-- NTH: delete runs
+- NTH: name of save - text input like profile names - DONE - TODO: close ui while text input
+- NTH: delete saved runs
+- NTH: rename saved runs
 - Save current active save - DONE
 - Maybe only save the newest file of the current run, not every save for every day
 - Change load button multiple times, if current run is not saved yet - DONE: Confirmation button to override current run

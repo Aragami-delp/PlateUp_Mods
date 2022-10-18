@@ -124,18 +124,28 @@ namespace SaveSystem
         /// <summary>
         /// Makes a backup into the SaveSystem of the currently loaded run
         /// </summary>
-        public static void SaveCurrentRun(string _name = "")
+        /// <param name="_name">Name of the new save, empty will save with the unix timestamp as name</param>
+        /// <param name="_saveAllFiles">If all run days should be saved or just the latest</param>
+        public static void SaveCurrentRun(string _name = "", bool _saveAllFiles = false)
         {
             // TODO: handle override - currently it just overrides all
             if (!CurrentSaveExists)
             {
                 string newDirectoryName = Application.persistentDataPath + "\\SaveSystem\\" + (String.IsNullOrWhiteSpace(_name) ? GetCurrentRunUnixName() : _name);
                 Directory.CreateDirectory(newDirectoryName);
-                string[] currentFiles = Directory.GetFiles(Application.persistentDataPath + "\\Full", "*.plateupsave");
 
-                foreach (string saveFile in currentFiles)
+                if (_saveAllFiles)
                 {
-                    File.Copy(saveFile, Path.Combine(newDirectoryName, Path.GetFileName(saveFile)), true);
+                    string[] currentFiles = Directory.GetFiles(Application.persistentDataPath + "\\Full", "*.plateupsave");
+                    foreach (string saveFile in currentFiles)
+                    {
+                        File.Copy(saveFile, Path.Combine(newDirectoryName, Path.GetFileName(saveFile)), true);
+                    }
+                }
+                else
+                {
+                    string newestSaveFileName = GetRunUnixNameAtPath(Application.persistentDataPath + "\\Full");
+                    File.Copy(Application.persistentDataPath + "\\Full\\" + newestSaveFileName + ".plateupsave", newDirectoryName + "\\" + newestSaveFileName + ".plateupsave");
                 }
             }
         }
@@ -160,7 +170,7 @@ namespace SaveSystem
             {
                 if (!CurrentlyAnyRunLoaded)
                     return false;
-                if (SelectedSaveSlotUnixName != null && SaveFileNames.ContainsKey(SelectedSaveSlotUnixName)) //Directory.Exists(Application.persistentDataPath + "\\SaveSystem\\" + GetCurrentRunUnixName()))
+                if (SaveFileNames.ContainsKey(GetCurrentRunUnixName()))
                     return true;
                 return false;
             }
