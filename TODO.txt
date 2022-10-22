@@ -1,14 +1,15 @@
-- Make sure old save won't be lost - like moving it into a backup folder, but only if there is already a run - "DONE": Confirmation button to override current run
-- Also don't show if the current run is already saved
-- NTH: name of save - text input like profile names - DONE - TODO: close ui while text input
-- NTH: delete saved runs
-- NTH: rename saved runs
+- Make sure old save won't be lost - like moving it into a backup folder, but only if there is already a run - DONE: Backup of current run in backup folder
+- Also don't show if the current run is already saved - DONE
 - Save current active save - DONE
-- Maybe only save the newest file of the current run, not every save for every day
+- Maybe only save the newest file of the current run, not every save for every day - DONE
 - Change load button multiple times, if current run is not saved yet - DONE: Confirmation button to override current run
-- NTH: Resize of UI window on save (if no save exsitsed before)
 - Load Button: Text if already loaded - DONE
 - Only show when client is host - DONE
 - Only show when in the lobby - DONE
-- No loading warning if there is no run loaded
+- No loading warning if there is no run loaded - DONE
 - Show "Recover Save" in lobby upon loading
+- NTH: delete saved runs
+- NTH: rename saved runs
+- NTH: Resize of UI window on save (if no save exsitsed before)
+- NTH: name of save - text input like profile names - DONE
+- NTH: close ui while text input

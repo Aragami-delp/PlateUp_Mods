@@ -2,22 +2,14 @@
 using BepInEx.Logging;
 using Kitchen;
 using Kitchen.Modules;
-using KitchenData;
-using UnityEngine;
-using TMPro;
 using HarmonyLib;
-using Kitchen.Layouts;
 using System.Collections.Generic;
-using Kitchen.Layouts.Modules;
 using System;
 using System.Reflection;
-using HarmonyLib.Tools;
-using System.Linq;
-using System.Reflection.Emit;
 
 namespace SaveSystem
 {
-    [BepInPlugin("com.aragami.plateup.mods", "SaveSystem", "1.0.0")]
+    [BepInPlugin("com.aragami.plateup.mods", "SaveSystem", "1.0.1")]
     [BepInProcess("PlateUp.exe")]
     public class SaveSystemPlugin : BaseUnityPlugin
     {
@@ -150,7 +142,7 @@ namespace SaveSystem
                 {
                     if (!BackupSystem.CurrentSelectionLoaded)
                     {
-                        if (!SaveSystemPlugin.TryLoadedOnce)
+                        if (!SaveSystemPlugin.TryLoadedOnce && !BackupSystem.CurrentSaveExists && BackupSystem.CurrentlyAnyRunLoaded)
                         {
                             SaveSystemPlugin.TryLoadedOnce = true;
                             SaveSystemPlugin.LoadButton.SetLabel("Override current run?");

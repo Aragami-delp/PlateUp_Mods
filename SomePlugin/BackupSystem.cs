@@ -1,12 +1,10 @@
 using UnityEngine;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Globalization;
-using SaveSystem;
 
 namespace SaveSystem
 {
@@ -92,10 +90,12 @@ namespace SaveSystem
         /// <exception cref="DirectoryNotFoundException">Thrown if selected save slot doesn't exists</exception>
         public static void LoadSaveSlot()
         {
-            SaveSystemPlugin.Log.LogInfo("Current Selection: " + SelectedSaveSlotUnixName);
             if (!String.IsNullOrEmpty(SelectedSaveSlotUnixName) && !CurrentSelectionLoaded)
             {
-                // TODO: Backup current run
+                if (CurrentlyAnyRunLoaded && !CurrentSaveExists)
+                {
+                    BackupCurrentRun();
+                }
 
                 string[] removeFiles = Directory.GetFiles(Application.persistentDataPath + "\\Full", "*.plateupsave");
                 foreach (string removeFile in removeFiles)
@@ -104,7 +104,6 @@ namespace SaveSystem
                 }
 
                 string path = Application.persistentDataPath + "\\SaveSystem\\" + SaveFileNames[SelectedSaveSlotUnixName];
-                SaveSystemPlugin.Log.LogInfo("Path of loading: " + path);
                 string[] currentFiles = Directory.GetFiles(path, "*.plateupsave");
                 foreach (string saveFile in currentFiles)
                 {
@@ -121,7 +120,19 @@ namespace SaveSystem
         /// <exception cref="NotImplementedException">TODO</exception>
         public static void BackupCurrentRun()
         {
-            throw new NotImplementedException();
+            if (!Directory.Exists(Application.persistentDataPath + "\\SaveSystemBackup"))
+            {
+                Directory.CreateDirectory(Application.persistentDataPath + "\\SaveSystemBackup\\");
+            }
+
+            string[] removeFiles = Directory.GetFiles(Application.persistentDataPath + "\\SaveSystemBackup", "*.plateupsave");
+            foreach (string removeFile in removeFiles)
+            {
+                File.Delete(removeFile);
+            }
+
+            string newestSaveFileName = GetRunUnixNameAtPath(Application.persistentDataPath + "\\Full");
+            File.Copy(Application.persistentDataPath + "\\Full\\" + newestSaveFileName + ".plateupsave", Application.persistentDataPath + "\\SaveSystemBackup\\" + newestSaveFileName + ".plateupsave");
         }
 
         /// <summary>
