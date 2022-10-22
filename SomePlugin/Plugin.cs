@@ -109,9 +109,9 @@ namespace SaveSystem
     [HarmonyPatch(typeof(OptionsMenu<PauseMenuAction>), nameof(OptionsMenu<PauseMenuAction>.Setup))]
     public static class OptionsMenuSetupPatch
     {
-        [HarmonyPostfix]
+        //[HarmonyPostfix]
         // ReSharper disable once UnusedMember.Local
-        static void StartPatch(OptionsMenu<PauseMenuAction> __instance, int player_id)
+        static void Postfix(OptionsMenu<PauseMenuAction> __instance, int player_id)
         {
             if (Session.CurrentGameNetworkMode != GameNetworkMode.Host || GameInfo.CurrentScene != SceneType.Franchise)
                 return;
@@ -131,9 +131,8 @@ namespace SaveSystem
                 foreach (KeyValuePair<string, string> saveNameEntry in BackupSystem.SaveFileNames)
                 {
                     unixNames.Add(saveNameEntry.Key);
-                    SaveSystemPlugin.Log.LogInfo(saveNameEntry.Key);
-                    displayNames.Add(saveNameEntry.Value);
-                    SaveSystemPlugin.Log.LogInfo(saveNameEntry.Value);
+                    string value = saveNameEntry.Value;
+                    displayNames.Add(BackupSystem.IsUnixTimestamp(value) ? BackupSystem.UnixTimeToLocalDateTimeFormat(value) : value);
                 }
 
                 SaveSystemPlugin.SaveSystemOption = new Option<string>(unixNames, BackupSystem.CurrentSaveExists ? BackupSystem.GetCurrentRunUnixName() : unixNames[0], displayNames);
@@ -141,6 +140,7 @@ namespace SaveSystem
                 SaveSystemPlugin.SaveSystemOption.OnChanged += (EventHandler<string>)((_, selectedSaveSlotIndex) =>
                 {
                     BackupSystem.SelectedSaveSlotUnixName = selectedSaveSlotIndex;
+                    SaveSystemPlugin.TryLoadedOnce = false;
                     SaveSystemPlugin.LoadButton?.SetLabel(BackupSystem.CurrentSelectionLoaded ? "Selection already loaded" : "Press to load!");
                     //SaveButton?.SetLabel(BackupSystem.CurrentSaveExists ? "Run already saved" : "Press to save!"); // Do I need both to be set? - prob only load
                 });
@@ -150,7 +150,7 @@ namespace SaveSystem
                 {
                     if (!BackupSystem.CurrentSelectionLoaded)
                     {
-                        if (!SaveSystemPlugin.TryLoadedOnce && !BackupSystem.CurrentSaveExists)
+                        if (!SaveSystemPlugin.TryLoadedOnce)
                         {
                             SaveSystemPlugin.TryLoadedOnce = true;
                             SaveSystemPlugin.LoadButton.SetLabel("Override current run?");
@@ -239,9 +239,8 @@ namespace SaveSystem
     [HarmonyPatch(typeof(DisplayVersion), "Awake")]
     public static class DisplayVersionPatch
     {
-        [HarmonyPostfix]
         // ReSharper disable once UnusedMember.Local
-        static void StartPatch(ref DisplayVersion __instance)
+        static void Postfix(ref DisplayVersion __instance)
         {
             __instance.Text.text = "Mod loaded: SaveSystem\n" + __instance.Text.text;
         }

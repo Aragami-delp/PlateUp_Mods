@@ -1,4 +1,5 @@
 - Make sure old save won't be lost - like moving it into a backup folder, but only if there is already a run - "DONE": Confirmation button to override current run
+- Also don't show if the current run is already saved
 - NTH: name of save - text input like profile names - DONE - TODO: close ui while text input
 - NTH: delete saved runs
 - NTH: rename saved runs
@@ -10,3 +11,4 @@
 - Only show when client is host - DONE
 - Only show when in the lobby - DONE
 - No loading warning if there is no run loaded
+- Show "Recover Save" in lobby upon loading

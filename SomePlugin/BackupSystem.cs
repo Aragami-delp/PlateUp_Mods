@@ -17,7 +17,7 @@ namespace SaveSystem
         /// </summary>
         public static string SelectedSaveSlotUnixName = null;
         /// <summary>
-        /// Save file names, (UnixName, DisplayName)
+        /// Save file names, (UnixTimestamp, SaveName)
         /// </summary>
         public static Dictionary<string, string> SaveFileNames = new Dictionary<string, string>();
 
@@ -46,7 +46,7 @@ namespace SaveSystem
             {
                 if (IsUnixTimestamp(name))
                 {
-                    SaveFileNames.Add(name, UnixTimeToLocalDateTimeFormat(name));
+                    SaveFileNames.Add(name, name);
                 }
                 else
                 {
@@ -68,7 +68,7 @@ namespace SaveSystem
         /// </summary>
         /// <param name="_timestamp">Timestamp to check</param>
         /// <returns>True if valid, otherwise false</returns>
-        private static bool IsUnixTimestamp(string _timestamp)
+        public static bool IsUnixTimestamp(string _timestamp)
         {
             return Regex.IsMatch(_timestamp, "^[0-9]+$"); // Is unix timestamp
         }
@@ -78,7 +78,7 @@ namespace SaveSystem
         /// </summary>
         /// <param name="text">Timestamp to convert</param>
         /// <returns>Localized timestamp</returns>
-        private static string UnixTimeToLocalDateTimeFormat(string text)
+        public static string UnixTimeToLocalDateTimeFormat(string text)
         {
             DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
             DateTimeFormatInfo formatInfo = CultureInfo.CurrentCulture.DateTimeFormat;
@@ -92,6 +92,7 @@ namespace SaveSystem
         /// <exception cref="DirectoryNotFoundException">Thrown if selected save slot doesn't exists</exception>
         public static void LoadSaveSlot()
         {
+            SaveSystemPlugin.Log.LogInfo("Current Selection: " + SelectedSaveSlotUnixName);
             if (!String.IsNullOrEmpty(SelectedSaveSlotUnixName) && !CurrentSelectionLoaded)
             {
                 // TODO: Backup current run
@@ -102,7 +103,9 @@ namespace SaveSystem
                     File.Delete(removeFile);
                 }
 
-                string[] currentFiles = Directory.GetFiles(Application.persistentDataPath + "\\SaveSystem\\" + SaveFileNames[SelectedSaveSlotUnixName], "*.plateupsave");
+                string path = Application.persistentDataPath + "\\SaveSystem\\" + SaveFileNames[SelectedSaveSlotUnixName];
+                SaveSystemPlugin.Log.LogInfo("Path of loading: " + path);
+                string[] currentFiles = Directory.GetFiles(path, "*.plateupsave");
                 foreach (string saveFile in currentFiles)
                 {
                     File.Copy(saveFile, Path.Combine(Application.persistentDataPath + "\\Full", Path.GetFileName(saveFile)));
@@ -151,7 +154,7 @@ namespace SaveSystem
         }
 
         /// <summary>
-        /// Whether the current selection is already loading into the game
+        /// Whether the current selection is already loaded into the game
         /// </summary>
         public static bool CurrentSelectionLoaded
         {
