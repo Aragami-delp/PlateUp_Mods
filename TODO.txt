@@ -8,8 +8,9 @@
 - Only show when in the lobby - DONE
 - No loading warning if there is no run loaded - DONE
 - Show "Recover Save" in lobby upon loading
+
+- NTH: name of save - text input like profile names - DONE
 - NTH: delete saved runs
 - NTH: rename saved runs
 - NTH: Resize of UI window on save (if no save exsitsed before)
-- NTH: name of save - text input like profile names - DONE
 - NTH: close ui while text input

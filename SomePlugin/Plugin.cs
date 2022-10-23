@@ -1,17 +1,25 @@
-﻿using BepInEx;
-using BepInEx.Logging;
+﻿//using BepInEx;
+//using BepInEx.Logging;
+//using BepInEx.Bootstrap;
 using Kitchen;
 using Kitchen.Modules;
 using HarmonyLib;
 using System.Collections.Generic;
 using System;
 using System.Reflection;
+using UnityEngine;
 
 namespace SaveSystem
 {
     [BepInPlugin("com.aragami.plateup.mods", "SaveSystem", "1.1.0")]
     [BepInProcess("PlateUp.exe")]
-    public class SaveSystemPlugin : BaseUnityPlugin
+    public class SaveSystemBepInEx : BaseUnityPlugin
+    {
+    }
+
+    [BepInPlugin("com.aragami.plateup.mods", "SaveSystem", "1.1.0")]
+    [BepInProcess("PlateUp.exe")]
+    public class SaveSystemPlugin : MonoBehaviour
     {
         internal static ManualLogSource Log;
 
@@ -37,6 +45,8 @@ namespace SaveSystem
         public static bool TryLoadedOnce = false;
 
         private readonly Harmony m_harmony = new Harmony("com.aragami.plateup.mods.harmony");
+
+        public static Dictionary<string, BepInEx.PluginInfo> LoadedPlugins => Chainloader.PluginInfos;
 
         private void Awake()
         {
@@ -114,10 +124,11 @@ namespace SaveSystem
             m_newSpacer.Invoke(__instance, new object[1] { true }); // Default parameter bool = true
             m_addLabelMethod.Invoke(__instance, new string[] { "Save System" });
 
-            // Select
             BackupSystem.ReloadSaveSystem();
             if (BackupSystem.SaveFileNames.Count > 0)
             {
+                #region Load
+                // Select
                 List<string> unixNames = new List<string>();
                 List<string> displayNames = new List<string>();
                 foreach (KeyValuePair<string, string> saveNameEntry in BackupSystem.SaveFileNames)
@@ -158,8 +169,13 @@ namespace SaveSystem
                         }
                     }
                 }), 0, 1f, 0.2f });
+                #endregion
+                #region Delete
+                // Delete
+                #endregion
             }
 
+            #region Save
             // SaveButton
             if (BackupSystem.CurrentlyAnyRunLoaded)
             {
@@ -173,6 +189,7 @@ namespace SaveSystem
                     }
                 }), 0, 1f, 0.2f });
             }
+            #endregion
         }
     }
     #endregion
@@ -234,7 +251,13 @@ namespace SaveSystem
         // ReSharper disable once UnusedMember.Local
         static void Postfix(ref DisplayVersion __instance)
         {
-            __instance.Text.text = "Mod loaded: SaveSystem\n" + __instance.Text.text;
+            List<string> pluginNames = new List<string>();
+            foreach (var plugin in Chainloader.PluginInfos)
+            {
+                pluginNames.Add(plugin.Value.Metadata.Name);
+            }
+            //__instance.Text.rectTransform.sizeDelta = new UnityEngine.Vector2(UnityEngine.Screen.width, __instance.Text.rectTransform.sizeDelta.y);
+            __instance.Text.text = __instance.Text.text + "; Mods loaded:\n " + String.Join(", ", pluginNames);
         }
     }
     #endregion

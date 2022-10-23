@@ -117,7 +117,6 @@ namespace SaveSystem
         /// <summary>
         /// Backs up the current run into a backup folder
         /// </summary>
-        /// <exception cref="NotImplementedException">TODO</exception>
         public static void BackupCurrentRun()
         {
             if (!Directory.Exists(Application.persistentDataPath + "\\SaveSystemBackup"))
@@ -161,6 +160,15 @@ namespace SaveSystem
                     string newestSaveFileName = GetRunUnixNameAtPath(Application.persistentDataPath + "\\Full");
                     File.Copy(Application.persistentDataPath + "\\Full\\" + newestSaveFileName + ".plateupsave", newDirectoryName + "\\" + newestSaveFileName + ".plateupsave");
                 }
+            }
+        }
+
+        public static void DeleteSaveSlot()
+        {
+            if (!String.IsNullOrEmpty(SelectedSaveSlotUnixName))
+            {
+                string path = Application.persistentDataPath + "\\SaveSystem\\" + SaveFileNames[SelectedSaveSlotUnixName];
+                Directory.Delete(path, true);
             }
         }
 
