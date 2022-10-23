@@ -5,6 +5,8 @@
 A mod that lets you save multiple runs at the same time. You can switch between those at will.
 While in the lobby, open up the settings menu and save/load the savegame you want.
 
+![Preview Image](https://github.com/Aragami-delp/PlateUp_Mods/blob/main/SomePlugin/SaveSystemPreviewImage.jpg?raw=true)
+
 **NOTE**: If you have don't see the `Recover Save` item in the lobby after loading a save, you will have to either start the tutorial and leave it immeditaly or restart the game
 
 ## How to install
