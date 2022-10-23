@@ -9,7 +9,7 @@ using System.Reflection;
 
 namespace SaveSystem
 {
-    [BepInPlugin("com.aragami.plateup.mods", "SaveSystem", "1.0.1")]
+    [BepInPlugin("com.aragami.plateup.mods", "SaveSystem", "1.1.0")]
     [BepInProcess("PlateUp.exe")]
     public class SaveSystemPlugin : BaseUnityPlugin
     {
