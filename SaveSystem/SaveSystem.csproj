@@ -1,12 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>netstandard2.0;net472</TargetFrameworks>
     <AssemblyName>SaveSystem</AssemblyName>
     <Description>Adds a save system to PlateUp to have saves of multiple runs at the same time</Description>
     <Version>0.1.0</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
+    <Configurations>Debug;Release;d</Configurations>
   </PropertyGroup>
 
   <ItemGroup>

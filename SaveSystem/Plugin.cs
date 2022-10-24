@@ -1,6 +1,6 @@
-﻿//using BepInEx;
-//using BepInEx.Logging;
-//using BepInEx.Bootstrap;
+﻿using BepInEx;
+using BepInEx.Logging;
+using BepInEx.Bootstrap;
 using Kitchen;
 using Kitchen.Modules;
 using HarmonyLib;
@@ -11,15 +11,10 @@ using UnityEngine;
 
 namespace SaveSystem
 {
+//#if NETSTANDARD2_0
     [BepInPlugin("com.aragami.plateup.mods", "SaveSystem", "1.1.0")]
     [BepInProcess("PlateUp.exe")]
-    public class SaveSystemBepInEx : BaseUnityPlugin
-    {
-    }
-
-    [BepInPlugin("com.aragami.plateup.mods", "SaveSystem", "1.1.0")]
-    [BepInProcess("PlateUp.exe")]
-    public class SaveSystemPlugin : MonoBehaviour
+    public class SaveSystemPlugin : BaseUnityPlugin
     {
         internal static ManualLogSource Log;
 
