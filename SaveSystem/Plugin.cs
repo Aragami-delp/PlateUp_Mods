@@ -11,13 +11,25 @@ using UnityEngine;
 
 namespace SaveSystem
 {
-//#if NETSTANDARD2_0
     [BepInPlugin("com.aragami.plateup.mods", "SaveSystem", "1.1.0")]
     [BepInProcess("PlateUp.exe")]
-    public class SaveSystemPlugin : BaseUnityPlugin
+    public class SaveSystemBepInEx : BaseUnityPlugin
     {
         internal static ManualLogSource Log;
 
+        private void Awake()
+        {
+            Log = base.Logger;
+            Log.LogInfo($"Plugin SaveSystem is loaded!");
+        }
+
+        public static void LogInfo(string _log) { Log.LogInfo(_log); }
+        public static void LogWarning(string _log) { Log.LogWarning(_log); }
+        public static void LogError(string _log) { Log.LogError(_log); }
+    }
+
+    public class SaveSystemPlugin : MonoBehaviour
+    {
         /// <summary>
         /// Select menu options
         /// </summary>
@@ -39,15 +51,13 @@ namespace SaveSystem
         /// </summary>
         public static bool TryLoadedOnce = false;
 
-        private readonly Harmony m_harmony = new Harmony("com.aragami.plateup.mods.harmony");
+        private readonly HarmonyLib.Harmony m_harmony = new HarmonyLib.Harmony("com.aragami.plateup.mods.harmony");
 
-        public static Dictionary<string, BepInEx.PluginInfo> LoadedPlugins => Chainloader.PluginInfos;
+        public static Dictionary<string, BepInEx.PluginInfo> LoadedPlugins => BepInEx.Bootstrap.Chainloader.PluginInfos;
 
         private void Awake()
         {
-            Log = base.Logger;
             m_harmony.PatchAll();
-            Log.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
         }
 
         public static void SaveRun(TextInputView.TextInputState _result, string _name)
@@ -55,14 +65,14 @@ namespace SaveSystem
             if (_result != TextInputView.TextInputState.TextEntryComplete)
                 return;
             _name = (String.IsNullOrWhiteSpace(_name) ? BackupSystem.GetCurrentRunUnixName() : _name);
-            SaveSystemPlugin.Log.LogInfo("Saving current run: " + _name);
+            SaveSystemBepInEx.LogInfo("Saving current run: " + _name);
             BackupSystem.SaveCurrentRun(_name);
             CurrentMenu.ModuleList.Clear();
             CurrentMenu.Setup(CurrentPlayerID);
             CurrentMenu.ModuleList.Select(SaveSystemPlugin.SaveButton);
         }
     }
-    #region Reflection GetMethod
+#region Reflection GetMethod
     public static class Helper
     {
         /// <summary>
@@ -100,9 +110,9 @@ namespace SaveSystem
             return retVal;
         }
     }
-    #endregion
+#endregion
 
-    #region Add options in menu
+#region Add options in menu
     [HarmonyPatch(typeof(OptionsMenu<PauseMenuAction>), nameof(OptionsMenu<PauseMenuAction>.Setup))]
     public static class OptionsMenuSetupPatch
     {
@@ -122,7 +132,7 @@ namespace SaveSystem
             BackupSystem.ReloadSaveSystem();
             if (BackupSystem.SaveFileNames.Count > 0)
             {
-                #region Load
+#region Load
                 // Select
                 List<string> unixNames = new List<string>();
                 List<string> displayNames = new List<string>();
@@ -155,7 +165,7 @@ namespace SaveSystem
                         }
                         else
                         {
-                            SaveSystemPlugin.Log.LogInfo("Loading Save: " + BackupSystem.SelectedSaveSlotUnixName);
+                            SaveSystemBepInEx.LogInfo("Loading Save: " + BackupSystem.SelectedSaveSlotUnixName);
                             SaveSystemPlugin.TryLoadedOnce = false;
                             BackupSystem.LoadSaveSlot();
                             __instance.ModuleList.Clear();
@@ -164,13 +174,13 @@ namespace SaveSystem
                         }
                     }
                 }), 0, 1f, 0.2f });
-                #endregion
-                #region Delete
+#endregion
+#region Delete
                 // Delete
-                #endregion
+#endregion
             }
 
-            #region Save
+#region Save
             // SaveButton
             if (BackupSystem.CurrentlyAnyRunLoaded)
             {
@@ -184,12 +194,12 @@ namespace SaveSystem
                     }
                 }), 0, 1f, 0.2f });
             }
-            #endregion
+#endregion
         }
     }
-    #endregion
+#endregion
 
-    #region Change map sizes
+#region Change map sizes
     //[HarmonyPatch(typeof(RoomGrid), "Generate")]
     //public static class RoomGridGeneratePatch
     //{
@@ -202,9 +212,9 @@ namespace SaveSystem
     //        ___Height = 5;
     //    }
     //}
-    #endregion
+#endregion
 
-    #region DebugLog
+#region DebugLog
     //[HarmonyPatch(typeof(RoomGrid), "ActOn")]
     //public static class RoomGridPatch
     //{
@@ -226,9 +236,9 @@ namespace SaveSystem
     //        Plugin.Log.LogInfo("W: " + w + "; H: " + h);
     //    }
     //}
-    #endregion
+#endregion
 
-    #region TextInjection
+#region TextInjection
     //[HarmonyPatch(typeof(NewspaperSubview), "SetLossReason")]
     //public static class NewspaperSubviewPatch
     //{
@@ -247,7 +257,7 @@ namespace SaveSystem
         static void Postfix(ref DisplayVersion __instance)
         {
             List<string> pluginNames = new List<string>();
-            foreach (var plugin in Chainloader.PluginInfos)
+            foreach (var plugin in BepInEx.Bootstrap.Chainloader.PluginInfos)
             {
                 pluginNames.Add(plugin.Value.Metadata.Name);
             }
@@ -255,5 +265,5 @@ namespace SaveSystem
             __instance.Text.text = __instance.Text.text + "; Mods loaded:\n " + String.Join(", ", pluginNames);
         }
     }
-    #endregion
+#endregion
 }
