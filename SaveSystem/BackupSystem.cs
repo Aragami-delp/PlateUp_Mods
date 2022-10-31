@@ -42,21 +42,32 @@ namespace SaveSystem
             }
             foreach (string name in foundNames)
             {
-                if (IsUnixTimestamp(name))
+                try
                 {
-                    SaveFileNames.Add(name, name);
-                }
-                else
-                {
-                    string namePath = Application.persistentDataPath + "\\SaveSystem\\" + name;
-                    if (Directory.GetFiles(namePath).Length > 0)
+                    if (IsUnixTimestamp(name))
                     {
-                        string unixName = GetRunUnixNameAtPath(namePath);
-                        if (!String.IsNullOrEmpty(unixName))
+                        Debug.Log("0 " + name);
+                        SaveFileNames.Add(name, name);
+                    }
+                    else
+                    {
+                        string namePath = Application.persistentDataPath + "\\SaveSystem\\" + name;
+                        if (Directory.GetFiles(namePath).Length > 0)
                         {
-                            SaveFileNames.Add(unixName, name);
+                            string unixName = GetRunUnixNameAtPath(namePath);
+                            if (!String.IsNullOrEmpty(unixName))
+                            {
+                                Debug.Log("1 " + unixName + " " + name);
+                                SaveFileNames.Add(unixName, name);
+                            }
                         }
                     }
+                }
+                catch (ArgumentException _e)
+                {
+                    // Save loaded twice
+                    // TODO: Log this properly ^^
+                    Debug.LogWarning("Save " + (IsUnixTimestamp(name) ? UnixTimeToLocalDateTimeFormat(name) : name) + " duplicated");
                 }
             }
         }

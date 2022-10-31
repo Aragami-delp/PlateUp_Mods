@@ -21,6 +21,9 @@ namespace SaveSystem
         {
             Log = base.Logger;
             Log.LogInfo($"Plugin SaveSystem is loaded!");
+            GameObject saveSystemMod = new GameObject("SaveSystem");
+            saveSystemMod.AddComponent<SaveSystemPlugin>();
+            DontDestroyOnLoad(saveSystemMod);
         }
 
         public static void LogInfo(string _log) { Log.LogInfo(_log); }
