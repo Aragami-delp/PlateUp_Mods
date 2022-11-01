@@ -85,6 +85,7 @@ namespace SaveSystem_MultiMod
         /// </summary>
         public static ButtonElement LoadButton = null;
         public static ButtonElement DeleteButton = null;
+        public static ButtonElement RenameButton = null;
 
         public static OptionsMenu<PauseMenuAction> CurrentMenu = null;
         public static int CurrentPlayerID = 0;
@@ -113,6 +114,20 @@ namespace SaveSystem_MultiMod
             CurrentMenu.ModuleList.Clear();
             CurrentMenu.Setup(CurrentPlayerID);
             CurrentMenu.ModuleList.Select(SaveSystemMod.SaveButton);
+        }
+
+        public static void RenameRun(TextInputView.TextInputState _result, string _name)
+        {
+            if (_result != TextInputView.TextInputState.TextEntryComplete)
+                return;
+            _name = (String.IsNullOrWhiteSpace(_name) ? BackupSystem.GetCurrentRunUnixName() : _name);
+            SaveSystem_ModLoaderSystem.LogInfo("Renaming Save: " + BackupSystem.SelectedSaveSlotDisplayName);
+            BackupSystem.RenameSaveSlot(_name);
+            CurrentMenu.ModuleList.Clear();
+            CurrentMenu.Setup(CurrentPlayerID);
+            CurrentMenu.ModuleList.Select(SaveSystemMod.RenameButton);
+            SaveSystemMod.ShowVersionSave.Text.text = SaveSystemMod.ShowVersionSaveDefaultText + "\n Loaded Save\n"+BackupSystem.SelectedSaveSlotDisplayName;
+
         }
     }
     #region Reflection GetMethod
@@ -239,6 +254,17 @@ namespace SaveSystem_MultiMod
                             __instance.Setup(player_id);
                             __instance.ModuleList.Select(SaveSystemMod.DeleteButton);
                         }
+                    }), 0, 1f, 0.2f });
+                }
+                #endregion
+                #region Rename
+                if (BackupSystem.SelectedSaveSlotUnixName != null)
+                {
+                    SaveSystemMod.RenameButton = (ButtonElement)m_addButton.Invoke(__instance, new object[] { "Press to rename!", (Action<int>)(_ =>
+                    {
+                        SaveSystemMod.CurrentMenu = __instance;
+                        SaveSystemMod.CurrentPlayerID = player_id;
+                        TextInputView.RequestTextInput("Enter new name:", BackupSystem.IsUnixTimestamp(BackupSystem.SaveFileNames[BackupSystem.SelectedSaveSlotUnixName]) ? BackupSystem.UnixTimeToLocalDateTimeFormat(BackupSystem.SaveFileNames[BackupSystem.SelectedSaveSlotUnixName]) : BackupSystem.SaveFileNames[BackupSystem.SelectedSaveSlotUnixName], 20, new Action<TextInputView.TextInputState, string>(SaveSystemMod.RenameRun));
                     }), 0, 1f, 0.2f });
                 }
                 #endregion

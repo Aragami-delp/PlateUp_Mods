@@ -198,6 +198,17 @@ namespace SaveSystem
             }
         }
 
+        public static void RenameSaveSlot(string _newName)
+        {
+            if (!String.IsNullOrEmpty(SelectedSaveSlotUnixName))
+            {
+                if (Directory.Exists(Application.persistentDataPath + "\\SaveSystem\\" + SaveFileNames[SelectedSaveSlotUnixName]) && !Directory.Exists(Application.persistentDataPath + "\\SaveSystem\\" + _newName))
+                {
+                    Directory.Move(Application.persistentDataPath + "\\SaveSystem\\" + SaveFileNames[SelectedSaveSlotUnixName], Application.persistentDataPath + "\\SaveSystem\\" + _newName);
+                }
+            }
+        }
+
         /// <summary>
         /// Whether the current selection is already loaded into the game
         /// </summary>
