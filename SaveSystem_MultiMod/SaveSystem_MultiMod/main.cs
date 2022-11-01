@@ -1,26 +1,61 @@
-﻿using BepInEx;
+﻿#if MelonLoader
+using MelonLoader;
+#endif
+#if BepInEx
+using BepInEx;
 using BepInEx.Logging;
-using BepInEx.Bootstrap;
+#endif
+
+using UnityEngine;
+using HarmonyLib;
+using UnityEngine.UI;
 using Kitchen;
 using Kitchen.Modules;
-using HarmonyLib;
-using System.Collections.Generic;
-using System;
-using System.Reflection;
-using UnityEngine;
+using SaveSystem;
 
-namespace SaveSystem
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Text.RegularExpressions;
+using System.Globalization;
+
+namespace SaveSystem_MultiMod
 {
+#if MelonLoader
+    // TODO: Proper Melon Setup
+    public class SaveSystem_ModLoaderSystem : MelonMod
+    {
+        private static MelonLogger.Instance Log;
+        public override void OnInitializeMelon()
+        {
+            Log = LoggerInstance;
+            LogInfo($"Plugin SaveSystem is loaded!");
+
+            GameObject saveSystemMod = new GameObject("SaveSystem");
+            saveSystemMod.AddComponent<SaveSystemMod>();
+            UnityEngine.Object.DontDestroyOnLoad(saveSystemMod);
+        }
+
+        public static void LogInfo(string _log) { Log.Msg(_log); }
+        public static void LogWarning(string _log) { Log.Warning(_log); }
+        public static void LogError(string _log) { Log.Error(_log); }
+    }
+#endif
+
+#if BepInEx
     [BepInPlugin("com.aragami.plateup.mods", "SaveSystem", "1.1.0")]
     [BepInProcess("PlateUp.exe")]
-    public class SaveSystemBepInEx : BaseUnityPlugin
+    public class SaveSystem_ModLoaderSystem : BaseUnityPlugin
     {
         internal static ManualLogSource Log;
 
         private void Awake()
         {
             Log = base.Logger;
-            Log.LogInfo($"Plugin SaveSystem is loaded!");
+            LogInfo($"Plugin SaveSystem is loaded!");
+
             GameObject saveSystemMod = new GameObject("SaveSystem");
             saveSystemMod.AddComponent<SaveSystemMod>();
             DontDestroyOnLoad(saveSystemMod);
@@ -30,6 +65,7 @@ namespace SaveSystem
         public static void LogWarning(string _log) { Log.LogWarning(_log); }
         public static void LogError(string _log) { Log.LogError(_log); }
     }
+#endif
 
     public class SaveSystemMod : MonoBehaviour
     {
@@ -37,7 +73,8 @@ namespace SaveSystem
         /// Select menu options
         /// </summary>
         public static Option<string> SaveSystemOption;
-
+        public static DisplayVersion ShowVersionSave;
+        public static string ShowVersionSaveDefaultText;
         /// <summary>
         /// Button to save the current run
         /// </summary>
@@ -68,14 +105,14 @@ namespace SaveSystem
             if (_result != TextInputView.TextInputState.TextEntryComplete)
                 return;
             _name = (String.IsNullOrWhiteSpace(_name) ? BackupSystem.GetCurrentRunUnixName() : _name);
-            SaveSystemBepInEx.LogInfo("Saving current run: " + _name);
+            SaveSystem_ModLoaderSystem.LogInfo("Saving current run: " + _name);
             BackupSystem.SaveCurrentRun(_name);
             CurrentMenu.ModuleList.Clear();
             CurrentMenu.Setup(CurrentPlayerID);
             CurrentMenu.ModuleList.Select(SaveSystemMod.SaveButton);
         }
     }
-#region Reflection GetMethod
+    #region Reflection GetMethod
     public static class Helper
     {
         /// <summary>
@@ -113,9 +150,9 @@ namespace SaveSystem
             return retVal;
         }
     }
-#endregion
+    #endregion
 
-#region Add options in menu
+    #region Add options in menu
     [HarmonyPatch(typeof(OptionsMenu<PauseMenuAction>), nameof(OptionsMenu<PauseMenuAction>.Setup))]
     public static class OptionsMenuSetupPatch
     {
@@ -135,7 +172,7 @@ namespace SaveSystem
             BackupSystem.ReloadSaveSystem();
             if (BackupSystem.SaveFileNames.Count > 0)
             {
-#region Load
+                #region Load
                 // Select
                 List<string> unixNames = new List<string>();
                 List<string> displayNames = new List<string>();
@@ -168,22 +205,23 @@ namespace SaveSystem
                         }
                         else
                         {
-                            SaveSystemBepInEx.LogInfo("Loading Save: " + BackupSystem.SelectedSaveSlotUnixName);
+                            SaveSystem_ModLoaderSystem.LogInfo("Loading Save: " + BackupSystem.SelectedSaveSlotUnixName);
                             SaveSystemMod.TryLoadedOnce = false;
                             BackupSystem.LoadSaveSlot();
+                            SaveSystemMod.ShowVersionSave.Text.text = SaveSystemMod.ShowVersionSaveDefaultText + "\n Selected Save:\n" + BackupSystem.SelectedSaveSlotDisplayName;
                             __instance.ModuleList.Clear();
                             __instance.Setup(player_id);
                             __instance.ModuleList.Select(SaveSystemMod.LoadButton);
                         }
                     }
                 }), 0, 1f, 0.2f });
-#endregion
-#region Delete
+                #endregion
+                #region Delete
                 // Delete
-#endregion
+                #endregion
             }
 
-#region Save
+            #region Save
             // SaveButton
             if (BackupSystem.CurrentlyAnyRunLoaded)
             {
@@ -197,61 +235,10 @@ namespace SaveSystem
                     }
                 }), 0, 1f, 0.2f });
             }
-#endregion
+            #endregion
         }
     }
-#endregion
-
-#region Change map sizes
-    //[HarmonyPatch(typeof(RoomGrid), "Generate")]
-    //public static class RoomGridGeneratePatch
-    //{
-    //    [HarmonyPrefix]
-    //    // ReSharper disable once UnusedMember.Local
-    //    static void StartPatch(ref int ___Width, ref int ___Height)
-    //    {
-    //        Plugin.Log.LogInfo("Width: " + ___Width.ToString() + ", Height: " + ___Height);
-    //        ___Width = 7;
-    //        ___Height = 5;
-    //    }
-    //}
-#endregion
-
-#region DebugLog
-    //[HarmonyPatch(typeof(RoomGrid), "ActOn")]
-    //public static class RoomGridPatch
-    //{
-    //    [HarmonyPrefix]
-    //    // ReSharper disable once UnusedMember.Local
-    //    static void StartPatch(ref RoomGrid __instance)
-    //    {
-    //        Plugin.Log.LogInfo("Width: " + __instance.Width + "; Height: " + __instance.Height);
-    //    }
-    //}
-
-    //[HarmonyPatch(typeof(LayoutDesign), "Resize")]
-    //public static class LayoutDesignPatch2
-    //{
-    //    [HarmonyPrefix]
-    //    // ReSharper disable once UnusedMember.Local
-    //    static void StartPatch(ref int w, ref int h)
-    //    {
-    //        Plugin.Log.LogInfo("W: " + w + "; H: " + h);
-    //    }
-    //}
-#endregion
-
-#region TextInjection
-    //[HarmonyPatch(typeof(NewspaperSubview), "SetLossReason")]
-    //public static class NewspaperSubviewPatch
-    //{
-    //    [HarmonyPostfix]
-    //    // ReSharper disable once UnusedMember.Local
-    //    static void StartPatch(ref NewspaperSubview __instance, LossReason reason)
-    //    {
-    //        __instance.Tagline.text += " -- Aragami was here";
-    //    }
-    //}
+    #endregion
 
     [HarmonyPatch(typeof(DisplayVersion), "Awake")]
     public static class DisplayVersionPatch
@@ -259,14 +246,10 @@ namespace SaveSystem
         // ReSharper disable once UnusedMember.Local
         static void Postfix(ref DisplayVersion __instance)
         {
-            List<string> pluginNames = new List<string>();
-            foreach (var plugin in BepInEx.Bootstrap.Chainloader.PluginInfos)
-            {
-                pluginNames.Add(plugin.Value.Metadata.Name);
-            }
-            //__instance.Text.rectTransform.sizeDelta = new UnityEngine.Vector2(UnityEngine.Screen.width, __instance.Text.rectTransform.sizeDelta.y);
-            __instance.Text.text = __instance.Text.text + "; Mods loaded:\n " + String.Join(", ", pluginNames);
+            SaveSystemMod.ShowVersionSave = __instance;
+            SaveSystemMod.ShowVersionSaveDefaultText = __instance.Text.text;
+            BackupSystem.ReloadSaveSystem();
+            __instance.Text.text = SaveSystemMod.ShowVersionSaveDefaultText + "\n Selected Save:\n" + BackupSystem.SelectedSaveSlotDisplayName;
         }
     }
-#endregion
 }

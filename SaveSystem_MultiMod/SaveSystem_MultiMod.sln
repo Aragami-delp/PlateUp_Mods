@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32526.322
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SaveSystem_MultiMod", "SaveSystem_MultiMod\SaveSystem_MultiMod.csproj", "{95316F32-424B-4169-AA53-9F0E56BC9144}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		BepInEx|Any CPU = BepInEx|Any CPU
+		MelonLoader|Any CPU = MelonLoader|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{95316F32-424B-4169-AA53-9F0E56BC9144}.BepInEx|Any CPU.ActiveCfg = BepInEx|Any CPU
+		{95316F32-424B-4169-AA53-9F0E56BC9144}.BepInEx|Any CPU.Build.0 = BepInEx|Any CPU
+		{95316F32-424B-4169-AA53-9F0E56BC9144}.MelonLoader|Any CPU.ActiveCfg = MelonLoader|Any CPU
+		{95316F32-424B-4169-AA53-9F0E56BC9144}.MelonLoader|Any CPU.Build.0 = MelonLoader|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {82BEA957-204D-4847-A816-A05C18B6BF2F}
+	EndGlobalSection
+EndGlobal
