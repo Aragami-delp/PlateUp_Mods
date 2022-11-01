@@ -21,7 +21,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Globalization;
 #if MelonLoader
-[assembly: MelonInfo(typeof(SaveSystem_MultiMod.SaveSystem_ModLoaderSystem), "SaveSystem", "1.1.0", "Aragami"), HarmonyDontPatchAll]
+[assembly: MelonInfo(typeof(SaveSystem_MultiMod.SaveSystem_ModLoaderSystem), "SaveSystem", "1.2.0", "Aragami"), HarmonyDontPatchAll]
 #endif
 namespace SaveSystem_MultiMod
 {
@@ -46,7 +46,7 @@ namespace SaveSystem_MultiMod
 #endif
 
 #if BepInEx
-    [BepInPlugin("com.aragami.plateup.mods", "SaveSystem", "1.1.0")]
+    [BepInPlugin("com.aragami.plateup.mods", "SaveSystem", "1.2.0")]
     [BepInProcess("PlateUp.exe")]
     public class SaveSystem_ModLoaderSystem : BaseUnityPlugin
     {
