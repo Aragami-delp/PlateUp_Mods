@@ -21,7 +21,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Globalization;
 #if MelonLoader
-[assembly: MelonInfo(typeof(SaveSystem_MultiMod.SaveSystem_ModLoaderSystem), "SaveSystem", "1.1.0", "Aragami")]
+[assembly: MelonInfo(typeof(SaveSystem_MultiMod.SaveSystem_ModLoaderSystem), "SaveSystem", "1.1.0", "Aragami"), HarmonyDontPatchAll]
 #endif
 namespace SaveSystem_MultiMod
 {
@@ -32,7 +32,7 @@ namespace SaveSystem_MultiMod
         public override void OnInitializeMelon()
         {
             Log = LoggerInstance;
-            LogInfo($"Plugin SaveSystem is loaded!");
+            LogInfo("Plugin SaveSystem is loaded!");
 
             GameObject saveSystemMod = new GameObject("SaveSystem");
             saveSystemMod.AddComponent<SaveSystemMod>();
@@ -55,7 +55,7 @@ namespace SaveSystem_MultiMod
         private void Awake()
         {
             Log = base.Logger;
-            LogInfo($"Plugin SaveSystem is loaded!");
+            LogInfo("Plugin SaveSystem is loaded!");
 
             GameObject saveSystemMod = new GameObject("SaveSystem");
             saveSystemMod.AddComponent<SaveSystemMod>();
@@ -96,8 +96,6 @@ namespace SaveSystem_MultiMod
         public static bool TryDeleteOnce = false;
 
         private readonly HarmonyLib.Harmony m_harmony = new HarmonyLib.Harmony("com.aragami.plateup.mods.harmony");
-
-        public static Dictionary<string, BepInEx.PluginInfo> LoadedPlugins => BepInEx.Bootstrap.Chainloader.PluginInfos;
 
         private void Awake()
         {
