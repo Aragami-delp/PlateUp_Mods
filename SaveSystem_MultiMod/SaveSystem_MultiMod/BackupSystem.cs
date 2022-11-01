@@ -43,7 +43,6 @@ namespace SaveSystem
         /// </summary>
         public static void ReloadSaveSystem()
         {
-            // TODO: Create SaveSystem folder if not there yet
             if (!Directory.Exists(Application.persistentDataPath + "\\SaveSystem"))
             {
                 Directory.CreateDirectory(Application.persistentDataPath + "\\SaveSystem\\");
@@ -65,7 +64,6 @@ namespace SaveSystem
                 {
                     if (IsUnixTimestamp(name))
                     {
-                        Debug.Log("0 " + name);
                         SaveFileNames.Add(name, name);
                     }
                     else
@@ -76,7 +74,6 @@ namespace SaveSystem
                             string unixName = GetRunUnixNameAtPath(namePath);
                             if (!String.IsNullOrEmpty(unixName))
                             {
-                                Debug.Log("1 " + unixName + " " + name);
                                 SaveFileNames.Add(unixName, name);
                             }
                         }
@@ -86,7 +83,7 @@ namespace SaveSystem
                 {
                     // Save loaded twice
                     // TODO: Log this properly ^^
-                    Debug.LogWarning("Save " + (IsUnixTimestamp(name) ? UnixTimeToLocalDateTimeFormat(name) : name) + " duplicated");
+                    Debug.LogWarning("SaveSystem: Save " + (IsUnixTimestamp(name) ? UnixTimeToLocalDateTimeFormat(name) : name) + " duplicated");
                 }
             }
         }
@@ -171,7 +168,6 @@ namespace SaveSystem
         /// <param name="_saveAllFiles">If all run days should be saved or just the latest</param>
         public static void SaveCurrentRun(string _name = "", bool _saveAllFiles = false)
         {
-            // TODO: handle override - currently it just overrides all
             if (!CurrentSaveExists)
             {
                 string newDirectoryName = Application.persistentDataPath + "\\SaveSystem\\" + (String.IsNullOrWhiteSpace(_name) ? GetCurrentRunUnixName() : _name);

@@ -20,11 +20,12 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Globalization;
-
+#if MelonLoader
+[assembly: MelonInfo(typeof(SaveSystem_MultiMod.SaveSystem_ModLoaderSystem), "SaveSystem", "1.1.0", "Aragami")]
+#endif
 namespace SaveSystem_MultiMod
 {
 #if MelonLoader
-    // TODO: Proper Melon Setup
     public class SaveSystem_ModLoaderSystem : MelonMod
     {
         private static MelonLogger.Instance Log;
@@ -83,6 +84,7 @@ namespace SaveSystem_MultiMod
         /// Button to load the selected save file
         /// </summary>
         public static ButtonElement LoadButton = null;
+        public static ButtonElement DeleteButton = null;
 
         public static OptionsMenu<PauseMenuAction> CurrentMenu = null;
         public static int CurrentPlayerID = 0;
@@ -90,6 +92,7 @@ namespace SaveSystem_MultiMod
         /// Confirmation trigger to avoid overriding the current run upon loading a new one
         /// </summary>
         public static bool TryLoadedOnce = false;
+        public static bool TryDeleteOnce = false;
 
         private readonly HarmonyLib.Harmony m_harmony = new HarmonyLib.Harmony("com.aragami.plateup.mods.harmony");
 
@@ -205,10 +208,10 @@ namespace SaveSystem_MultiMod
                         }
                         else
                         {
-                            SaveSystem_ModLoaderSystem.LogInfo("Loading Save: " + BackupSystem.SelectedSaveSlotUnixName);
+                            SaveSystem_ModLoaderSystem.LogInfo("Loading Save: " + BackupSystem.SelectedSaveSlotDisplayName);
                             SaveSystemMod.TryLoadedOnce = false;
                             BackupSystem.LoadSaveSlot();
-                            SaveSystemMod.ShowVersionSave.Text.text = SaveSystemMod.ShowVersionSaveDefaultText + "\n Selected Save:\n" + BackupSystem.SelectedSaveSlotDisplayName;
+                            SaveSystemMod.ShowVersionSave.Text.text = SaveSystemMod.ShowVersionSaveDefaultText + "\n Loaded Save:\n" + BackupSystem.SelectedSaveSlotDisplayName;
                             __instance.ModuleList.Clear();
                             __instance.Setup(player_id);
                             __instance.ModuleList.Select(SaveSystemMod.LoadButton);
@@ -217,7 +220,27 @@ namespace SaveSystem_MultiMod
                 }), 0, 1f, 0.2f });
                 #endregion
                 #region Delete
-                // Delete
+                if (BackupSystem.SelectedSaveSlotUnixName != null)
+                {
+                    SaveSystemMod.DeleteButton = (ButtonElement)m_addButton.Invoke(__instance, new object[] { "Press to delete!", (Action<int>)(_ =>
+                    {
+                        if (!SaveSystemMod.TryDeleteOnce)
+                        {
+                            SaveSystemMod.TryDeleteOnce = true;
+                            SaveSystemMod.DeleteButton.SetLabel("Confirm deleting?");
+                        }
+                        else
+                        {
+                            SaveSystem_ModLoaderSystem.LogInfo("Deleting Save: " + BackupSystem.SelectedSaveSlotDisplayName);
+                            SaveSystemMod.TryDeleteOnce = false;
+                            BackupSystem.DeleteSaveSlot();
+                            SaveSystemMod.ShowVersionSave.Text.text = SaveSystemMod.ShowVersionSaveDefaultText + "\n Loaded Save:\n" + BackupSystem.SelectedSaveSlotDisplayName; // Should show "No save selected"
+                            __instance.ModuleList.Clear();
+                            __instance.Setup(player_id);
+                            __instance.ModuleList.Select(SaveSystemMod.DeleteButton);
+                        }
+                    }), 0, 1f, 0.2f });
+                }
                 #endregion
             }
 
@@ -235,6 +258,7 @@ namespace SaveSystem_MultiMod
                     }
                 }), 0, 1f, 0.2f });
             }
+
             #endregion
         }
     }
@@ -246,6 +270,8 @@ namespace SaveSystem_MultiMod
         // ReSharper disable once UnusedMember.Local
         static void Postfix(ref DisplayVersion __instance)
         {
+            if (Session.CurrentGameNetworkMode != GameNetworkMode.Host || GameInfo.CurrentScene != SceneType.Franchise)
+                return;
             SaveSystemMod.ShowVersionSave = __instance;
             SaveSystemMod.ShowVersionSaveDefaultText = __instance.Text.text;
             BackupSystem.ReloadSaveSystem();
