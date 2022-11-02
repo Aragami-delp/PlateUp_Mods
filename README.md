@@ -49,10 +49,10 @@ If you already have other mods, that use BepInEx (like the ones mentioned below)
 
 * [PlateUp Seeds](https://plateupseeds.com/) - A website where you can filter for different map sizes and get a preview of the seeds.
 
-* [Modding Discord](https://discord.gg/uPbuYVjJQq/) - Unofficial PlateUp Modding Discord - not affiliated, associated, endorsed by, or in any way officially connected with the PlateUp Team, or the Yogscast Team.
+* [Modding Discord](https://discord.gg/uPbuYVjJQq) - Unofficial PlateUp Modding Discord - not affiliated, associated, endorsed by, or in any way officially connected with the PlateUp Team, or the Yogscast Team.
 
 ## Bugs & Help
 
 Known Issues: When renaming a save you need to close the text input afterwards using ESC
 
-If you encounter any problems, feel free to open a GitHub issue ([GitHub](https://github.com/Aragami-delp/PlateUp_Mods/issues)) or contact me on Discord (`Aragami_delp_#5775`) or in the unofficial [Modding Discord](https://discord.gg/uPbuYVjJQq/).
+If you encounter any problems, feel free to open a GitHub issue ([GitHub](https://github.com/Aragami-delp/PlateUp_Mods/issues)) or contact me on Discord (`Aragami_delp_#5775`) or in the unofficial [Modding Discord](https://discord.gg/uPbuYVjJQq).
