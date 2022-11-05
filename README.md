@@ -3,7 +3,9 @@
 ## Save System Mod v1.2.0
 
 *NEW* Rename Saves
+
 *NEW* Delete Saves
+
 *NEW* MelonLoader compatiilty
 
 A mod that lets you save multiple runs at the same time. You can switch between those at will.
@@ -15,6 +17,8 @@ There is a version for BepInEx as well as MelonLoader (use the MelonLoader versi
 **NOTE**: If you have don't see the `Recover Save` item in the lobby after loading a save, you will have to either start the tutorial and leave it immeditaly or restart the game
 
 ## How to install
+
+[Video Tutorial](https://www.youtube.com/watch?v=wBhSWiLCKCs) (Made by QuackAndCheese)
 
 If you already have other mods, that use BepInEx (like the ones mentioned below) or MelonLoader or the package manager, you can skip installing the mod loader.
 
