@@ -1,7 +1,12 @@
 ﻿using BepInEx;
 using UnityEngine;
 using System.IO;
+using Kitchen;
+using System.Collections.Generic;
+using KitchenData;
 using KitchenLib;
+using KitchenLib.Utils;
+using UnityHelperClass;
 
 namespace FBX_Test
 {
@@ -19,8 +24,13 @@ namespace FBX_Test
             if (Input.GetKeyDown(KeyCode.F))
             {
                 GameObject prefab = LoadFromFileExample.GetStreamingAssetGameObject();
-                Instantiate(prefab);
+                GameObject go = Instantiate(prefab);
+                foreach (GetProperMaterial item in go.GetComponentsInChildren<GetProperMaterial>())
+                {
+                    item.GetComponent<MeshRenderer>().material = MaterialUtils.GetExistingMaterial(item.m_wantedMaterialName);
+                }
             }
+
         }
     }
 
@@ -30,13 +40,13 @@ namespace FBX_Test
         public static GameObject GetStreamingAssetGameObject()
         {
             if (cucumberAssetBundle == null)
-                cucumberAssetBundle = AssetBundle.LoadFromFile(Path.Combine(Application.streamingAssetsPath, "provider_-_cucumber"));
+                cucumberAssetBundle = AssetBundle.LoadFromFile(Path.Combine(Application.streamingAssetsPath, "testAssetBundle"));
             if (cucumberAssetBundle == null)
             {
                 Debug.Log("Failed to load AssetBundle!");
                 return null;
             }
-            return cucumberAssetBundle.LoadAsset<GameObject>("provider_-_cucumber");
+            return cucumberAssetBundle.LoadAsset<GameObject>("testAsset");
         }
     }
 }

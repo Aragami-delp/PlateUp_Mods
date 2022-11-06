@@ -21,8 +21,20 @@
   </ItemGroup>
   
   <ItemGroup>
+    <Reference Include="Kitchen.Common">
+      <HintPath>F:\SteamLibrary\steamapps\common\PlateUp\PlateUp\PlateUp_Data\Managed\Kitchen.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="Kitchen.GameData">
+      <HintPath>F:\SteamLibrary\steamapps\common\PlateUp\PlateUp\PlateUp_Data\Managed\Kitchen.GameData.dll</HintPath>
+    </Reference>
     <Reference Include="KitchenLib">
       <HintPath>F:\SteamLibrary\steamapps\common\PlateUp\PlateUp\BepInEx\plugins\KitchenLib-BepInEx.dll</HintPath>
+    </Reference>
+    <Reference Include="Sirenix.Serialization">
+      <HintPath>F:\SteamLibrary\steamapps\common\PlateUp\PlateUp\PlateUp_Data\Managed\Sirenix.Serialization.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityHelperClass">
+      <HintPath>F:\SteamLibrary\steamapps\common\PlateUp\PlateUp\BepInEx\plugins\UnityHelperClass.dll</HintPath>
     </Reference>
   </ItemGroup>
 </Project>
