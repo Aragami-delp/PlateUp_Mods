@@ -24,7 +24,7 @@ If you already have other mods, that use BepInEx (like the ones mentioned below)
 
 ### Install the mod loader
 
-(You can skipt this if you already have a mod loader)
+(You can skip this if you already have a mod loader)
 1. Download the newest version of BepInEx 5.4.x ([BepInEx Download](https://github.com/BepInEx/BepInEx/releases))   If you are not sure which to choose, download it directly from here: ([Direct Download](https://github.com/BepInEx/BepInEx/releases/download/v5.4.21/BepInEx_x64_5.4.21.0.zip))
 
 1. Find your game installation folder (The folder with `PlateUp.exe` in it). The default installation is located at `C:\Program Files (x86)\Steam\steamapps\common\PlateUp\PlateUp\ `
