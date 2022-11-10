@@ -1,4 +1,4 @@
-﻿#if MelonLoader
+#if MelonLoader
 using MelonLoader;
 #endif
 #if BepInEx
@@ -31,6 +31,8 @@ namespace SaveSystem_MultiMod
         private static MelonLogger.Instance Log;
         public override void OnInitializeMelon()
         {
+            Debug.LogWarning("Mod: SaveSystemMod in use!"); // For log file output for support stuff
+            
             Log = LoggerInstance;
             LogInfo("Plugin SaveSystem is loaded!");
 
@@ -39,9 +41,9 @@ namespace SaveSystem_MultiMod
             UnityEngine.Object.DontDestroyOnLoad(saveSystemMod);
         }
 
-        public static void LogInfo(string _log) { Log.Msg(_log); }
-        public static void LogWarning(string _log) { Log.Warning(_log); }
-        public static void LogError(string _log) { Log.Error(_log); }
+        public static void LogInfo(string _log) { Log.Msg("SaveSystem: " + _log); }
+        public static void LogWarning(string _log) { Log.Warning("SaveSystem: " + _log); }
+        public static void LogError(string _log) { Log.Error("SaveSystem: " + _log); }
     }
 #endif
 
@@ -62,9 +64,9 @@ namespace SaveSystem_MultiMod
             DontDestroyOnLoad(saveSystemMod);
         }
 
-        public static void LogInfo(string _log) { Log.LogInfo(_log); }
-        public static void LogWarning(string _log) { Log.LogWarning(_log); }
-        public static void LogError(string _log) { Log.LogError(_log); }
+        public static void LogInfo(string _log) { Log.LogInfo("SaveSystem: " + _log); }
+        public static void LogWarning(string _log) { Log.LogWarning("SaveSystem: " + _log); }
+        public static void LogError(string _log) { Log.LogError("SaveSystem: " + _log); }
     }
 #endif
 
@@ -287,6 +289,59 @@ namespace SaveSystem_MultiMod
         }
     }
     #endregion
+
+    public class SaveSystemDeleteMenu<T> : Menu<T>
+    {
+        public SaveSystemDeleteMenu(Transform container, ModuleList module_list) : base(container, module_list)
+        {
+        }
+
+        public override void Setup(int player_id)
+        {
+            this.AddButton(this.Localisation["PROFILE_CONFIRM_DELETE"], (Action<int>)(i => this.ConfirmDelete));
+            this.AddButton(this.Localisation["CANCEL_PROFILE"], (Action<int>)(i => this.RequestPreviousMenu()));
+        }
+
+        public void ConfirmDelete()
+        {
+            // TODO: SaveSystem.BackupSystem.Delete
+            this.RequestPreviousMenu();
+        }
+    }
+
+    public class SaveSystemLoadConfirmMenu<T> : Menu<T>
+    {
+        public SaveSystemLoadConfirmMenu(Transform container, ModuleList module_list) : base(container, module_list)
+        {
+        }
+
+        public override void Setup(int player_id)
+        {
+            this.AddButton("Confirm loading", (Action<int>)(i => this.LoadAndGoBack()));
+            this.AddButton(this.Localisation["CANCEL_PROFILE"], (Action<int>)(i => this.RequestPreviousMenu()));
+        }
+
+        public void LoadAndGoBack()
+        {
+            // TODO: SaveSystem.BackupSystem.Load
+            this.RequestPreviousMenu();
+        }
+    }
+
+    public class SaveSystemMenu<T> : Menu<T>
+    {
+        public SaveSystemMenu(Transform container, ModuleList module_list) : base(container, module_list)
+        {
+        }
+
+        public override void Setup(int player_id)
+        {
+            if (Session.CurrentGameNetworkMode != GameNetworkMode.Host || GameInfo.CurrentScene != SceneType.Franchise)
+                return; // TODO: in the menu of spawning the button
+            this.AddLabel("Save System");
+            throw new NotImplementedException();
+        }
+    }
 
     [HarmonyPatch(typeof(DisplayVersion), "Awake")]
     public static class DisplayVersionPatch
