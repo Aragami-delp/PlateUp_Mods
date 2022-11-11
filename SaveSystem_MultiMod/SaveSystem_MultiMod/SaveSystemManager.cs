@@ -18,7 +18,6 @@ namespace SaveSystem
         [JsonIgnore] private List<uint> Previous_Save_IDs = new List<uint>();
         public SaveEntry(string _folderName, string _name)
         {
-            SaveSystem_MultiMod.SaveSystem_ModLoaderSystem.LogInfo("Constructor");
             FolderName = _folderName;
             Name = _name;
             RefreshPreviousIDs();
@@ -39,10 +38,8 @@ namespace SaveSystem
                 Previous_Save_IDs.Clear();
                 foreach (string potentialFile in Directory.GetFiles(FolderPath, "*.plateupsave"))
                 {
-                    SaveSystem_MultiMod.SaveSystem_ModLoaderSystem.LogInfo("potentialFile: " + Path.GetFileNameWithoutExtension(potentialFile));
                     if (uint.TryParse(Path.GetFileNameWithoutExtension(potentialFile), out uint _res))
                     {
-                        SaveSystem_MultiMod.SaveSystem_ModLoaderSystem.LogInfo("added");
                         Previous_Save_IDs.Add(_res);
                     }
                 }
@@ -297,7 +294,14 @@ namespace SaveSystem
                 {
                     // TODO: maybe put all removed files inside a "deleted" folder which get cleaned up on game start
                     RemoveAllFiles(GameSaveFolderPath);
-                    File.Copy(saveEntry.NewsetFilePath, Path.Combine(GameSaveFolderPath, Path.GetFileName(saveEntry.NewsetFilePath)));
+                    try
+                    {
+                        File.Copy(saveEntry.NewsetFilePath, Path.Combine(GameSaveFolderPath, Path.GetFileName(saveEntry.NewsetFilePath)));
+                    }
+                    catch (DirectoryNotFoundException _dirEx)
+                    {
+                        SaveSystem_MultiMod.SaveSystem_ModLoaderSystem.LogError("There was never a run on this computer, do a run for an entire day first.");
+                    }
                 }
             }
         }
@@ -328,7 +332,14 @@ namespace SaveSystem
         /// <param name="_path">Path to delete files from</param>
         private void RemoveAllFiles(string _path)
         {
-            Directory.Delete(_path, true);
+            try
+            {
+                Directory.Delete(_path, true);
+            }
+            catch (DirectoryNotFoundException _dirEx)
+            {
+                SaveSystem_MultiMod.SaveSystem_ModLoaderSystem.LogError($"Can't find Path: {_path} to delete");
+            }
         }
 
         /// <summary>
@@ -355,10 +366,9 @@ namespace SaveSystem
         private void AddUntrackedSaves()
         {
             List<string> allSaveFolderNames = new List<string>();
-            foreach (var d in Directory.GetDirectories(SaveFolderPath))
+            foreach (string d in Directory.GetDirectories(SaveFolderPath))
             {
-                string dirName = new DirectoryInfo(d).Name;
-                allSaveFolderNames.Add(dirName);
+                allSaveFolderNames.Add(new DirectoryInfo(d).Name);
             }
             foreach (SaveEntry saveEntry in Saves)
             {
@@ -389,8 +399,7 @@ namespace SaveSystem
             }
             foreach (SaveEntry emptyEntry in emptyEntrys)
             {
-                SaveSystem_MultiMod.SaveSystem_ModLoaderSystem.LogInfo("DeleteEmpty: " + emptyEntry.Name);
-                Directory.Delete(emptyEntry.FolderPath, true);
+                RemoveAllFiles(emptyEntry.FolderPath);
                 Saves.Remove(emptyEntry);
             }
         }

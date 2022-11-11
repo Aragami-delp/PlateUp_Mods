@@ -129,8 +129,7 @@ namespace SaveSystem_MultiMod
         {
             if (Session.CurrentGameNetworkMode != GameNetworkMode.Host || GameInfo.CurrentScene != SceneType.Franchise)
                 return;
-            MethodInfo m_addButtonMenu = __instance.GetType().GetMethod("AddSubmenuButton", BindingFlags.Instance | BindingFlags.NonPublic);
-                //Helper.GetMethod(typeof(MainMenu), "AddSubmenuButton", new Type[] { typeof(string), typeof(Type), typeof(bool) });
+            MethodInfo m_addButtonMenu = Helper.GetMethod(__instance.GetType(), "AddSubmenuButton");
 
             m_addButtonMenu.Invoke(__instance, new object[3] { "Save System", typeof(SaveSystemMenu), false});
         }
@@ -143,7 +142,7 @@ namespace SaveSystem_MultiMod
         static void Prefix(MainMenuView __instance)
         {
             ModuleList moduleList = (ModuleList)__instance.GetType().GetField("ModuleList", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(__instance);
-            MethodInfo mInfo = __instance.GetType().GetMethod("AddMenu", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo mInfo = Helper.GetMethod(__instance.GetType(), "AddMenu");
 
             mInfo.Invoke(__instance, new object[2] { typeof(SaveSystemMenu), new SaveSystemMenu(__instance.ButtonContainer, moduleList) });
         }
@@ -210,7 +209,7 @@ namespace SaveSystem_MultiMod
             menus.Add(typeof (SaveSystemLoadConfirmMenu), new SaveSystemLoadConfirmMenu(Container, ModuleList));
         }
 
-        public override void Setup(int player_id)
+        public override void Setup(int player_id) // TODO: Back button
         {
             #region SaveSelect
             List<string> saveNames = SaveSystemManager.Instance.GetSaveNamesList();
@@ -221,11 +220,10 @@ namespace SaveSystem_MultiMod
             SaveSelectOption.OnChanged += (EventHandler<string>)((_, f) =>
             {
                 currentlySelectedName = f;
-                ReloadMenu(SaveSelectModule);
             });
             #endregion
 
-            AddLabel("Save System");
+            //AddLabel("Save System");
             if (SaveSystemManager.Instance.CurrentRunAlreadySaved)
                 SaveButton = AddButton("Already saved", null);
             else
