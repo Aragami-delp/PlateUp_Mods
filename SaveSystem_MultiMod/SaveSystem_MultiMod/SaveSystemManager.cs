@@ -15,33 +15,34 @@ namespace SaveSystem
     {
         public string FolderName;
         public string Name;
-        private List<uint> Previous_Save_IDs = new List<uint>();
-
-        [JsonConstructor]
+        [JsonIgnore] private List<uint> Previous_Save_IDs = new List<uint>();
         public SaveEntry(string _folderName, string _name)
         {
+            SaveSystem_MultiMod.SaveSystem_ModLoaderSystem.LogInfo("Constructor");
             FolderName = _folderName;
             Name = _name;
             RefreshPreviousIDs();
         }
 
-        public string FolderPath => SaveSystemManager.Instance.SaveFolderPath + "\\" + FolderName;
-        public uint NewestID => Previous_Save_IDs.Max();
-        public string NewsetFilePath => FolderPath + "\\" + NewestID + ".plateupsave";
+        [JsonIgnore] public string FolderPath => SaveSystemManager.Instance.SaveFolderPath + "/" + FolderName;
+        [JsonIgnore] public uint NewestID => Previous_Save_IDs.Max();
+        [JsonIgnore] public string NewsetFilePath => FolderPath + "/" + NewestID + ".plateupsave";
         public void ChangeName(string _newName) { Name = _newName; }
         public bool HasID(uint _id) { return Previous_Save_IDs.Contains(_id); }
-        public bool HasSaves => Previous_Save_IDs.Count > 0;
-        public string GetDisplayName => SaveSystemManager.IsUnixTimestamp(Name) ? SaveSystemManager.UnixTimeToLocalDateTimeFormat(Name) : Name;
+        [JsonIgnore] public bool HasSaves => Previous_Save_IDs.Count > 0;
+        [JsonIgnore] public string GetDisplayName => SaveSystemManager.IsUnixTimestamp(Name) ? SaveSystemManager.UnixTimeToLocalDateTimeFormat(Name) : Name;
 
         public void RefreshPreviousIDs()
         {
-            Previous_Save_IDs.Clear();
             try
             {
+                Previous_Save_IDs.Clear();
                 foreach (string potentialFile in Directory.GetFiles(FolderPath, "*.plateupsave"))
                 {
+                    SaveSystem_MultiMod.SaveSystem_ModLoaderSystem.LogInfo("potentialFile: " + Path.GetFileNameWithoutExtension(potentialFile));
                     if (uint.TryParse(Path.GetFileNameWithoutExtension(potentialFile), out uint _res))
                     {
+                        SaveSystem_MultiMod.SaveSystem_ModLoaderSystem.LogInfo("added");
                         Previous_Save_IDs.Add(_res);
                     }
                 }
@@ -61,21 +62,54 @@ namespace SaveSystem
         {
             get
             {
-                return instance ?? (instance = new SaveSystemManager());
+                if (instance != null)
+                {
+                    return instance;
+                }
+                instance = new SaveSystemManager();
+                instance.Init();
+                return instance;
             }
         }
 
         public List<SaveEntry> Saves = new List<SaveEntry>();
         public string SaveFolderPath { get; private set; }
-        private readonly string GameSaveFolderPath = Application.persistentDataPath + "\\Full";
+        private readonly string GameSaveFolderPath = Application.persistentDataPath + "/Full";
 
-        private SaveSystemManager(string _saveFolderPath = null)
+        private SaveSystemManager()
         {
-            if (string.IsNullOrWhiteSpace(_saveFolderPath)) { SaveFolderPath = Application.persistentDataPath + "\\SaveSystem"; }
+
+        }
+
+        private void Init()
+        {
+            SaveFolderPath = Application.persistentDataPath + "/SaveSystem";
             LoadCurrentSetup();
             AddUntrackedSaves();
             RemoveEmptySaveEntrys();
             SaveCurrentSetup();
+
+        }
+
+        /// <summary>
+        /// Whether the currently loaded run is already saved in the SaveSystem
+        /// </summary>
+        public bool CurrentRunAlreadySaved
+        {
+            get
+            {
+                return GetSaveEntryForCurrentlyLoadedRun() != null;
+            }
+        }
+        /// <summary>
+        /// Name of the current run; if no run currently loaded its null
+        /// </summary>
+        public string CurrentRunName
+        {
+            get
+            {
+                return GetSaveEntryForCurrentlyLoadedRun()?.Name;
+            }
         }
 
         /// <summary>
@@ -180,16 +214,16 @@ namespace SaveSystem
                 SaveEntry save = GetSaveEntryForCurrentlyLoadedRun();
                 if (save != null)
                 {
-                    File.Copy(GameSaveFolderPath + "\\" + _currentLoadedID.ToString() + ".plateupsave", save.FolderPath + "\\" + _currentLoadedID.ToString() + ".plateupsave");
+                    File.Copy(GameSaveFolderPath + "/" + _currentLoadedID.ToString() + ".plateupsave", save.FolderPath + "/" + _currentLoadedID.ToString() + ".plateupsave");
                     save.RefreshPreviousIDs();
                     SaveCurrentSetup();
                     return;
                 }
                 else if (_name != null)
                 {
-                    Directory.CreateDirectory(SaveFolderPath + "\\" + _currentLoadedID.ToString());
+                    Directory.CreateDirectory(SaveFolderPath + "/" + _currentLoadedID.ToString());
                     SaveEntry newSaveEntry = new SaveEntry(_currentLoadedID.ToString(), string.IsNullOrWhiteSpace(_name) ? _currentLoadedID.ToString() : _name);
-                    File.Copy(GameSaveFolderPath + "\\" + _currentLoadedID.ToString() + ".plateupsave", save.FolderPath + "\\" + _currentLoadedID.ToString() + ".plateupsave");
+                    File.Copy(GameSaveFolderPath + "/" + _currentLoadedID.ToString() + ".plateupsave", save.FolderPath + "/" + _currentLoadedID.ToString() + ".plateupsave");
                     save.RefreshPreviousIDs();
                     Saves.Add(newSaveEntry);
                     SaveCurrentSetup();
@@ -222,8 +256,8 @@ namespace SaveSystem
         /// </summary>
         private void SaveCurrentSetup()
         {
-            string currentJson = JsonConvert.SerializeObject(Saves);
-            File.WriteAllText(SaveFolderPath + "\\SaveInfo.json", currentJson);
+            string currentJson = JsonConvert.SerializeObject(Saves, Formatting.Indented);
+            File.WriteAllText(SaveFolderPath + "/SaveInfo.json", currentJson);
         }
 
         /// <summary>
@@ -233,13 +267,20 @@ namespace SaveSystem
         {
             try
             {
-                string text = System.IO.File.ReadAllText(SaveFolderPath + "\\SaveInfo.json");
-                Saves = JsonConvert.DeserializeObject<List<SaveEntry>>(text);
+                try
+                {
+                    string text = System.IO.File.ReadAllText(SaveFolderPath + "/SaveInfo.json");
+                    Saves = JsonConvert.DeserializeObject<List<SaveEntry>>(text);
+                }
+                catch (FileNotFoundException _fileEx)
+                {
+                    SaveSystem_MultiMod.SaveSystem_ModLoaderSystem.LogWarning("No info file to load, probably started for the first time.");
+                    Saves = new List<SaveEntry>();
+                }
             }
-            catch (FileNotFoundException _fileEx)
+            catch (Exception _e)
             {
-                SaveSystem_MultiMod.SaveSystem_ModLoaderSystem.LogWarning("No info file to load, probably started for the first time.");
-                Saves = new List<SaveEntry>();
+                SaveSystem_MultiMod.SaveSystem_ModLoaderSystem.LogWarning(_e.Message);
             }
         }
 
@@ -313,16 +354,20 @@ namespace SaveSystem
         /// </summary>
         private void AddUntrackedSaves()
         {
-            List<string> allSaveFolderPaths = new List<string>();
-            allSaveFolderPaths = Directory.GetDirectories(SaveFolderPath).ToList();
+            List<string> allSaveFolderNames = new List<string>();
+            foreach (var d in Directory.GetDirectories(SaveFolderPath))
+            {
+                string dirName = new DirectoryInfo(d).Name;
+                allSaveFolderNames.Add(dirName);
+            }
             foreach (SaveEntry saveEntry in Saves)
             {
-                if (allSaveFolderPaths.Contains(saveEntry.FolderPath))
+                if (allSaveFolderNames.Contains(saveEntry.FolderName))
                 {
-                    allSaveFolderPaths.Remove(saveEntry.FolderPath);
+                    allSaveFolderNames.Remove(saveEntry.FolderName);
                 }
             }
-            foreach (string untrackedSaves in allSaveFolderPaths)
+            foreach (string untrackedSaves in allSaveFolderNames)
             {
                 Saves.Add(new SaveEntry(untrackedSaves, untrackedSaves));
             }
@@ -336,6 +381,7 @@ namespace SaveSystem
             List<SaveEntry> emptyEntrys = new List<SaveEntry>();
             foreach (SaveEntry saveEntry in Saves)
             {
+                saveEntry.RefreshPreviousIDs();
                 if (!saveEntry.HasSaves)
                 {
                     emptyEntrys.Add(saveEntry);
@@ -343,9 +389,39 @@ namespace SaveSystem
             }
             foreach (SaveEntry emptyEntry in emptyEntrys)
             {
+                SaveSystem_MultiMod.SaveSystem_ModLoaderSystem.LogInfo("DeleteEmpty: " + emptyEntry.Name);
                 Directory.Delete(emptyEntry.FolderPath, true);
                 Saves.Remove(emptyEntry);
             }
         }
+
+        /// <summary>
+        /// List of all names of SaveEntrys
+        /// </summary>
+        /// <returns></returns>
+        public List<string> GetSaveNamesList()
+        {
+            List<string> saveNames = new List<string>();
+            foreach (SaveEntry saveEntry in Saves)
+            {
+                saveNames.Add(saveEntry.Name);
+            }
+            return saveNames;
+        }
+
+        /// <summary>
+        /// List of all display names of SaveEntrys;
+        /// </summary>
+        /// <returns>List of names, each unix name will be converted into a localized Time/Date string</returns>
+        public List<string> GetSaveDisplayNamesList()
+        {
+            List<string> saveDisplayNames = new List<string>();
+            foreach (SaveEntry saveEntry in Saves)
+            {
+                saveDisplayNames.Add(saveEntry.GetDisplayName);
+            }
+            return saveDisplayNames;
+        }
+        public bool HasSavedRuns => Saves.Count > 0;
     }
 }
