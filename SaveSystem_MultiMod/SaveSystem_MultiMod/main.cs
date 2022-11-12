@@ -243,27 +243,31 @@ namespace SaveSystem_MultiMod
 
         public override void Setup(int player_id)
         {
+            SaveSystem_ModLoaderSystem.LogInfo("0");
             #region SaveSelect
-            List<string> saveNames = SaveSystemManager.Instance.GetSaveNamesList();
-            string preselectedName = SaveSystemManager.Instance.CurrentRunName != null ? SaveSystemManager.Instance.CurrentRunName : saveNames[0];
-            currentlySelectedName = currentlySelectedName != null ? currentlySelectedName : preselectedName;
-            List<string> saveDisplayNames = SaveSystemManager.Instance.GetSaveDisplayNamesList();
-            Dictionary<string, string> dicSavesToDatetime = saveNames.Zip(SaveSystemManager.Instance.GetSaveDateTimeNamesList(), (k, v) => new { k, v }).ToDictionary(x => x.k, x => x.v);
-            currentlySelectedDateTime = currentlySelectedDateTime != null ? currentlySelectedDateTime : dicSavesToDatetime[currentlySelectedName];
-            SaveSelectOption = new Option<string>(saveNames, preselectedName, saveDisplayNames);
-            SaveSelectOption.OnChanged += (EventHandler<string>)((_, f) =>
+            if (SaveSystemManager.Instance.HasSavedRuns)
             {
-                currentlySelectedName = f;
-                SaveSelectDescription.SetLabel(dicSavesToDatetime[currentlySelectedName]);
-                SetLoadButtonText();
-            });
+                List<string> saveNames = SaveSystemManager.Instance.GetSaveNamesList();
+                string preselectedName = SaveSystemManager.Instance.CurrentRunName != null ? SaveSystemManager.Instance.CurrentRunName : saveNames[0];
+                currentlySelectedName = currentlySelectedName != null ? currentlySelectedName : preselectedName;
+                List<string> saveDisplayNames = SaveSystemManager.Instance.GetSaveDisplayNamesList();
+                Dictionary<string, string> dicSavesToDatetime = saveNames.Zip(SaveSystemManager.Instance.GetSaveDateTimeNamesList(), (k, v) => new { k, v }).ToDictionary(x => x.k, x => x.v);
+                currentlySelectedDateTime = currentlySelectedDateTime != null ? currentlySelectedDateTime : dicSavesToDatetime[currentlySelectedName];
+                SaveSelectOption = new Option<string>(saveNames, preselectedName, saveDisplayNames);
+                SaveSelectOption.OnChanged += (EventHandler<string>)((_, f) =>
+                {
+                    currentlySelectedName = f;
+                    SaveSelectDescription.SetLabel(dicSavesToDatetime[currentlySelectedName]);
+                    SetLoadButtonText();
+                });
+            }
             #endregion
 
             //AddLabel("Save System");
             if (SaveSystemManager.Instance.CurrentRunAlreadySaved)
                 SaveButton = AddButton("Already saved", (Action<int>)(_ =>
                 {
-                    
+
                 }));
             else
                 SaveButton = AddButton("Save now", (Action<int>)(_ =>

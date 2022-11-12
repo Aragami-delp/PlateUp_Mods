@@ -397,6 +397,8 @@ namespace SaveSystem
         /// </summary>
         private void AddUntrackedSaves()
         {
+            if (!Directory.Exists(SaveFolderPath))
+                Directory.CreateDirectory(SaveFolderPath);
             List<string> allSaveFolderNames = new List<string>();
             foreach (string d in Directory.GetDirectories(SaveFolderPath))
             {
