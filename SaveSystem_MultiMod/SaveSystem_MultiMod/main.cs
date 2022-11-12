@@ -20,6 +20,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Globalization;
+using TMPro;
 #if MelonLoader
 [assembly: MelonInfo(typeof(SaveSystem_MultiMod.SaveSystem_ModLoaderSystem), "SaveSystem", "1.3.0", "Aragami"), HarmonyDontPatchAll]
 #endif
@@ -131,7 +132,7 @@ namespace SaveSystem_MultiMod
                 return;
             MethodInfo m_addButtonMenu = Helper.GetMethod(__instance.GetType(), "AddSubmenuButton");
 
-            m_addButtonMenu.Invoke(__instance, new object[3] { "Save System", typeof(SaveSystemMenu), false});
+            m_addButtonMenu.Invoke(__instance, new object[3] { "Save System", typeof(SaveSystemMenu), false });
         }
     }
 
@@ -139,7 +140,7 @@ namespace SaveSystem_MultiMod
     class PlayerPauseView_Patch
     {
         [HarmonyPrefix]
-        static void Prefix(MainMenuView __instance)
+        static void Prefix(PlayerPauseView __instance)
         {
             ModuleList moduleList = (ModuleList)__instance.GetType().GetField("ModuleList", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(__instance);
             MethodInfo mInfo = Helper.GetMethod(__instance.GetType(), "AddMenu");
@@ -158,12 +159,16 @@ namespace SaveSystem_MultiMod
 
         public override void Setup(int player_id)
         {
+            AddLabel("Delete this save?");
+            AddInfo(SaveSystemMenu.currentlySelectedName);
+            AddInfo(SaveSystemMenu.currentlySelectedDateTime);
             this.AddButton(this.Localisation["PROFILE_CONFIRM_DELETE"], (Action<int>)(i => this.ConfirmDelete()));
             this.AddButton(this.Localisation["CANCEL_PROFILE"], (Action<int>)(i => this.RequestPreviousMenu()));
         }
 
         public void ConfirmDelete()
         {
+            SaveSystem_ModLoaderSystem.LogInfo("Deleting run: " + SaveSystemMenu.currentlySelectedName);
             SaveSystemManager.Instance.DeleteSave(SaveSystemMenu.currentlySelectedName);
             SaveSystemMenu.currentlySelectedName = null;
             this.RequestPreviousMenu();
@@ -178,12 +183,20 @@ namespace SaveSystem_MultiMod
 
         public override void Setup(int player_id)
         {
+            if (!SaveSystemManager.Instance.CurrentRunAlreadySaved)
+            {
+                AddLabel("Overwrite currently loaded save?");
+                AddInfo(SaveSystemManager.Instance.CurrentRunName);
+                AddInfo(SaveSystemManager.Instance.CurrentRunDateTime);
+                New<SpacerElement>();
+            }
             this.AddButton("Confirm loading", (Action<int>)(i => this.LoadAndGoBack()));
             this.AddButton(this.Localisation["CANCEL_PROFILE"], (Action<int>)(i => this.RequestPreviousMenu()));
         }
 
         public void LoadAndGoBack()
         {
+            SaveSystem_ModLoaderSystem.LogInfo("Loading run: " + SaveSystemMenu.currentlySelectedName);
             SaveSystemManager.Instance.LoadSave(SaveSystemMenu.currentlySelectedName);
             SaveSystemMenu.currentlySelectedName = null;
             this.RequestPreviousMenu();
@@ -198,28 +211,36 @@ namespace SaveSystem_MultiMod
 
         private static int PlayerID;
         private ButtonElement SaveButton;
+        private ButtonElement LoadButton;
         private ButtonElement RenameButton;
+        private ButtonElement DeleteButton;
         private Option<string> SaveSelectOption;
         private IModule SaveSelectModule;
+        private LabelElement SaveSelectDescription;
         public static string currentlySelectedName;
+        public static string currentlySelectedDateTime;
 
         public override void CreateSubmenus(ref Dictionary<Type, Menu<PauseMenuAction>> menus)
         {
-            menus.Add(typeof (SaveSystemDeleteMenu), new SaveSystemDeleteMenu(Container, ModuleList));
-            menus.Add(typeof (SaveSystemLoadConfirmMenu), new SaveSystemLoadConfirmMenu(Container, ModuleList));
+            menus.Add(typeof(SaveSystemDeleteMenu), new SaveSystemDeleteMenu(Container, ModuleList));
+            menus.Add(typeof(SaveSystemLoadConfirmMenu), new SaveSystemLoadConfirmMenu(Container, ModuleList));
         }
 
-        public override void Setup(int player_id) // TODO: Back button
+        public override void Setup(int player_id)
         {
             #region SaveSelect
             List<string> saveNames = SaveSystemManager.Instance.GetSaveNamesList();
             string preselectedName = SaveSystemManager.Instance.CurrentRunName != null ? SaveSystemManager.Instance.CurrentRunName : saveNames[0];
             currentlySelectedName = currentlySelectedName != null ? currentlySelectedName : preselectedName;
             List<string> saveDisplayNames = SaveSystemManager.Instance.GetSaveDisplayNamesList();
+            Dictionary<string, string> dicSavesToDatetime = saveNames.Zip(SaveSystemManager.Instance.GetSaveDateTimeNamesList(), (k, v) => new { k, v }).ToDictionary(x => x.k, x => x.v);
+            currentlySelectedDateTime = currentlySelectedDateTime != null ? currentlySelectedDateTime : dicSavesToDatetime[currentlySelectedName];
             SaveSelectOption = new Option<string>(saveNames, preselectedName, saveDisplayNames);
             SaveSelectOption.OnChanged += (EventHandler<string>)((_, f) =>
             {
                 currentlySelectedName = f;
+                SaveSelectDescription.SetLabel(dicSavesToDatetime[currentlySelectedName]);
+                SetLoadButtonText();
             });
             #endregion
 
@@ -231,27 +252,49 @@ namespace SaveSystem_MultiMod
                 {
                     PlayerID = player_id;
                     TextInputView.RequestTextInput("Enter save name:", /*TODO: Preset with franchise name*/"", 30, new Action<TextInputView.TextInputState, string>(SaveRun));
+                    this.RequestAction(PauseMenuAction.CloseMenu);
                 }));
 
             if (SaveSystemManager.Instance.HasSavedRuns)
             {
                 New<SpacerElement>();
-                SaveSelectModule = (IModule)AddSelect<string>(SaveSelectOption);
-                AddButton("Load", (Action<int>)(_ =>
+                SaveSelectModule = AddSelect<string>(SaveSelectOption);
+                SaveSelectDescription = AddInfo(currentlySelectedDateTime);
+                #region AlignMiddle - Not working
+                //TextMeshPro labelSaveButton = (TextMeshPro)SaveButton.GetType().GetField("Label", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(SaveButton);
+                //Vector2 labelSaveButtonSizeDelta = labelSaveButton.GetComponent<RectTransform>().sizeDelta;
+                //TextMeshPro labelSaveSelectDescription = (TextMeshPro)SaveSelectDescription.GetType().GetField("Label", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(SaveSelectDescription);
+                //SaveSelectDescription.SetSize(labelSaveButtonSizeDelta.x, labelSaveButtonSizeDelta.y);
+                //labelSaveSelectDescription.alignment = TextAlignmentOptions.Midline;
+                #endregion
+                LoadButton = AddButton("", (Action<int>)(_ =>
                 {
                     RequestSubMenu(typeof(SaveSystemLoadConfirmMenu));
                 }));
+                SetLoadButtonText();
                 New<SpacerElement>();
                 RenameButton = AddButton("Rename", (Action<int>)(_ =>
                 {
                     PlayerID = player_id;
                     TextInputView.RequestTextInput("Enter new name:", currentlySelectedName, 30, new Action<TextInputView.TextInputState, string>(RenameRun));
+                    this.RequestAction(PauseMenuAction.CloseMenu);
                 }));
-                AddButton("Delete", (Action<int>)(_ =>
+                DeleteButton = AddButton("Delete", (Action<int>)(_ =>
                 {
                     RequestSubMenu(typeof(SaveSystemDeleteMenu));
                 }));
             }
+            New<SpacerElement>();
+            AddButton(this.Localisation["MENU_BACK_SETTINGS"], (Action<int>)(i => this.RequestPreviousMenu()));
+        }
+
+        private void SetLoadButtonText()
+        {
+            if (SaveSystemManager.Instance.CurrentRunName == currentlySelectedName)
+            {
+                LoadButton?.SetLabel("Already loaded");
+            }
+            LoadButton?.SetLabel("Load");
         }
 
         private void ReloadMenu(IModule _selectThis)
@@ -264,7 +307,7 @@ namespace SaveSystem_MultiMod
 
         public void SaveRun(TextInputView.TextInputState _result, string _name)
         {
-            if (_result != TextInputView.TextInputState.TextEntryComplete)
+            if (_result != TextInputView.TextInputState.TextEntryComplete && _result != TextInputView.TextInputState.TextEntryCancelled)
                 return;
             SaveSystem_ModLoaderSystem.LogInfo("Saving current run: " + _name);
             SaveSystemManager.Instance.SaveCurrentSave(_name);
@@ -273,11 +316,11 @@ namespace SaveSystem_MultiMod
 
         public void RenameRun(TextInputView.TextInputState _result, string _name)
         {
-            if (_result != TextInputView.TextInputState.TextEntryComplete)
+            if (_result != TextInputView.TextInputState.TextEntryComplete && _result != TextInputView.TextInputState.TextEntryCancelled)
                 return;
             SaveSystem_ModLoaderSystem.LogInfo("Renaming current run: " + currentlySelectedName + " to: " + _name);
             SaveSystemManager.Instance.RenameSave(currentlySelectedName, _name);
-            ReloadMenu(RenameButton);
+            RequestSubMenu(this.GetType(), true); // Doesnt work for some reason
         }
     }
     #endregion

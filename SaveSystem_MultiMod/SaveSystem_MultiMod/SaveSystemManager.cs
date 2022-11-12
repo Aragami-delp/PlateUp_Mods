@@ -30,6 +30,7 @@ namespace SaveSystem
         public bool HasID(uint _id) { return Previous_Save_IDs.Contains(_id); }
         [JsonIgnore] public bool HasSaves => Previous_Save_IDs.Count > 0;
         [JsonIgnore] public string GetDisplayName => SaveSystemManager.IsUnixTimestamp(Name) ? SaveSystemManager.UnixTimeToLocalDateTimeFormat(Name) : Name;
+        [JsonIgnore] public string GetDateTime => SaveSystemManager.UnixTimeToLocalDateTimeFormat(NewestID);
 
         public void RefreshPreviousIDs()
         {
@@ -108,6 +109,16 @@ namespace SaveSystem
                 return GetSaveEntryForCurrentlyLoadedRun()?.Name;
             }
         }
+        /// <summary>
+        /// Localized DateTime string representation of unix timestamp of current run; if no run currently loaded its null
+        /// </summary>
+        public string CurrentRunDateTime
+        {
+            get
+            {
+                return GetSaveEntryForCurrentlyLoadedRun()?.GetDateTime;
+            }
+        }
 
         /// <summary>
         /// Gets the ID of the currently loaded run
@@ -134,14 +145,26 @@ namespace SaveSystem
         /// <summary>
         /// Converts a (string) unix timestamp into a localized string representation
         /// </summary>
-        /// <param name="text">Timestamp to convert</param>
+        /// <param name="_text">Timestamp to convert</param>
         /// <returns>Localized timestamp</returns>
-        public static string UnixTimeToLocalDateTimeFormat(string text)
+        public static string UnixTimeToLocalDateTimeFormat(string _text)
         {
             DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
             DateTimeFormatInfo formatInfo = CultureInfo.CurrentCulture.DateTimeFormat;
-            double seconds = double.Parse(text, CultureInfo.InvariantCulture);
+            double seconds = double.Parse(_text, CultureInfo.InvariantCulture);
             return Epoch.AddSeconds(seconds).ToLocalTime().ToString(formatInfo);
+        }
+
+        /// <summary>
+        /// Converts a unix timestamp into a localized string representation
+        /// </summary>
+        /// <param name="_id">Timestamp to convert</param>
+        /// <returns>Localized timestamp</returns>
+        public static string UnixTimeToLocalDateTimeFormat(uint _id)
+        {
+            DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            DateTimeFormatInfo formatInfo = CultureInfo.CurrentCulture.DateTimeFormat;
+            return Epoch.AddSeconds(_id).ToLocalTime().ToString(formatInfo);
         }
 
         /// <summary>
@@ -218,10 +241,11 @@ namespace SaveSystem
                 }
                 else if (_name != null)
                 {
-                    Directory.CreateDirectory(SaveFolderPath + "/" + _currentLoadedID.ToString());
-                    SaveEntry newSaveEntry = new SaveEntry(_currentLoadedID.ToString(), string.IsNullOrWhiteSpace(_name) ? _currentLoadedID.ToString() : _name);
-                    File.Copy(GameSaveFolderPath + "/" + _currentLoadedID.ToString() + ".plateupsave", save.FolderPath + "/" + _currentLoadedID.ToString() + ".plateupsave");
-                    save.RefreshPreviousIDs();
+                    string newFolderName = string.IsNullOrWhiteSpace(_name) ? _currentLoadedID.ToString() : _name;
+                    Directory.CreateDirectory(SaveFolderPath + "/" + newFolderName);
+                    SaveEntry newSaveEntry = new SaveEntry(newFolderName, newFolderName);
+                    File.Copy(GameSaveFolderPath + "/" + _currentLoadedID.ToString() + ".plateupsave", newSaveEntry.FolderPath + "/" + _currentLoadedID.ToString() + ".plateupsave");
+                    newSaveEntry.RefreshPreviousIDs();
                     Saves.Add(newSaveEntry);
                     SaveCurrentSetup();
                 }
@@ -293,7 +317,7 @@ namespace SaveSystem
                 if (saveEntry.Name == _name)
                 {
                     // TODO: maybe put all removed files inside a "deleted" folder which get cleaned up on game start
-                    RemoveAllFiles(GameSaveFolderPath);
+                    RemoveAllFiles(GameSaveFolderPath, false);
                     try
                     {
                         File.Copy(saveEntry.NewsetFilePath, Path.Combine(GameSaveFolderPath, Path.GetFileName(saveEntry.NewsetFilePath)));
@@ -330,11 +354,19 @@ namespace SaveSystem
         /// Removes all files at a given path including the directory itself
         /// </summary>
         /// <param name="_path">Path to delete files from</param>
-        private void RemoveAllFiles(string _path)
+        private void RemoveAllFiles(string _path, bool _folderAsWell = true)
         {
             try
             {
-                Directory.Delete(_path, true);
+                if (_folderAsWell)
+                    Directory.Delete(_path, true);
+                else
+                {
+                    foreach (string deleteFile in Directory.GetFiles(_path))
+                    {
+                        File.Delete(deleteFile);
+                    }
+                }
             }
             catch (DirectoryNotFoundException _dirEx)
             {
@@ -417,7 +449,6 @@ namespace SaveSystem
             }
             return saveNames;
         }
-
         /// <summary>
         /// List of all display names of SaveEntrys;
         /// </summary>
@@ -431,6 +462,22 @@ namespace SaveSystem
             }
             return saveDisplayNames;
         }
+        /// <summary>
+        /// List of all display names of SaveEntrys;
+        /// </summary>
+        /// <returns>List of DateTime localized string representation, each with its newset timestamp</returns>
+        public List<string> GetSaveDateTimeNamesList()
+        {
+            List<string> saveDisplayNames = new List<string>();
+            foreach (SaveEntry saveEntry in Saves)
+            {
+                saveDisplayNames.Add(saveEntry.GetDateTime);
+            }
+            return saveDisplayNames;
+        }
+        /// <summary>
+        /// Whether there are any runs in the SaveSystem saved
+        /// </summary>
         public bool HasSavedRuns => Saves.Count > 0;
     }
 }
