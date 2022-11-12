@@ -1,12 +1,14 @@
 # PlateUp! Mods
 
-## Save System Mod v1.2.0
+## Save System Mod v1.3.0
 
-*NEW* Rename Saves
+*NEW* UI redone
 
-*NEW* Delete Saves
+*NEW* Back to lobby button
 
-*NEW* MelonLoader compatiilty
+*NEW* Save while in a match
+
+Reworked from ground up to be able to implement more features faster
 
 A mod that lets you save multiple runs at the same time. You can switch between those at will.
 While in the lobby, open up the settings menu and save/load the savegame you want.
@@ -36,8 +38,8 @@ If you already have other mods, that use BepInEx (like the ones mentioned below)
 ### Install Save System
 
 1. Download the newset version of the mod from here: 
-   [Save System v1.2.0 BepInEx](https://github.com/Aragami-delp/PlateUp_Mods/releases/latest/download/SaveSystem_BepInEx.dll)
-   [Save System v1.2.0 MelonLoader or Package-Manager](https://github.com/Aragami-delp/PlateUp_Mods/releases/latest/download/SaveSystem_MelonLoader.dll)
+   [Save System v1.3.0 BepInEx](https://github.com/Aragami-delp/PlateUp_Mods/releases/latest/download/SaveSystem_BepInEx.dll)
+   [Save System v1.3.0 MelonLoader or Package-Manager](https://github.com/Aragami-delp/PlateUp_Mods/releases/latest/download/SaveSystem_MelonLoader.dll)
 
 1. Find your plugin folder within the game folder. (`\PlateUp\BepInEx\plugins\` or `\PlateUp\Mods\`). If the folder doesn't exists make sure to run the game at least once after installing the mod loader.
 
