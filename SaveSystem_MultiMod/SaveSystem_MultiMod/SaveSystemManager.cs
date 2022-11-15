@@ -96,6 +96,17 @@ namespace SaveSystem
         {
             get
             {
+                if (GetLoadedSaveID(out uint _id))
+                {
+                    return GetSaveEntryForCurrentlyLoadedRun().HasID(_id);
+                }
+                return false;
+            }
+        }
+        public bool CurrentRunHasPreviousSaves
+        {
+            get
+            {
                 return GetSaveEntryForCurrentlyLoadedRun() != null;
             }
         }
@@ -397,6 +408,8 @@ namespace SaveSystem
         /// </summary>
         private void AddUntrackedSaves()
         {
+            if (!Directory.Exists(SaveFolderPath))
+                Directory.CreateDirectory(SaveFolderPath);
             List<string> allSaveFolderNames = new List<string>();
             foreach (string d in Directory.GetDirectories(SaveFolderPath))
             {

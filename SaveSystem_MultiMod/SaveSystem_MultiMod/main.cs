@@ -21,6 +21,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Globalization;
 using TMPro;
+using Unity.Entities;
 #if MelonLoader
 [assembly: MelonInfo(typeof(SaveSystem_MultiMod.SaveSystem_ModLoaderSystem), "SaveSystem", "1.3.0", "Aragami"), HarmonyDontPatchAll]
 #endif
@@ -49,7 +50,7 @@ namespace SaveSystem_MultiMod
 #endif
 
 #if BepInEx
-    [BepInPlugin("com.aragami.plateup.mods", "SaveSystem", "1.3.0")]
+    [BepInPlugin("com.aragami.plateup.mods.savesystem", "SaveSystem", "1.3.0")]
     [BepInProcess("PlateUp.exe")]
     public class SaveSystem_ModLoaderSystem : BaseUnityPlugin
     {
@@ -119,6 +120,17 @@ namespace SaveSystem_MultiMod
             }
             return retVal;
         }
+
+        public static void ChangeScene(SceneType _next)
+        {
+            EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+            Entity entity = entityManager.CreateEntity((ComponentType)typeof(SPerformSceneTransition), (ComponentType)typeof(CDoNotPersist));
+            entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+            entityManager.AddComponentData<SPerformSceneTransition>(entity, new SPerformSceneTransition()
+            {
+                NextScene = _next
+            });
+        }
     }
     #endregion
 
@@ -128,11 +140,14 @@ namespace SaveSystem_MultiMod
     {
         static void Prefix(MainMenu __instance, int player_id)
         {
-            if (Session.CurrentGameNetworkMode != GameNetworkMode.Host || GameInfo.CurrentScene != SceneType.Franchise)
+            if (Session.CurrentGameNetworkMode != GameNetworkMode.Host || (GameInfo.CurrentScene != SceneType.Franchise && GameInfo.CurrentScene != SceneType.Kitchen))
                 return;
             MethodInfo m_addButtonMenu = Helper.GetMethod(__instance.GetType(), "AddSubmenuButton");
+            MethodInfo m_addBackToLobbyButton = Helper.GetMethod(__instance.GetType(), "AddButton");
 
             m_addButtonMenu.Invoke(__instance, new object[3] { "Save System", typeof(SaveSystemMenu), false });
+            if (GameInfo.CurrentScene == SceneType.Kitchen)
+                m_addBackToLobbyButton.Invoke(__instance, new object[5] { "Back to lobby", (Action<int>)(_ => Helper.ChangeScene(SceneType.Franchise)), 0, 1f, 0.2f });
         }
     }
 
@@ -219,6 +234,7 @@ namespace SaveSystem_MultiMod
         private LabelElement SaveSelectDescription;
         public static string currentlySelectedName;
         public static string currentlySelectedDateTime;
+        private Dictionary<string, string> m_dicSavesToDatetime;
 
         public override void CreateSubmenus(ref Dictionary<Type, Menu<PauseMenuAction>> menus)
         {
@@ -229,33 +245,36 @@ namespace SaveSystem_MultiMod
         public override void Setup(int player_id)
         {
             #region SaveSelect
-            List<string> saveNames = SaveSystemManager.Instance.GetSaveNamesList();
-            string preselectedName = SaveSystemManager.Instance.CurrentRunName != null ? SaveSystemManager.Instance.CurrentRunName : saveNames[0];
-            currentlySelectedName = currentlySelectedName != null ? currentlySelectedName : preselectedName;
-            List<string> saveDisplayNames = SaveSystemManager.Instance.GetSaveDisplayNamesList();
-            Dictionary<string, string> dicSavesToDatetime = saveNames.Zip(SaveSystemManager.Instance.GetSaveDateTimeNamesList(), (k, v) => new { k, v }).ToDictionary(x => x.k, x => x.v);
-            currentlySelectedDateTime = currentlySelectedDateTime != null ? currentlySelectedDateTime : dicSavesToDatetime[currentlySelectedName];
-            SaveSelectOption = new Option<string>(saveNames, preselectedName, saveDisplayNames);
-            SaveSelectOption.OnChanged += (EventHandler<string>)((_, f) =>
+            if (SaveSystemManager.Instance.HasSavedRuns)
             {
-                currentlySelectedName = f;
-                SaveSelectDescription.SetLabel(dicSavesToDatetime[currentlySelectedName]);
-                SetLoadButtonText();
-            });
+                InitSaveInfo();
+                SaveSelectOption.OnChanged += (EventHandler<string>)((_, f) =>
+                {
+                    currentlySelectedName = f;
+                    SaveSelectDescription.SetLabel(m_dicSavesToDatetime[currentlySelectedName]);
+                    SetLoadButtonText();
+                });
+            }
             #endregion
 
             //AddLabel("Save System");
             if (SaveSystemManager.Instance.CurrentRunAlreadySaved)
-                SaveButton = AddButton("Already saved", null);
+                SaveButton = AddButton("Already saved", (Action<int>)(_ =>
+                {
+
+                }));
             else
                 SaveButton = AddButton("Save now", (Action<int>)(_ =>
                 {
                     PlayerID = player_id;
-                    TextInputView.RequestTextInput("Enter save name:", /*TODO: Preset with franchise name*/"", 30, new Action<TextInputView.TextInputState, string>(SaveRun));
+                    if (!SaveSystemManager.Instance.CurrentRunHasPreviousSaves)
+                        TextInputView.RequestTextInput("Enter save name:", /*TODO: Preset with franchise name*/"", 30, new Action<TextInputView.TextInputState, string>(SaveRun));
+                    else
+                        SaveRun();
                     this.RequestAction(PauseMenuAction.CloseMenu);
                 }));
 
-            if (SaveSystemManager.Instance.HasSavedRuns)
+            if (GameInfo.CurrentScene != SceneType.Kitchen && SaveSystemManager.Instance.HasSavedRuns)
             {
                 New<SpacerElement>();
                 SaveSelectModule = AddSelect<string>(SaveSelectOption);
@@ -273,7 +292,7 @@ namespace SaveSystem_MultiMod
                 }));
                 SetLoadButtonText();
                 New<SpacerElement>();
-                RenameButton = AddButton("Rename", (Action<int>)(_ =>
+                RenameButton = AddButton("Rename", (Action<int>)(_ => // TODO: same name not allowed
                 {
                     PlayerID = player_id;
                     TextInputView.RequestTextInput("Enter new name:", currentlySelectedName, 30, new Action<TextInputView.TextInputState, string>(RenameRun));
@@ -284,8 +303,20 @@ namespace SaveSystem_MultiMod
                     RequestSubMenu(typeof(SaveSystemDeleteMenu));
                 }));
             }
+
             New<SpacerElement>();
             AddButton(this.Localisation["MENU_BACK_SETTINGS"], (Action<int>)(i => this.RequestPreviousMenu()));
+        }
+
+        private void InitSaveInfo()
+        {
+            List<string> saveNames = SaveSystemManager.Instance.GetSaveNamesList();
+            string preselectedName = SaveSystemManager.Instance.CurrentRunName != null ? SaveSystemManager.Instance.CurrentRunName : saveNames[0];
+            currentlySelectedName = preselectedName;
+            List<string> saveDisplayNames = SaveSystemManager.Instance.GetSaveDisplayNamesList();
+            m_dicSavesToDatetime = saveNames.Zip(SaveSystemManager.Instance.GetSaveDateTimeNamesList(), (k, v) => new { k, v }).ToDictionary(x => x.k, x => x.v);
+            currentlySelectedDateTime =  m_dicSavesToDatetime[currentlySelectedName];
+            SaveSelectOption = new Option<string>(saveNames, preselectedName, saveDisplayNames);
         }
 
         private void SetLoadButtonText()
@@ -303,6 +334,13 @@ namespace SaveSystem_MultiMod
             Setup(PlayerID);
             if (_selectThis != null)
                 ModuleList.Select(_selectThis);
+        }
+
+        public void SaveRun()
+        {
+            SaveSystem_ModLoaderSystem.LogInfo("Saving current run with previouse one.");
+            SaveSystemManager.Instance.SaveCurrentSave();
+            ReloadMenu(SaveButton);
         }
 
         public void SaveRun(TextInputView.TextInputState _result, string _name)
