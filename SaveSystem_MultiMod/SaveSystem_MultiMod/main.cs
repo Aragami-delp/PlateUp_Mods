@@ -147,7 +147,7 @@ namespace SaveSystem_MultiMod
 
             m_addButtonMenu.Invoke(__instance, new object[3] { "Save System", typeof(SaveSystemMenu), false });
             if (GameInfo.CurrentScene == SceneType.Kitchen)
-                m_addBackToLobbyButton.Invoke(__instance, new object[5] { "Back to lobby", (Action<int>)(i => Helper.ChangeScene(SceneType.Franchise)), 0, 1f, 0.2f });
+                m_addBackToLobbyButton.Invoke(__instance, new object[5] { "Back to lobby", (Action<int>)(_ => Helper.ChangeScene(SceneType.Franchise)), 0, 1f, 0.2f });
         }
     }
 
@@ -234,6 +234,7 @@ namespace SaveSystem_MultiMod
         private LabelElement SaveSelectDescription;
         public static string currentlySelectedName;
         public static string currentlySelectedDateTime;
+        private Dictionary<string, string> m_dicSavesToDatetime;
 
         public override void CreateSubmenus(ref Dictionary<Type, Menu<PauseMenuAction>> menus)
         {
@@ -243,21 +244,14 @@ namespace SaveSystem_MultiMod
 
         public override void Setup(int player_id)
         {
-            SaveSystem_ModLoaderSystem.LogInfo("0");
             #region SaveSelect
             if (SaveSystemManager.Instance.HasSavedRuns)
             {
-                List<string> saveNames = SaveSystemManager.Instance.GetSaveNamesList();
-                string preselectedName = SaveSystemManager.Instance.CurrentRunName != null ? SaveSystemManager.Instance.CurrentRunName : saveNames[0];
-                currentlySelectedName = currentlySelectedName != null ? currentlySelectedName : preselectedName;
-                List<string> saveDisplayNames = SaveSystemManager.Instance.GetSaveDisplayNamesList();
-                Dictionary<string, string> dicSavesToDatetime = saveNames.Zip(SaveSystemManager.Instance.GetSaveDateTimeNamesList(), (k, v) => new { k, v }).ToDictionary(x => x.k, x => x.v);
-                currentlySelectedDateTime = currentlySelectedDateTime != null ? currentlySelectedDateTime : dicSavesToDatetime[currentlySelectedName];
-                SaveSelectOption = new Option<string>(saveNames, preselectedName, saveDisplayNames);
+                InitSaveInfo();
                 SaveSelectOption.OnChanged += (EventHandler<string>)((_, f) =>
                 {
                     currentlySelectedName = f;
-                    SaveSelectDescription.SetLabel(dicSavesToDatetime[currentlySelectedName]);
+                    SaveSelectDescription.SetLabel(m_dicSavesToDatetime[currentlySelectedName]);
                     SetLoadButtonText();
                 });
             }
@@ -273,7 +267,10 @@ namespace SaveSystem_MultiMod
                 SaveButton = AddButton("Save now", (Action<int>)(_ =>
                 {
                     PlayerID = player_id;
-                    TextInputView.RequestTextInput("Enter save name:", /*TODO: Preset with franchise name*/"", 30, new Action<TextInputView.TextInputState, string>(SaveRun));
+                    if (!SaveSystemManager.Instance.CurrentRunHasPreviousSaves)
+                        TextInputView.RequestTextInput("Enter save name:", /*TODO: Preset with franchise name*/"", 30, new Action<TextInputView.TextInputState, string>(SaveRun));
+                    else
+                        SaveRun();
                     this.RequestAction(PauseMenuAction.CloseMenu);
                 }));
 
@@ -311,6 +308,17 @@ namespace SaveSystem_MultiMod
             AddButton(this.Localisation["MENU_BACK_SETTINGS"], (Action<int>)(i => this.RequestPreviousMenu()));
         }
 
+        private void InitSaveInfo()
+        {
+            List<string> saveNames = SaveSystemManager.Instance.GetSaveNamesList();
+            string preselectedName = SaveSystemManager.Instance.CurrentRunName != null ? SaveSystemManager.Instance.CurrentRunName : saveNames[0];
+            currentlySelectedName = preselectedName;
+            List<string> saveDisplayNames = SaveSystemManager.Instance.GetSaveDisplayNamesList();
+            m_dicSavesToDatetime = saveNames.Zip(SaveSystemManager.Instance.GetSaveDateTimeNamesList(), (k, v) => new { k, v }).ToDictionary(x => x.k, x => x.v);
+            currentlySelectedDateTime =  m_dicSavesToDatetime[currentlySelectedName];
+            SaveSelectOption = new Option<string>(saveNames, preselectedName, saveDisplayNames);
+        }
+
         private void SetLoadButtonText()
         {
             if (SaveSystemManager.Instance.CurrentRunName == currentlySelectedName)
@@ -326,6 +334,13 @@ namespace SaveSystem_MultiMod
             Setup(PlayerID);
             if (_selectThis != null)
                 ModuleList.Select(_selectThis);
+        }
+
+        public void SaveRun()
+        {
+            SaveSystem_ModLoaderSystem.LogInfo("Saving current run with previouse one.");
+            SaveSystemManager.Instance.SaveCurrentSave();
+            ReloadMenu(SaveButton);
         }
 
         public void SaveRun(TextInputView.TextInputState _result, string _name)
