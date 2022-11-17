@@ -347,6 +347,12 @@ namespace SaveSystem_MultiMod
         {
             if (_result != TextInputView.TextInputState.TextEntryComplete && _result != TextInputView.TextInputState.TextEntryCancelled)
                 return;
+            if (SaveSystemManager.Instance.SaveAlreadyExists(_name))
+            {
+                SaveSystem_ModLoaderSystem.LogWarning("Save: " + _name + " already exists!\n skipping saving.");
+                ReloadMenu(SaveButton);
+                return;
+            }
             SaveSystem_ModLoaderSystem.LogInfo("Saving current run: " + _name);
             SaveSystemManager.Instance.SaveCurrentSave(_name);
             ReloadMenu(SaveButton);

@@ -131,6 +131,16 @@ namespace SaveSystem
             }
         }
 
+        public bool SaveAlreadyExists(string _wantedName)
+        {
+            foreach (SaveEntry saveEntry in Saves)
+            {
+                if (_wantedName == saveEntry.Name || _wantedName == saveEntry.FolderName)
+                    return true;
+            }
+            return false;
+        }
+
         /// <summary>
         /// Gets the ID of the currently loaded run
         /// </summary>
@@ -238,7 +248,7 @@ namespace SaveSystem
         /// Saves the currently loaded save or creates a new SaveEntry if there is no exisitng save yet
         /// </summary>
         /// <param name="_name">Name of new save; If adding to existing save, this will be ignored</param>
-        public void SaveCurrentSave(string _name = null)
+        public bool SaveCurrentSave(string _name = null)
         {
             if (GetLoadedSaveID(out uint _currentLoadedID)) // if any run loaded
             {
@@ -248,10 +258,16 @@ namespace SaveSystem
                     File.Copy(GameSaveFolderPath + "/" + _currentLoadedID.ToString() + ".plateupsave", save.FolderPath + "/" + _currentLoadedID.ToString() + ".plateupsave");
                     save.RefreshPreviousIDs();
                     SaveCurrentSetup();
-                    return;
+                    return true;
                 }
                 else if (_name != null)
                 {
+                    // Test for duplicate name - already tested in main, just to be sure
+                    if (SaveAlreadyExists(_name))
+                    {
+                        SaveSystem_MultiMod.SaveSystem_ModLoaderSystem.LogWarning("Save: " + _name + " already exists!\n skipping saving. This should be a duplicate warning");
+                        return false;
+                    }
                     string newFolderName = string.IsNullOrWhiteSpace(_name) ? _currentLoadedID.ToString() : _name;
                     Directory.CreateDirectory(SaveFolderPath + "/" + newFolderName);
                     SaveEntry newSaveEntry = new SaveEntry(newFolderName, newFolderName);
@@ -259,8 +275,10 @@ namespace SaveSystem
                     newSaveEntry.RefreshPreviousIDs();
                     Saves.Add(newSaveEntry);
                     SaveCurrentSetup();
+                    return true;
                 }
             }
+            return false;
         }
 
         /// <summary>
@@ -390,7 +408,7 @@ namespace SaveSystem
         /// </summary>
         /// <param name="_oldName">Save to rename</param>
         /// <param name="_newName">New name for save</param>
-        public void RenameSave(string _oldName, string _newName)
+        public void RenameSave(string _oldName, string _newName) // TODO: Also rename folder, so a new save can have its name
         {
             foreach (SaveEntry save in Saves)
             {
