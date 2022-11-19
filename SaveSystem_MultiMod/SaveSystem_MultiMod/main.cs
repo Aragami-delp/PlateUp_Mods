@@ -23,7 +23,7 @@ using System.Globalization;
 using TMPro;
 using Unity.Entities;
 #if MelonLoader
-[assembly: MelonInfo(typeof(SaveSystem_MultiMod.SaveSystem_ModLoaderSystem), "SaveSystem", "1.3.0", "Aragami"), HarmonyDontPatchAll]
+[assembly: MelonInfo(typeof(SaveSystem_MultiMod.SaveSystem_ModLoaderSystem), "SaveSystem", "1.3.2", "Aragami"), HarmonyDontPatchAll]
 #endif
 namespace SaveSystem_MultiMod
 {
@@ -50,7 +50,7 @@ namespace SaveSystem_MultiMod
 #endif
 
 #if BepInEx
-    [BepInPlugin("com.aragami.plateup.mods.savesystem", "SaveSystem", "1.3.0")]
+    [BepInPlugin("com.aragami.plateup.mods.savesystem", "SaveSystem", "1.3.2")]
     [BepInProcess("PlateUp.exe")]
     public class SaveSystem_ModLoaderSystem : BaseUnityPlugin
     {
@@ -83,7 +83,7 @@ namespace SaveSystem_MultiMod
             m_harmony.PatchAll();
         }
     }
-    #region Reflection GetMethod
+    #region Reflection/Helper
     public static class Helper
     {
         /// <summary>
@@ -147,7 +147,7 @@ namespace SaveSystem_MultiMod
 
             m_addButtonMenu.Invoke(__instance, new object[3] { "Save System", typeof(SaveSystemMenu), false });
             if (GameInfo.CurrentScene == SceneType.Kitchen)
-                m_addBackToLobbyButton.Invoke(__instance, new object[5] { "Back to lobby", (Action<int>)(_ => Helper.ChangeScene(SceneType.Franchise)), 0, 1f, 0.2f });
+                m_addBackToLobbyButton.Invoke(__instance, new object[5] { "Back to lobby", (Action<int>)(_ => Helper.ChangeScene(SceneType.Franchise)), 0, 1f, 0.2f }); // TODO: Add voting
         }
     }
 
@@ -207,6 +207,7 @@ namespace SaveSystem_MultiMod
             }
             this.AddButton("Confirm loading", (Action<int>)(i => this.LoadAndGoBack()));
             this.AddButton(this.Localisation["CANCEL_PROFILE"], (Action<int>)(i => this.RequestPreviousMenu()));
+            Helper.ChangeScene(SceneType.Franchise); // Reload scene
         }
 
         public void LoadAndGoBack()

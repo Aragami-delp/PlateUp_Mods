@@ -98,7 +98,11 @@ namespace SaveSystem
             {
                 if (GetLoadedSaveID(out uint _id))
                 {
-                    return GetSaveEntryForCurrentlyLoadedRun().HasID(_id);
+                    SaveEntry tmp = GetSaveEntryForCurrentlyLoadedRun();
+                    if (tmp != null)
+                    {
+                        return tmp.HasID(_id);
+                    }
                 }
                 return false;
             }
@@ -225,23 +229,6 @@ namespace SaveSystem
                 return true;
             }
             return false;
-        }
-
-        /// <summary>
-        /// Gets the name of the currently loaded run
-        /// </summary>
-        /// <returns>Name of the run</returns>
-        public string GetLoadedSaveName()
-        {
-            return GetSaveEntryForCurrentlyLoadedRun().Name;
-        }
-        /// <summary>
-        /// Gets the name of the currenlty loaded run, ID-timestamp converted to localized dateTime string representation
-        /// </summary>
-        /// <returns>Name of the run; if ID -> then as localized string</returns>
-        public string GetLoadedSaveDisplayName()
-        {
-            return GetSaveEntryForCurrentlyLoadedRun().GetDisplayName;
         }
 
         /// <summary>
