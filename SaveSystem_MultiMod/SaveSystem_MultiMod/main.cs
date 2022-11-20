@@ -71,6 +71,9 @@ namespace SaveSystem_MultiMod
         public static void LogInfo(string _log) { Log.LogInfo("SaveSystem: " + _log); }
         public static void LogWarning(string _log) { Log.LogWarning("SaveSystem: " + _log); }
         public static void LogError(string _log) { Log.LogError("SaveSystem: " + _log); }
+        public static void LogInfo(object _log) { LogInfo(_log.ToString()); }
+        public static void LogWarning(object _log) { LogWarning(_log.ToString()); }
+        public static void LogError(object _log) { LogError(_log.ToString()); }
     }
 #endif
 
@@ -114,6 +117,24 @@ namespace SaveSystem_MultiMod
         public static MethodInfo GetMethod(Type _typeOfOriginal, string _name, Type[] _paramTypes, Type _genericT = null)
         {
             MethodInfo retVal = _typeOfOriginal.GetMethod(_name, BindingFlags.NonPublic | BindingFlags.Instance, null, _paramTypes, null);
+            if (_genericT != null)
+            {
+                retVal = retVal.MakeGenericMethod(_genericT);
+            }
+            return retVal;
+        }
+
+        /// <summary>
+        /// Gets a MethodInfo of a given class using Reflection, that has Parameters
+        /// </summary>
+        /// <param name="_typeOfOriginal">Type of class to find a Method on</param>
+        /// <param name="_name">Name of the Method to find</param>
+        /// <param name="_paramTypes">Types of parameters of the Method in right order</param>
+        /// <param name="_genericT">Type of Method</param>
+        /// <returns>MethodInfo if found</returns>
+        public static MethodInfo GetStaticMethod(Type _typeOfOriginal, string _name, Type[] _paramTypes, Type _genericT = null)
+        {
+            MethodInfo retVal = _typeOfOriginal.GetMethod(_name, BindingFlags.Static, null, _paramTypes, null);
             if (_genericT != null)
             {
                 retVal = retVal.MakeGenericMethod(_genericT);
@@ -259,21 +280,36 @@ namespace SaveSystem_MultiMod
             #endregion
 
             //AddLabel("Save System");
-            if (SaveSystemManager.Instance.CurrentRunAlreadySaved)
-                SaveButton = AddButton("Already saved", (Action<int>)(_ =>
+            SaveSystem_ModLoaderSystem.LogInfo(GameInfo.CurrentDay.ToString());
+            if ((GameInfo.CurrentDay == 1 && GameInfo.IsPreparationTime == true) || GameInfo.CurrentDay >= 2)
+            {
+                if (SaveSystemManager.Instance.CurrentRunAlreadySaved)
+                {
+                    SaveButton = AddButton("Already saved", (Action<int>)(_ =>
+                    {
+
+                    }));
+                }
+                else
+                {
+                    SaveButton = AddButton("Save now", (Action<int>)(_ =>
+                    {
+                        PlayerID = player_id;
+                        if (!SaveSystemManager.Instance.CurrentRunHasPreviousSaves)
+                            TextInputView.RequestTextInput("Enter save name:", /*TODO: Preset with franchise name*/"", 30, new Action<TextInputView.TextInputState, string>(SaveRun));
+                        else
+                            SaveRun();
+                        this.RequestAction(PauseMenuAction.CloseMenu);
+                    }));
+                }
+            }
+            else
+            {
+                SaveButton = AddButton("Complete day 1 before saving!", (Action<int>)(_ =>
                 {
 
                 }));
-            else
-                SaveButton = AddButton("Save now", (Action<int>)(_ =>
-                {
-                    PlayerID = player_id;
-                    if (!SaveSystemManager.Instance.CurrentRunHasPreviousSaves)
-                        TextInputView.RequestTextInput("Enter save name:", /*TODO: Preset with franchise name*/"", 30, new Action<TextInputView.TextInputState, string>(SaveRun));
-                    else
-                        SaveRun();
-                    this.RequestAction(PauseMenuAction.CloseMenu);
-                }));
+            }
 
             if (GameInfo.CurrentScene != SceneType.Kitchen && SaveSystemManager.Instance.HasSavedRuns)
             {
