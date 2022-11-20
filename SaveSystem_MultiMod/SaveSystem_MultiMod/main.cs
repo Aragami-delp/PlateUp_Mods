@@ -281,68 +281,76 @@ namespace SaveSystem_MultiMod
 
             //AddLabel("Save System");
             SaveSystem_ModLoaderSystem.LogInfo(GameInfo.CurrentDay.ToString());
-            if ((GameInfo.CurrentDay == 1 && GameInfo.IsPreparationTime == true) || GameInfo.CurrentDay >= 2)
+            if (GameInfo.CurrentScene == SceneType.Kitchen)
             {
-                if (SaveSystemManager.Instance.CurrentRunAlreadySaved)
+                if ((GameInfo.CurrentDay == 1 && GameInfo.IsPreparationTime == true) || GameInfo.CurrentDay >= 2)
                 {
-                    SaveButton = AddButton("Already saved", (Action<int>)(_ =>
+                    if (SaveSystemManager.Instance.CurrentRunAlreadySaved)
                     {
+                        SaveButton = AddButton("Already saved", (Action<int>)(_ =>
+                        {
 
-                    }));
+                        }));
+                    }
+                    else
+                    {
+                        SaveButton = AddButton("Save now", (Action<int>)(_ =>
+                        {
+                            PlayerID = player_id;
+                            if (!SaveSystemManager.Instance.CurrentRunHasPreviousSaves)
+                                TextInputView.RequestTextInput("Enter save name:", /*TODO: Preset with franchise name*/"", 30, new Action<TextInputView.TextInputState, string>(SaveRun));
+                            else
+                                SaveRun();
+                            this.RequestAction(PauseMenuAction.CloseMenu);
+                        }));
+                    }
                 }
                 else
                 {
-                    SaveButton = AddButton("Save now", (Action<int>)(_ =>
+                    SaveButton = AddButton("Complete day 1 before saving!", (Action<int>)(_ =>
                     {
-                        PlayerID = player_id;
-                        if (!SaveSystemManager.Instance.CurrentRunHasPreviousSaves)
-                            TextInputView.RequestTextInput("Enter save name:", /*TODO: Preset with franchise name*/"", 30, new Action<TextInputView.TextInputState, string>(SaveRun));
-                        else
-                            SaveRun();
-                        this.RequestAction(PauseMenuAction.CloseMenu);
+
                     }));
                 }
+
+                New<SpacerElement>();
+                AddButton(this.Localisation["MENU_BACK_SETTINGS"], (Action<int>)(i => this.RequestPreviousMenu()));
             }
             else
             {
-                SaveButton = AddButton("Complete day 1 before saving!", (Action<int>)(_ =>
+                if (/*GameInfo.CurrentScene != SceneType.Kitchen && */SaveSystemManager.Instance.HasSavedRuns)
                 {
+                    //New<SpacerElement>();
+                    SaveSelectModule = AddSelect<string>(SaveSelectOption);
+                    SaveSelectDescription = AddInfo(currentlySelectedDateTime);
+                    #region AlignMiddle - Not working
+                    //TextMeshPro labelSaveButton = (TextMeshPro)SaveButton.GetType().GetField("Label", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(SaveButton);
+                    //Vector2 labelSaveButtonSizeDelta = labelSaveButton.GetComponent<RectTransform>().sizeDelta;
+                    //TextMeshPro labelSaveSelectDescription = (TextMeshPro)SaveSelectDescription.GetType().GetField("Label", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(SaveSelectDescription);
+                    //SaveSelectDescription.SetSize(labelSaveButtonSizeDelta.x, labelSaveButtonSizeDelta.y);
+                    //labelSaveSelectDescription.alignment = TextAlignmentOptions.Midline;
+                    #endregion
+                    LoadButton = AddButton("", (Action<int>)(_ =>
+                    {
+                        RequestSubMenu(typeof(SaveSystemLoadConfirmMenu));
+                    }));
+                    SetLoadButtonText();
+                    New<SpacerElement>();
+                    RenameButton = AddButton("Rename", (Action<int>)(_ => // TODO: same name not allowed
+                    {
+                        PlayerID = player_id;
+                        TextInputView.RequestTextInput("Enter new name:", currentlySelectedName, 30, new Action<TextInputView.TextInputState, string>(RenameRun));
+                        this.RequestAction(PauseMenuAction.CloseMenu);
+                    }));
+                    DeleteButton = AddButton("Delete", (Action<int>)(_ =>
+                    {
+                        RequestSubMenu(typeof(SaveSystemDeleteMenu));
+                    }));
+                }
 
-                }));
-            }
-
-            if (GameInfo.CurrentScene != SceneType.Kitchen && SaveSystemManager.Instance.HasSavedRuns)
-            {
                 New<SpacerElement>();
-                SaveSelectModule = AddSelect<string>(SaveSelectOption);
-                SaveSelectDescription = AddInfo(currentlySelectedDateTime);
-                #region AlignMiddle - Not working
-                //TextMeshPro labelSaveButton = (TextMeshPro)SaveButton.GetType().GetField("Label", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(SaveButton);
-                //Vector2 labelSaveButtonSizeDelta = labelSaveButton.GetComponent<RectTransform>().sizeDelta;
-                //TextMeshPro labelSaveSelectDescription = (TextMeshPro)SaveSelectDescription.GetType().GetField("Label", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(SaveSelectDescription);
-                //SaveSelectDescription.SetSize(labelSaveButtonSizeDelta.x, labelSaveButtonSizeDelta.y);
-                //labelSaveSelectDescription.alignment = TextAlignmentOptions.Midline;
-                #endregion
-                LoadButton = AddButton("", (Action<int>)(_ =>
-                {
-                    RequestSubMenu(typeof(SaveSystemLoadConfirmMenu));
-                }));
-                SetLoadButtonText();
-                New<SpacerElement>();
-                RenameButton = AddButton("Rename", (Action<int>)(_ => // TODO: same name not allowed
-                {
-                    PlayerID = player_id;
-                    TextInputView.RequestTextInput("Enter new name:", currentlySelectedName, 30, new Action<TextInputView.TextInputState, string>(RenameRun));
-                    this.RequestAction(PauseMenuAction.CloseMenu);
-                }));
-                DeleteButton = AddButton("Delete", (Action<int>)(_ =>
-                {
-                    RequestSubMenu(typeof(SaveSystemDeleteMenu));
-                }));
+                AddButton(this.Localisation["MENU_BACK_SETTINGS"], (Action<int>)(i => this.RequestPreviousMenu()));
             }
-
-            New<SpacerElement>();
-            AddButton(this.Localisation["MENU_BACK_SETTINGS"], (Action<int>)(i => this.RequestPreviousMenu()));
         }
 
         private void InitSaveInfo()
