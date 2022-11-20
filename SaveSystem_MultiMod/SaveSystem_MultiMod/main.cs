@@ -46,6 +46,9 @@ namespace SaveSystem_MultiMod
         public static void LogInfo(string _log) { Log.Msg("SaveSystem: " + _log); }
         public static void LogWarning(string _log) { Log.Warning("SaveSystem: " + _log); }
         public static void LogError(string _log) { Log.Error("SaveSystem: " + _log); }
+        public static void LogInfo(object _log) { LogInfo(_log.ToString()); }
+        public static void LogWarning(object _log) { LogWarning(_log.ToString()); }
+        public static void LogError(object _log) { LogError(_log.ToString()); }
     }
 #endif
 
