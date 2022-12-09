@@ -1,4 +1,4 @@
-﻿#if MelonLoader
+#if MelonLoader
 using MelonLoader;
 #endif
 #if BepInEx
@@ -154,6 +154,22 @@ namespace SaveSystem_MultiMod
             {
                 NextScene = _next
             });
+        }
+    }
+    #endregion
+
+    #region Only have one save at the same time in the base game
+    [HarmonyPatch(typeof(Persistence), "ClearOldestSave")]
+    class Persistence_Patch
+    {
+        static MethodBase TargetMethod()
+        {
+            return Helper.GetStaticMethod(typeof(Persistence), "ClearOldestSave", new Type[] { typeof(int) }, typeof(ISaveSystem));
+        }
+        static bool Prefix(int max)
+        {
+            max = 1;
+            return true;
         }
     }
     #endregion
