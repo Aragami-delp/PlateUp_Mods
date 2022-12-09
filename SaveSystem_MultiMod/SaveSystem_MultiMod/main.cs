@@ -1,4 +1,4 @@
-#if MelonLoader
+﻿#if MelonLoader
 using MelonLoader;
 #endif
 #if BepInEx
@@ -137,7 +137,7 @@ namespace SaveSystem_MultiMod
         /// <returns>MethodInfo if found</returns>
         public static MethodInfo GetStaticMethod(Type _typeOfOriginal, string _name, Type[] _paramTypes, Type _genericT = null)
         {
-            MethodInfo retVal = _typeOfOriginal.GetMethod(_name, BindingFlags.Static, null, _paramTypes, null);
+            MethodInfo retVal = _typeOfOriginal.GetMethod(_name, BindingFlags.Static | BindingFlags.NonPublic, null, _paramTypes, null);
             if (_genericT != null)
             {
                 retVal = retVal.MakeGenericMethod(_genericT);
@@ -191,7 +191,7 @@ namespace SaveSystem_MultiMod
         }
     }
 
-    [HarmonyPatch(typeof(PlayerPauseView), "SetupMenus")]
+    [HarmonyPatch(typeof(PlayerPauseView), "SetupMenus", new Type[] {})]
     class PlayerPauseView_Patch
     {
         [HarmonyPrefix]
@@ -299,7 +299,7 @@ namespace SaveSystem_MultiMod
             #endregion
 
             //AddLabel("Save System");
-            SaveSystem_ModLoaderSystem.LogInfo(GameInfo.CurrentDay.ToString());
+            //SaveSystem_ModLoaderSystem.LogInfo(GameInfo.CurrentDay.ToString());
             if (GameInfo.CurrentScene == SceneType.Kitchen)
             {
                 if ((GameInfo.CurrentDay == 5 && GameInfo.IsPreparationTime == true) || GameInfo.CurrentDay >= 6)
