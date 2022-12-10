@@ -31,6 +31,15 @@
     <LangVersion>7.3</LangVersion>
     <ErrorReport>prompt</ErrorReport>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Workshop|AnyCPU'">
+    <OutputPath>bin\Workshop\</OutputPath>
+    <DefineConstants>TRACE;Workshop</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <LangVersion>7.3</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
   <PropertyGroup>
     <RunPostBuildEvent>Always</RunPostBuildEvent>
   </PropertyGroup>
@@ -80,6 +89,9 @@
     <Reference Include="KitchenMode">
       <HintPath>F:\SteamLibrary\steamapps\common\PlateUp\PlateUp\PlateUp_Data\Managed\KitchenMode.dll</HintPath>
     </Reference>
+    <Reference Include="KitchenMods">
+      <HintPath>F:\SteamLibrary\steamapps\common\PlateUp\PlateUp\PlateUp_Data\Managed\KitchenMods.dll</HintPath>
+    </Reference>
     <Reference Include="MelonLoader">
       <HintPath>..\..\ModLoaders\Melon\MelonLoader\MelonLoader.dll</HintPath>
     </Reference>
@@ -89,7 +101,9 @@
     <Reference Include="Newtonsoft.Json">
       <HintPath>F:\SteamLibrary\steamapps\common\PlateUp\PlateUp\PlateUp_Data\Managed\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="Sirenix.Serialization, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
+    <Reference Include="Sirenix.Serialization">
+      <HintPath>F:\SteamLibrary\steamapps\common\PlateUp\PlateUp\PlateUp_Data\Managed\Sirenix.Serialization.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -122,6 +136,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy /Y "$(TargetDir)$(TargetName).dll" "F:\SteamLibrary\steamapps\common\PlateUp\PlateUp\BepInEx\plugins\$(TargetName).dll"</PostBuildEvent>
+    <PostBuildEvent>if $(ConfigurationName) == BepInEx copy /Y "$(TargetDir)$(TargetName).dll" "F:\SteamLibrary\steamapps\common\PlateUp\PlateUp\BepInEx\plugins\$(TargetName).dll"
+if $(ConfigurationName) == Workshop copy /Y "$(TargetDir)$(TargetName).dll" "$(TargetDir)\..\..\..\WorkshopFolder\content\$(TargetName).dll"</PostBuildEvent>
   </PropertyGroup>
 </Project>

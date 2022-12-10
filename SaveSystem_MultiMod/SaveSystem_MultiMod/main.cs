@@ -5,6 +5,9 @@ using MelonLoader;
 using BepInEx;
 using BepInEx.Logging;
 #endif
+#if Workshop
+using KitchenMods;
+#endif
 
 using UnityEngine;
 using HarmonyLib;
@@ -36,7 +39,7 @@ namespace SaveSystem_MultiMod
             Debug.LogWarning("Mod: SaveSystemMod in use!"); // For log file output for official support staff
 
             Log = LoggerInstance;
-            LogInfo("Plugin SaveSystem is loaded!");
+            LogInfo("Melon Mod: SaveSystem is loaded!");
 
             GameObject saveSystemMod = new GameObject("SaveSystem");
             saveSystemMod.AddComponent<SaveSystemMod>();
@@ -64,7 +67,7 @@ namespace SaveSystem_MultiMod
             Debug.LogWarning("Mod: SaveSystemMod in use!"); // For log file output for official support staff
 
             Log = base.Logger;
-            LogInfo("Plugin SaveSystem is loaded!");
+            LogInfo("BepInEx Plugin: SaveSystem is loaded!");
 
             GameObject saveSystemMod = new GameObject("SaveSystem");
             saveSystemMod.AddComponent<SaveSystemMod>();
@@ -74,6 +77,32 @@ namespace SaveSystem_MultiMod
         public static void LogInfo(string _log) { Log.LogInfo("SaveSystem: " + _log); }
         public static void LogWarning(string _log) { Log.LogWarning("SaveSystem: " + _log); }
         public static void LogError(string _log) { Log.LogError("SaveSystem: " + _log); }
+        public static void LogInfo(object _log) { LogInfo(_log.ToString()); }
+        public static void LogWarning(object _log) { LogWarning(_log.ToString()); }
+        public static void LogError(object _log) { LogError(_log.ToString()); }
+    }
+#endif
+
+#if Workshop
+    //[BepInPlugin("com.aragami.plateup.mods.savesystem", "SaveSystem", "1.3.3")]
+    public class SaveSystem_ModLoaderSystem : GenericSystemBase, IModSystem
+    {
+        protected override void Initialise()
+        {
+            Debug.LogWarning("Mod: SaveSystemMod in use!"); // For log file output for official support staff
+
+            LogInfo("Workshop mod: SaveSystem is loaded!"); // Might be unnecessary for Workshop mods
+
+            GameObject saveSystemMod = new GameObject("SaveSystem");
+            saveSystemMod.AddComponent<SaveSystemMod>();
+            GameObject.DontDestroyOnLoad(saveSystemMod);
+        }
+
+        protected override void OnUpdate() { }
+
+        public static void LogInfo(string _log) { Debug.Log("[SaveSystem] " + _log); }
+        public static void LogWarning(string _log) { Debug.LogWarning("[SaveSystem] " + _log); }
+        public static void LogError(string _log) { Debug.LogError("[SaveSystem] " + _log); }
         public static void LogInfo(object _log) { LogInfo(_log.ToString()); }
         public static void LogWarning(object _log) { LogWarning(_log.ToString()); }
         public static void LogError(object _log) { LogError(_log.ToString()); }
