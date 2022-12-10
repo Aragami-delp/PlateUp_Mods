@@ -1,4 +1,4 @@
-#if MelonLoader
+﻿#if MelonLoader
 using MelonLoader;
 #endif
 #if BepInEx
@@ -83,10 +83,18 @@ namespace SaveSystem_MultiMod
     public class SaveSystemMod : MonoBehaviour
     {
         private readonly HarmonyLib.Harmony m_harmony = new HarmonyLib.Harmony("com.aragami.plateup.mods.harmony");
+        public static DisplayVersion m_DisplayVersion;
+        public static string m_DisplayVersionDefaultText;
 
         private void Awake()
         {
             m_harmony.PatchAll();
+        }
+
+        public static void UpdateDisplayVersion()
+        {
+            string currentName = SaveSystemManager.Instance.CurrentRunName;
+            m_DisplayVersion.Text.SetText(m_DisplayVersionDefaultText + "\n Selected Save:\n" + (String.IsNullOrWhiteSpace(currentName) ? "No save selected" : currentName));
         }
     }
     #region Reflection/Helper
@@ -253,6 +261,7 @@ namespace SaveSystem_MultiMod
             SaveSystemManager.Instance.DeleteSave(SaveSystemMenu.currentlySelectedName);
             SaveSystemMenu.currentlySelectedName = null;
             this.RequestPreviousMenu();
+            SaveSystemMod.UpdateDisplayVersion();
         }
     }
 
@@ -282,6 +291,7 @@ namespace SaveSystem_MultiMod
             SaveSystemManager.Instance.LoadSave(SaveSystemMenu.currentlySelectedName);
             SaveSystemMenu.currentlySelectedName = null;
             this.RequestPreviousMenu();
+            SaveSystemMod.UpdateDisplayVersion();
         }
     }
 
@@ -340,9 +350,15 @@ namespace SaveSystem_MultiMod
                     {
                         PlayerID = player_id;
                         if (!SaveSystemManager.Instance.CurrentRunHasPreviousSaves)
+                        {
                             TextInputView.RequestTextInput("Enter save name:", /*TODO: Preset with franchise name*/"", 30, new Action<TextInputView.TextInputState, string>(SaveRun));
+                            SaveSystemMod.UpdateDisplayVersion();
+                        }
                         else
+                        {
                             SaveRun();
+                            SaveSystemMod.UpdateDisplayVersion();
+                        }
                         this.RequestAction(PauseMenuAction.CloseMenu);
                     }));
                 }
@@ -444,22 +460,22 @@ namespace SaveSystem_MultiMod
             SaveSystem_ModLoaderSystem.LogInfo("Renaming current run: " + currentlySelectedName + " to: " + _name);
             SaveSystemManager.Instance.RenameSave(currentlySelectedName, _name);
             RequestSubMenu(this.GetType(), true); // Doesnt work for some reason
+            SaveSystemMod.UpdateDisplayVersion();
         }
     }
     #endregion
 
-    //[HarmonyPatch(typeof(DisplayVersion), "Awake")]
-    //public static class DisplayVersionPatch
-    //{
-    //    // ReSharper disable once UnusedMember.Local
-    //    static void Postfix(ref DisplayVersion __instance)
-    //    {
-    //        if (Session.CurrentGameNetworkMode != GameNetworkMode.Host || GameInfo.CurrentScene != SceneType.Franchise)
-    //            return;
-    //        SaveSystemMod.ShowVersionSave = __instance;
-    //        SaveSystemMod.ShowVersionSaveDefaultText = __instance.Text.text;
-    //        SaveSystem.SaveSystem.ReloadSaveSystem();
-    //        __instance.Text.text = SaveSystemMod.ShowVersionSaveDefaultText + "\n Selected Save:\n" + SaveSystem.SaveSystem.SelectedSaveSlotDisplayName;
-    //    }
-    //}
+    [HarmonyPatch(typeof(DisplayVersion), "Awake")]
+    public static class DisplayVersionPatch
+    {
+        // ReSharper disable once UnusedMember.Local
+        static void Postfix(ref DisplayVersion __instance)
+        {
+            if (Session.CurrentGameNetworkMode != GameNetworkMode.Host || GameInfo.CurrentScene != SceneType.Franchise)
+                return;
+            SaveSystemMod.m_DisplayVersion = __instance;
+            SaveSystemMod.m_DisplayVersionDefaultText = __instance.Text.text;
+            SaveSystemMod.UpdateDisplayVersion();
+        }
+    }
 }
