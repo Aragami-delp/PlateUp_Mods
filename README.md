@@ -2,15 +2,13 @@
 
 ## Save System Mod
 
-A mod that lets you save multiple runs at the same time. You can switch between those at will.
+A mod that lets you save multiple runs at the same time. You can switch between those at will. - Now with auto save support
 
 While in-game, open up the pause menu and save the savegame you want
 While in the lobby, open up the pause menu and load the savegame you want.
-There is a version for BepInEx as well as MelonLoader (use the MelonLoader version for the package manager)
+There is a version for BepInEx as well as MelonLoader. (Workshop soon)
 
 ![Preview Image](https://github.com/Aragami-delp/PlateUp_Mods/blob/main/SaveSystemPreviewImage.png?raw=true)
-
-**NOTE**: If you have don't see the `Recover Save` item in the lobby after loading a save, you will have to either start the tutorial and leave it immeditaly or restart the game
 
 ## How to install
 
@@ -45,14 +43,8 @@ If you already have other mods, that use BepInEx (like the ones mentioned below)
 
 ## Other great PlateUp! stuff
 
-* [Map Designer](https://plateuptools.com/) - A website and mod, where you can design your own kitchen layout and load it into the game.
-
-* [PlateUp Seeds](https://plateupseeds.com/) - A website where you can filter for different map sizes and get a preview of the seeds.
-
-* [Modding Discord](https://discord.gg/uPbuYVjJQq) - Unofficial PlateUp Modding Discord - not affiliated, associated, endorsed by, or in any way officially connected with the PlateUp Team, or the Yogscast Team.
+* [Modding Discord](https://discord.gg/uPbuYVjJQq) - Unofficial PlateUp Modding Discord - There you can find more mods - not affiliated, associated, endorsed by, or in any way officially connected with the PlateUp Team, or the Yogscast Team.
 
 ## Bugs & Help
-
-Known Issues: When renaming a save you need to close the text input afterwards using ESC
 
 If you encounter any problems, feel free to open a GitHub issue ([GitHub](https://github.com/Aragami-delp/PlateUp_Mods/issues)) or contact me on Discord (`Aragami_delp_#5775`) or in the unofficial [Modding Discord](https://discord.gg/uPbuYVjJQq).
