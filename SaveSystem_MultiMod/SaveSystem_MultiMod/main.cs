@@ -1,4 +1,4 @@
-﻿#if MelonLoader
+#if MelonLoader
 using MelonLoader;
 #endif
 #if BepInEx
@@ -325,7 +325,6 @@ namespace SaveSystem_MultiMod
             #endregion
 
             //AddLabel("Save System");
-            SaveSystem_ModLoaderSystem.LogInfo(GameInfo.CurrentDay.ToString());
             if (GameInfo.CurrentScene == SceneType.Kitchen)
             {
                 if (SaveSystemManager.Instance.CurrentRunAlreadySaved)
