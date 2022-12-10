@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 using System.IO;
 using Newtonsoft.Json;
@@ -11,48 +9,6 @@ using System.Globalization;
 
 namespace SaveSystem
 {
-    public class SaveEntry
-    {
-        public string FolderName;
-        public string Name;
-        [JsonIgnore] private List<uint> Previous_Save_IDs = new List<uint>();
-        public SaveEntry(string _folderName, string _name)
-        {
-            FolderName = _folderName;
-            Name = _name;
-            RefreshPreviousIDs();
-        }
-
-        [JsonIgnore] public string FolderPath => SaveSystemManager.Instance.SaveFolderPath + "/" + FolderName;
-        [JsonIgnore] public uint NewestID => Previous_Save_IDs.Max();
-        [JsonIgnore] public string NewsetFilePath => FolderPath + "/" + NewestID + ".plateupsave";
-        public void ChangeName(string _newName) { Name = _newName; }
-        public bool HasID(uint _id) { return Previous_Save_IDs.Contains(_id); }
-        [JsonIgnore] public bool HasSaves => Previous_Save_IDs.Count > 0;
-        [JsonIgnore] public string GetDisplayName => SaveSystemManager.IsUnixTimestamp(Name) ? SaveSystemManager.UnixTimeToLocalDateTimeFormat(Name) : Name;
-        [JsonIgnore] public string GetDateTime => SaveSystemManager.UnixTimeToLocalDateTimeFormat(NewestID);
-
-        public void RefreshPreviousIDs()
-        {
-            try
-            {
-                Previous_Save_IDs.Clear();
-                foreach (string potentialFile in Directory.GetFiles(FolderPath, "*.plateupsave"))
-                {
-                    if (uint.TryParse(Path.GetFileNameWithoutExtension(potentialFile), out uint _res))
-                    {
-                        Previous_Save_IDs.Add(_res);
-                    }
-                }
-            }
-
-            catch (DirectoryNotFoundException _dirEx)
-            {
-                SaveSystem_MultiMod.SaveSystem_ModLoaderSystem.LogError($"Folder for Save {Name} not found");
-            }
-        }
-    }
-
     public class SaveSystemManager
     {
         private static SaveSystemManager instance;
@@ -235,11 +191,18 @@ namespace SaveSystem
         /// Saves the currently loaded save or creates a new SaveEntry if there is no exisitng save yet
         /// </summary>
         /// <param name="_name">Name of new save; If adding to existing save, this will be ignored</param>
+        /// <returns>True if already saved or already exisiting identical save id; Otherwise false</returns>
         public bool SaveCurrentSave(string _name = null)
         {
             if (GetLoadedSaveID(out uint _currentLoadedID)) // if any run loaded
             {
                 SaveEntry save = GetSaveEntryForCurrentlyLoadedRun();
+                if (save.NewestID == _currentLoadedID)
+                {
+                    SaveSystem_MultiMod.SaveSystem_ModLoaderSystem.LogInfo("Save: " + save.GetDisplayName + " already exists!\nskipping saving.");
+
+                }
+                    return true;
                 if (save != null)
                 {
                     File.Copy(GameSaveFolderPath + "/" + _currentLoadedID.ToString() + ".plateupsave", save.FolderPath + "/" + _currentLoadedID.ToString() + ".plateupsave");
@@ -252,7 +215,7 @@ namespace SaveSystem
                     // Test for duplicate name - already tested in main, just to be sure
                     if (SaveAlreadyExists(_name))
                     {
-                        SaveSystem_MultiMod.SaveSystem_ModLoaderSystem.LogWarning("Save: " + _name + " already exists!\n skipping saving. This should be a duplicate warning");
+                        SaveSystem_MultiMod.SaveSystem_ModLoaderSystem.LogWarning("Save: " + _name + " already exists!\nskipping saving. This should be a duplicate warning");
                         return false;
                     }
                     string newFolderName = string.IsNullOrWhiteSpace(_name) ? _currentLoadedID.ToString() : _name;
@@ -327,20 +290,21 @@ namespace SaveSystem
         /// <param name="_name">Save to load</param>
         public void LoadSave(string _name)
         {
+            // TODO: Check for already loaded
             foreach (SaveEntry saveEntry in Saves)
             {
                 if (!saveEntry.HasSaves) continue;
                 if (saveEntry.Name == _name)
                 {
                     // TODO: maybe put all removed files inside a "deleted" folder which get cleaned up on game start
-                    RemoveAllFiles(GameSaveFolderPath, false);
+                    RemoveAllFiles(GameSaveFolderPath, false); // TODO: Persistence.ClearSaves<FullWorldSaveSystem>();
                     try
                     {
                         File.Copy(saveEntry.NewsetFilePath, Path.Combine(GameSaveFolderPath, Path.GetFileName(saveEntry.NewsetFilePath)));
                     }
                     catch (DirectoryNotFoundException _dirEx)
                     {
-                        SaveSystem_MultiMod.SaveSystem_ModLoaderSystem.LogError("There was never a run on this computer, do a run for an entire day first.");
+                        SaveSystem_MultiMod.SaveSystem_ModLoaderSystem.LogError("There was never a run on this local machine, do a run for an entire day first.");
                     }
                 }
             }

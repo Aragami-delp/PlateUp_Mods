@@ -94,7 +94,7 @@ namespace SaveSystem_MultiMod
         public static void UpdateDisplayVersion()
         {
             string currentName = SaveSystemManager.Instance.CurrentRunName;
-            m_DisplayVersion.Text.SetText(m_DisplayVersionDefaultText + "\n Selected Save:\n" + (String.IsNullOrWhiteSpace(currentName) ? "No save selected" : currentName));
+            m_DisplayVersion.Text.SetText(m_DisplayVersionDefaultText + "\n Selected Save:\n" + (SaveSystemManager.Instance.CurrentRunAlreadySaved ? "Saved: " : "UNSAVED: ") + (String.IsNullOrWhiteSpace(currentName) ? "No save selected" : currentName));
         }
     }
     #region Reflection/Helper
@@ -205,7 +205,7 @@ namespace SaveSystem_MultiMod
     }
     #endregion
 
-    #region DeleteRemainingSaveFilesOnNewKitchen
+    #region Delete Remaining SaveFiles On New Kitchen
     [HarmonyPatch(typeof(CreateNewKitchen), "OnUpdate")]
     class CreateNewKitchen_Patch
     {
@@ -215,6 +215,19 @@ namespace SaveSystem_MultiMod
             if (____SingletonEntityQuery_SCreateScene_33.GetSingleton<SCreateScene>().Type != SceneType.Kitchen)
                 return;
             Persistence.ClearSaves<FullWorldSaveSystem>();
+        }
+    }
+    #endregion
+
+    #region Get Day Change Info
+    [HarmonyPatch(typeof(DayDisplayView), "UpdateData")]
+    class DayDisplayView_Patch
+    {
+        [HarmonyPostfix]
+        static void Postfix(DayDisplayView __instance, DayDisplayView.ViewData view_data) // TODO: Save more info for each save
+        {
+            SaveSystemManager.Instance.SaveCurrentSave();
+            SaveSystemMod.UpdateDisplayVersion();
         }
     }
     #endregion
@@ -282,7 +295,6 @@ namespace SaveSystem_MultiMod
             }
             this.AddButton("Confirm loading", (Action<int>)(i => this.LoadAndGoBack()));
             this.AddButton(this.Localisation["CANCEL_PROFILE"], (Action<int>)(i => this.RequestPreviousMenu()));
-            Helper.ChangeScene(SceneType.Franchise); // Reload scene
         }
 
         public void LoadAndGoBack()
@@ -290,8 +302,9 @@ namespace SaveSystem_MultiMod
             SaveSystem_ModLoaderSystem.LogInfo("Loading run: " + SaveSystemMenu.currentlySelectedName);
             SaveSystemManager.Instance.LoadSave(SaveSystemMenu.currentlySelectedName);
             SaveSystemMenu.currentlySelectedName = null;
-            this.RequestPreviousMenu();
+            this.RequestAction(PauseMenuAction.CloseMenu);
             SaveSystemMod.UpdateDisplayVersion();
+            Helper.ChangeScene(SceneType.Franchise); // Reload scene
         }
     }
 
@@ -471,7 +484,7 @@ namespace SaveSystem_MultiMod
         // ReSharper disable once UnusedMember.Local
         static void Postfix(ref DisplayVersion __instance)
         {
-            if (Session.CurrentGameNetworkMode != GameNetworkMode.Host || GameInfo.CurrentScene != SceneType.Franchise)
+            if (Session.CurrentGameNetworkMode != GameNetworkMode.Host/* || GameInfo.CurrentScene != SceneType.Franchise*/)
                 return;
             SaveSystemMod.m_DisplayVersion = __instance;
             SaveSystemMod.m_DisplayVersionDefaultText = __instance.Text.text;
