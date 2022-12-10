@@ -1,4 +1,4 @@
-#if MelonLoader
+﻿#if MelonLoader
 using MelonLoader;
 #endif
 #if BepInEx
@@ -300,33 +300,23 @@ namespace SaveSystem_MultiMod
             SaveSystem_ModLoaderSystem.LogInfo(GameInfo.CurrentDay.ToString());
             if (GameInfo.CurrentScene == SceneType.Kitchen)
             {
-                if ((GameInfo.CurrentDay == 5 && GameInfo.IsPreparationTime == true) || GameInfo.CurrentDay >= 6)
+                if (SaveSystemManager.Instance.CurrentRunAlreadySaved)
                 {
-                    if (SaveSystemManager.Instance.CurrentRunAlreadySaved)
+                    SaveButton = AddButton("Already saved", (Action<int>)(_ =>
                     {
-                        SaveButton = AddButton("Already saved", (Action<int>)(_ =>
-                        {
 
-                        }));
-                    }
-                    else
-                    {
-                        SaveButton = AddButton("Save now", (Action<int>)(_ =>
-                        {
-                            PlayerID = player_id;
-                            if (!SaveSystemManager.Instance.CurrentRunHasPreviousSaves)
-                                TextInputView.RequestTextInput("Enter save name:", /*TODO: Preset with franchise name*/"", 30, new Action<TextInputView.TextInputState, string>(SaveRun));
-                            else
-                                SaveRun();
-                            this.RequestAction(PauseMenuAction.CloseMenu);
-                        }));
-                    }
+                    }));
                 }
                 else
                 {
-                    SaveButton = AddButton("Complete day 5 before saving!", (Action<int>)(_ =>
+                    SaveButton = AddButton("Save now", (Action<int>)(_ =>
                     {
-
+                        PlayerID = player_id;
+                        if (!SaveSystemManager.Instance.CurrentRunHasPreviousSaves)
+                            TextInputView.RequestTextInput("Enter save name:", /*TODO: Preset with franchise name*/"", 30, new Action<TextInputView.TextInputState, string>(SaveRun));
+                        else
+                            SaveRun();
+                        this.RequestAction(PauseMenuAction.CloseMenu);
                     }));
                 }
 
