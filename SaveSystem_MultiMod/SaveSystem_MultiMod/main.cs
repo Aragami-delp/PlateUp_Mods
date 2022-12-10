@@ -167,12 +167,19 @@ namespace SaveSystem_MultiMod
             if (Session.CurrentGameNetworkMode != GameNetworkMode.Host || (GameInfo.CurrentScene != SceneType.Franchise && GameInfo.CurrentScene != SceneType.Kitchen))
                 return;
             MethodInfo m_addButtonMenu = Helper.GetMethod(__instance.GetType(), "AddSubmenuButton");
-            MethodInfo m_addBackToLobbyButton = Helper.GetMethod(__instance.GetType(), "AddButton");
+            MethodInfo m_addBackToLobbyButton = Helper.GetMethod(__instance.GetType(), "AddSubmenuButton");
 
             m_addButtonMenu.Invoke(__instance, new object[3] { "Save System", typeof(SaveSystemMenu), false });
             if (GameInfo.CurrentScene == SceneType.Kitchen)
-                m_addBackToLobbyButton.Invoke(__instance, new object[5] { "Back to lobby", (Action<int>)(_ => Helper.ChangeScene(SceneType.Franchise)), 0, 1f, 0.2f }); // TODO: Add voting
+                m_addBackToLobbyButton.Invoke(__instance, new object[3] { "Back to lobby", typeof(SaveSystemBackToLobby), false }); // TODO: Add voting
         }
+
+        //static void BackToLobby(MainMenu __instance)
+        //{
+        //    Helper.ChangeScene(SceneType.Franchise);
+        //    //MethodInfo closeMenuEvent = Helper.GetMethod(typeof(MainMenu), "RequestAction");
+        //    //closeMenuEvent.Invoke(__instance, new object[1] { PauseMenuAction.CloseMenu });
+        //}
     }
 
     [HarmonyPatch(typeof(PlayerPauseView), "SetupMenus")]
@@ -185,6 +192,7 @@ namespace SaveSystem_MultiMod
             MethodInfo mInfo = Helper.GetMethod(__instance.GetType(), "AddMenu");
 
             mInfo.Invoke(__instance, new object[2] { typeof(SaveSystemMenu), new SaveSystemMenu(__instance.ButtonContainer, moduleList) });
+            mInfo.Invoke(__instance, new object[2] { typeof(SaveSystemBackToLobby), new SaveSystemBackToLobby(__instance.ButtonContainer, moduleList) });
         }
     }
     #endregion
@@ -204,6 +212,26 @@ namespace SaveSystem_MultiMod
     #endregion
 
     #region ReworkUI
+    public class SaveSystemBackToLobby : Menu<PauseMenuAction>
+    {
+        public SaveSystemBackToLobby(Transform container, ModuleList module_list) : base(container, module_list)
+        {
+        }
+
+        public override void Setup(int player_id)
+        {
+            AddLabel("Back to lobby?");
+            this.AddButton("Confirm", (Action<int>)(i => this.ReturnToLobby()));
+            this.AddButton(this.Localisation["CANCEL_PROFILE"], (Action<int>)(i => this.RequestPreviousMenu()));
+        }
+
+        public void ReturnToLobby()
+        {
+            Helper.ChangeScene(SceneType.Franchise);
+            RequestAction(PauseMenuAction.CloseMenu);
+        }
+    }
+
     public class SaveSystemDeleteMenu : Menu<PauseMenuAction>
     {
         public SaveSystemDeleteMenu(Transform container, ModuleList module_list) : base(container, module_list)
