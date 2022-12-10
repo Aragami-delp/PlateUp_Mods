@@ -1,4 +1,4 @@
-﻿#if MelonLoader
+#if MelonLoader
 using MelonLoader;
 #endif
 #if BepInEx
@@ -185,6 +185,20 @@ namespace SaveSystem_MultiMod
             MethodInfo mInfo = Helper.GetMethod(__instance.GetType(), "AddMenu");
 
             mInfo.Invoke(__instance, new object[2] { typeof(SaveSystemMenu), new SaveSystemMenu(__instance.ButtonContainer, moduleList) });
+        }
+    }
+    #endregion
+
+    #region DeleteRemainingSaveFilesOnNewKitchen
+    [HarmonyPatch(typeof(CreateNewKitchen), "OnUpdate")]
+    class CreateNewKitchen_Patch
+    {
+        [HarmonyPostfix]
+        static void Postfix(CreateNewKitchen __instance, EntityQuery ____SingletonEntityQuery_SCreateScene_33)
+        {
+            if (____SingletonEntityQuery_SCreateScene_33.GetSingleton<SCreateScene>().Type != SceneType.Kitchen)
+                return;
+            Persistence.ClearSaves<FullWorldSaveSystem>();
         }
     }
     #endregion
