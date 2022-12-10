@@ -31,6 +31,9 @@
     <LangVersion>7.3</LangVersion>
     <ErrorReport>prompt</ErrorReport>
   </PropertyGroup>
+  <PropertyGroup>
+    <RunPostBuildEvent>Always</RunPostBuildEvent>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="0Harmony">
       <HintPath>..\..\ModLoaders\Melon\MelonLoader\0Harmony.dll</HintPath>
@@ -117,4 +120,7 @@
     <Compile Include="SaveSystemManager.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>copy /Y "$(TargetDir)$(TargetName).dll" "F:\SteamLibrary\steamapps\common\PlateUp\PlateUp\BepInEx\plugins\$(TargetName).dll"</PostBuildEvent>
+  </PropertyGroup>
 </Project>
