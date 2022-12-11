@@ -1,6 +1,4 @@
-# PlateUp! Mods
-
-## Save System Mod
+# PlateUp! Save System Mod
 
 A mod that lets you save multiple runs at the same time. You can switch between those at will. - Now with auto save support
 
