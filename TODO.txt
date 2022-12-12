@@ -7,10 +7,17 @@
 - Only show when client is host - DONE
 - Only show when in the lobby - DONE
 - No loading warning if there is no run loaded - DONE
-- Show "Recover Save" in lobby upon loading
+- Show "Recover Save" in lobby upon loading - Reloading Lobby - DONE
+- Auto-save exisiting SaveEntry - DONE
 
 - NTH: name of save - text input like profile names - DONE
 - NTH: delete saved runs - DONE
 - NTH: rename saved runs - DONE
 - NTH: Resize of UI window on save (if no save exsitsed before) - Not needed anymore, since menu gets redrawn upon interaction - DONE
 - NTH: close ui while text input - DONE - Bug: wont open up after finishing input is complete
+
+- New mod: rebind movement on keyboard
+- New mod: Order Franchise by date
+- New mod: Show players of Franchise
+- New mod: Show Order UI for each table
+- New mod: goodly eyes

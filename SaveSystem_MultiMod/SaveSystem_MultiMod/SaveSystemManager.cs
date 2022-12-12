@@ -197,14 +197,14 @@ namespace SaveSystem
             if (GetLoadedSaveID(out uint _currentLoadedID)) // if any run loaded
             {
                 SaveEntry save = GetSaveEntryForCurrentlyLoadedRun();
-                if (save.NewestID == _currentLoadedID)
-                {
-                    SaveSystem_MultiMod.SaveSystem_ModLoaderSystem.LogInfo("Save: " + save.GetDisplayName + " already exists!\nskipping saving.");
-
-                }
-                    return true;
                 if (save != null)
                 {
+                    if (save.NewestID == _currentLoadedID)
+                    {
+                        SaveSystem_MultiMod.SaveSystem_ModLoaderSystem.LogInfo("Save: " + save.GetDisplayName + " already exists!\nskipping saving.");
+                        return true;
+                    }
+
                     File.Copy(GameSaveFolderPath + "/" + _currentLoadedID.ToString() + ".plateupsave", save.FolderPath + "/" + _currentLoadedID.ToString() + ".plateupsave");
                     save.RefreshPreviousIDs();
                     SaveCurrentSetup();

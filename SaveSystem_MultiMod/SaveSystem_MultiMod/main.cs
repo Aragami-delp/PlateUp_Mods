@@ -1,4 +1,4 @@
-﻿#if MelonLoader
+#if MelonLoader
 using MelonLoader;
 #endif
 #if BepInEx
@@ -26,10 +26,11 @@ using System.Globalization;
 using TMPro;
 using Unity.Entities;
 #if MelonLoader
-[assembly: MelonInfo(typeof(SaveSystem_MultiMod.SaveSystem_ModLoaderSystem), "SaveSystem", "1.3.3", "Aragami"), HarmonyDontPatchAll]
+[assembly: MelonInfo(typeof(SaveSystem_MultiMod.SaveSystem_ModLoaderSystem), "SaveSystem", "1.3.4", "Aragami"), HarmonyDontPatchAll]
 #endif
 namespace SaveSystem_MultiMod
 {
+    #region ModLoader
 #if MelonLoader
     public class SaveSystem_ModLoaderSystem : MelonMod
     {
@@ -56,7 +57,7 @@ namespace SaveSystem_MultiMod
 #endif
 
 #if BepInEx
-    [BepInPlugin("com.aragami.plateup.mods.savesystem", "SaveSystem", "1.3.3")]
+    [BepInPlugin("com.aragami.plateup.mods.savesystem", "SaveSystem", "1.3.4")]
     [BepInProcess("PlateUp.exe")]
     public class SaveSystem_ModLoaderSystem : BaseUnityPlugin
     {
@@ -84,14 +85,14 @@ namespace SaveSystem_MultiMod
 #endif
 
 #if Workshop
-    //[BepInPlugin("com.aragami.plateup.mods.savesystem", "SaveSystem", "1.3.3")]
+    //[BepInPlugin("com.aragami.plateup.mods.savesystem", "SaveSystem", "1.3.4")]
     public class SaveSystem_ModLoaderSystem : GenericSystemBase, IModSystem
     {
         protected override void Initialise()
         {
             Debug.LogWarning("Mod: SaveSystemMod in use!"); // For log file output for official support staff
 
-            LogInfo("Workshop mod: SaveSystem is loaded!"); // Might be unnecessary for Workshop mods
+            LogInfo("Workshop mod: SaveSystem v1.3.4 is loaded!"); // Might be unnecessary for Workshop mods
 
             GameObject saveSystemMod = new GameObject("SaveSystem");
             saveSystemMod.AddComponent<SaveSystemMod>();
@@ -108,7 +109,7 @@ namespace SaveSystem_MultiMod
         public static void LogError(object _log) { LogError(_log.ToString()); }
     }
 #endif
-
+    #endregion
     public class SaveSystemMod : MonoBehaviour
     {
         private readonly HarmonyLib.Harmony m_harmony = new HarmonyLib.Harmony("com.aragami.plateup.mods.harmony");
