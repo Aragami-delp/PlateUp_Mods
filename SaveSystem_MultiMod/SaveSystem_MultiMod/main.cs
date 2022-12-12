@@ -1,4 +1,4 @@
-#if MelonLoader
+﻿#if MelonLoader
 using MelonLoader;
 #endif
 #if BepInEx
@@ -403,6 +403,7 @@ namespace SaveSystem_MultiMod
                             SaveSystemMod.UpdateDisplayVersion();
                         }
                         this.RequestAction(PauseMenuAction.CloseMenu);
+                        SaveSystemMod.UpdateDisplayVersion();
                     }));
                 }
 
