@@ -26,7 +26,7 @@ using System.Globalization;
 using TMPro;
 using Unity.Entities;
 #if MelonLoader
-[assembly: MelonInfo(typeof(SaveSystem_MultiMod.SaveSystem_ModLoaderSystem), "SaveSystem", "1.3.4", "Aragami"), HarmonyDontPatchAll]
+[assembly: MelonInfo(typeof(SaveSystem_MultiMod.SaveSystem_ModLoaderSystem), "SaveSystem", "1.3.5", "Aragami"), HarmonyDontPatchAll]
 #endif
 namespace SaveSystem_MultiMod
 {
@@ -57,7 +57,7 @@ namespace SaveSystem_MultiMod
 #endif
 
 #if BepInEx
-    [BepInPlugin("com.aragami.plateup.mods.savesystem", "SaveSystem", "1.3.4")]
+    [BepInPlugin("com.aragami.plateup.mods.savesystem", "SaveSystem", "1.3.5")]
     [BepInProcess("PlateUp.exe")]
     public class SaveSystem_ModLoaderSystem : BaseUnityPlugin
     {
@@ -85,14 +85,14 @@ namespace SaveSystem_MultiMod
 #endif
 
 #if Workshop
-    //[BepInPlugin("com.aragami.plateup.mods.savesystem", "SaveSystem", "1.3.4")]
+    //[BepInPlugin("com.aragami.plateup.mods.savesystem", "SaveSystem", "1.3.5")]
     public class SaveSystem_ModLoaderSystem : GenericSystemBase, IModSystem
     {
         protected override void Initialise()
         {
             Debug.LogWarning("Mod: SaveSystemMod in use!"); // For log file output for official support staff
 
-            LogInfo("Workshop mod: SaveSystem v1.3.4 is loaded!"); // Might be unnecessary for Workshop mods
+            LogInfo("Workshop mod: SaveSystem v1.3.5 is loaded!"); // Might be unnecessary for Workshop mods
 
             GameObject saveSystemMod = new GameObject("SaveSystem");
             saveSystemMod.AddComponent<SaveSystemMod>();
@@ -118,7 +118,7 @@ namespace SaveSystem_MultiMod
 
         private void Awake()
         {
-            m_harmony.PatchAll();
+            m_harmony.PatchAll(Assembly.GetExecutingAssembly());
         }
 
         public static void UpdateDisplayVersion()

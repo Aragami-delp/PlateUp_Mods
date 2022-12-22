@@ -21,3 +21,10 @@
 - New mod: Show players of Franchise
 - New mod: Show Order UI for each table
 - New mod: goodly eyes
+- New mod: save map as client
+- New mod: reroll maps in lobby (maybe with size setting)
+- New mod: copy/paste seed
+- New mod: sell items at some price
+- New mod: save outfit on reconnect
+- New mod: interact in prep mod (like corner grabers)
+- New mod: mouse move appliances in prep mode
