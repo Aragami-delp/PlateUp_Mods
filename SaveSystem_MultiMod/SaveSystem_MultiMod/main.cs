@@ -94,9 +94,12 @@ namespace SaveSystem_MultiMod
 
             LogInfo("Workshop mod: SaveSystem v1.3.6 is loaded!"); // Might be unnecessary for Workshop mods
 
-            GameObject saveSystemMod = new GameObject("SaveSystem");
-            saveSystemMod.AddComponent<SaveSystemMod>();
-            GameObject.DontDestroyOnLoad(saveSystemMod);
+            if (GameObject.FindObjectOfType<SaveSystemMod>() == null)
+            {
+                GameObject saveSystemMod = new GameObject("SaveSystem");
+                saveSystemMod.AddComponent<SaveSystemMod>();
+                GameObject.DontDestroyOnLoad(saveSystemMod);
+            }
         }
 
         protected override void OnUpdate() { }
