@@ -6,6 +6,7 @@ using System.IO;
 using Newtonsoft.Json;
 using System.Text.RegularExpressions;
 using System.Globalization;
+using Kitchen;
 
 namespace SaveSystem
 {
@@ -295,6 +296,7 @@ namespace SaveSystem
                 {
                     // TODO: maybe put all removed files inside a "deleted" folder which get cleaned up on game start
                     RemoveAllFiles(GameSaveFolderPath, false); // TODO: Persistence.ClearSaves<FullWorldSaveSystem>();
+                    WorldBackupSystem.ClearBackup();
                     try
                     {
                         File.Copy(saveEntry.NewsetFilePath, Path.Combine(GameSaveFolderPath, Path.GetFileName(saveEntry.NewsetFilePath)));
