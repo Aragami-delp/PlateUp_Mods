@@ -10,13 +10,16 @@ There is a version for BepInEx as well as MelonLoader. (Workshop soon)
 
 ## How to install
 
-[Video Tutorial](https://www.youtube.com/watch?v=wBhSWiLCKCs) (Made by QuackAndCheese)
+Subscribe to Harmony and SaveSystem on the Steam Workshop
+
+[[Harmony](https://steamcommunity.com/workshop/filedetails/?id=2898033283)] [[Save System](https://steamcommunity.com/workshop/filedetails/?id=2898033283)]
+
+Sometimes workshop mods/updates are not up to date. Verifying your game files will also update your mods.
+
+### Install the mod loader (old)
 
 If you already have other mods, that use BepInEx (like the ones mentioned below) or MelonLoader or the package manager, you can skip installing the mod loader.
 
-### Install the mod loader
-
-(You can skip this if you already have a mod loader)
 1. Download the newest version of BepInEx 5.4.x ([BepInEx Download](https://github.com/BepInEx/BepInEx/releases))   If you are not sure which to choose, download it directly from here: ([Direct Download](https://github.com/BepInEx/BepInEx/releases/download/v5.4.21/BepInEx_x64_5.4.21.0.zip))
 
 1. Find your game installation folder (The folder with `PlateUp.exe` in it). The default installation is located at `C:\Program Files (x86)\Steam\steamapps\common\PlateUp\PlateUp\ `
@@ -25,7 +28,7 @@ If you already have other mods, that use BepInEx (like the ones mentioned below)
 
 1. Run the game once before installing any mod to initialize the mod loader.
 
-### Install Save System
+### Install Save System (old)
 
 1. Download the newset version of the mod from here: 
    [Save System newest BepInEx](https://github.com/Aragami-delp/PlateUp_Mods/releases/latest/download/SaveSystem_BepInEx.dll)
