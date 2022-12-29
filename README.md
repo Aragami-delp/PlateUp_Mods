@@ -12,7 +12,7 @@ There is a version for BepInEx as well as MelonLoader. (Workshop soon)
 
 Subscribe to Harmony and SaveSystem on the Steam Workshop
 
-[[Harmony](https://steamcommunity.com/workshop/filedetails/?id=2898033283)] [[Save System](https://steamcommunity.com/workshop/filedetails/?id=2898033283)]
+[[Harmony](https://steamcommunity.com/workshop/filedetails/?id=2898033283)] [[Save System](https://steamcommunity.com/workshop/filedetails/?id=2900092542)]
 
 Sometimes workshop mods/updates are not up to date. Verifying your game files will also update your mods.
 
