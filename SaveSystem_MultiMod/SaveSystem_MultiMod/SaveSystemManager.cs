@@ -29,11 +29,7 @@ namespace SaveSystem
         public List<SaveEntry> Saves = new List<SaveEntry>();
         public string SaveFolderPath { get; private set; }
         private readonly string GameSaveFolderPath = Application.persistentDataPath + "/Full";
-
-        private SaveSystemManager()
-        {
-
-        }
+        public SaveSettingManager Settings;
 
         private void Init()
         {
@@ -43,6 +39,7 @@ namespace SaveSystem
             RemoveEmptySaveEntrys();
             SaveCurrentSetup();
 
+            Settings = new SaveSettingManager(SaveFolderPath);
         }
 
         /// <summary>

@@ -26,7 +26,7 @@ using System.Globalization;
 using TMPro;
 using Unity.Entities;
 #if MelonLoader
-[assembly: MelonInfo(typeof(SaveSystem_MultiMod.SaveSystem_ModLoaderSystem), "SaveSystem", "1.3.6", "Aragami"), HarmonyDontPatchAll]
+[assembly: MelonInfo(typeof(SaveSystem_MultiMod.SaveSystem_ModLoaderSystem), "SaveSystem", SaveSystemMod.Version, "Aragami"), HarmonyDontPatchAll]
 #endif
 namespace SaveSystem_MultiMod
 {
@@ -57,7 +57,7 @@ namespace SaveSystem_MultiMod
 #endif
 
 #if BepInEx
-    [BepInPlugin("com.aragami.plateup.mods.savesystem", "SaveSystem", "1.3.6")]
+    [BepInPlugin("com.aragami.plateup.mods.savesystem", "SaveSystem", SaveSystemMod.Version)]
     [BepInProcess("PlateUp.exe")]
     public class SaveSystem_ModLoaderSystem : BaseUnityPlugin
     {
@@ -85,14 +85,14 @@ namespace SaveSystem_MultiMod
 #endif
 
 #if Workshop
-    //[BepInPlugin("com.aragami.plateup.mods.savesystem", "SaveSystem", "1.3.6")]
+    //[BepInPlugin("com.aragami.plateup.mods.savesystem", "SaveSystem", SaveSystemMod.Version)]
     public class SaveSystem_ModLoaderSystem : GenericSystemBase, IModSystem
     {
         protected override void Initialise()
         {
             Debug.LogWarning("Mod: SaveSystemMod in use!"); // For log file output for official support staff
 
-            LogInfo("Workshop mod: SaveSystem v1.3.6 is loaded!"); // Might be unnecessary for Workshop mods
+            LogInfo("Workshop mod: SaveSystem v" + SaveSystemMod.Version + " is loaded!"); // Might be unnecessary for Workshop mods
 
             if (GameObject.FindObjectOfType<SaveSystemMod>() == null)
             {
@@ -115,6 +115,7 @@ namespace SaveSystem_MultiMod
     #endregion
     public class SaveSystemMod : MonoBehaviour
     {
+        public const string Version = "1.3.8";
         private readonly HarmonyLib.Harmony m_harmony = new HarmonyLib.Harmony("com.aragami.plateup.mods.harmony");
         public static DisplayVersion m_DisplayVersion;
         public static string m_DisplayVersionDefaultText;
@@ -126,8 +127,13 @@ namespace SaveSystem_MultiMod
 
         public static void UpdateDisplayVersion()
         {
-            string currentName = SaveSystemManager.Instance.CurrentRunName;
-            m_DisplayVersion.Text.SetText(m_DisplayVersionDefaultText + "\n Selected Save:\n" + (SaveSystemManager.Instance.CurrentRunAlreadySaved ? "Saved: " : "UNSAVED: ") + (String.IsNullOrWhiteSpace(currentName) ? "No save selected" : currentName));
+            string extraText = String.Empty;
+            if (!(bool)SaveSystemManager.Instance.Settings["hidesaveinfo"].GetValue(SaveSetting.SettingType.boolValue))
+            {
+                string currentName = SaveSystemManager.Instance.CurrentRunName;
+                extraText = "\n" + (SaveSystemManager.Instance.CurrentRunAlreadySaved ? "Last save at " + SaveSystemManager.Instance.GetSaveEntryForCurrentlyLoadedRun().GetDateTime + ": " : "UNSAVED: ") + (String.IsNullOrWhiteSpace(currentName) ? "No save selected" : currentName);
+            }
+            m_DisplayVersion.Text.SetText(m_DisplayVersionDefaultText + extraText);
         }
     }
     #region Reflection/Helper
@@ -311,6 +317,40 @@ namespace SaveSystem_MultiMod
         }
     }
 
+    public class SaveSystemOptionsMenu : Menu<PauseMenuAction>
+    {
+        public SaveSystemOptionsMenu(Transform container, ModuleList module_list) : base(container, module_list)
+        {
+        }
+
+        public Option<bool> HideSaveInfo;
+
+        private Option<bool> GetHideSaveInfoOption() => new Option<bool>(new List<bool>()
+        {
+            false,
+            true
+            }, (bool)SaveSystemManager.Instance.Settings["hidesaveinfo"].GetValue(SaveSetting.SettingType.boolValue), new List<string>()
+            {
+            this.Localisation["SETTING_DISABLED"],
+            this.Localisation["SETTING_ENABLED"]
+        });
+
+        public override void Setup(int player_id)
+        {
+            HideSaveInfo = GetHideSaveInfoOption();
+
+            AddLabel("Hide save info");
+            Add<bool>(this.HideSaveInfo).OnChanged += (EventHandler<bool>)((_, value) =>
+            {
+                SaveSystemManager.Instance.Settings["hidesaveinfo"].SetValue(value);
+                SaveSystemManager.Instance.Settings.SaveCurrentSettings();
+                SaveSystemMod.UpdateDisplayVersion();
+            });
+            New<SpacerElement>();
+            this.AddButton(this.Localisation["CANCEL_PROFILE"], (Action<int>)(i => this.RequestPreviousMenu()));
+        }
+    }
+
     public class SaveSystemLoadConfirmMenu : Menu<PauseMenuAction>
     {
         public SaveSystemLoadConfirmMenu(Transform container, ModuleList module_list) : base(container, module_list)
@@ -363,6 +403,7 @@ namespace SaveSystem_MultiMod
         {
             menus.Add(typeof(SaveSystemDeleteMenu), new SaveSystemDeleteMenu(Container, ModuleList));
             menus.Add(typeof(SaveSystemLoadConfirmMenu), new SaveSystemLoadConfirmMenu(Container, ModuleList));
+            menus.Add(typeof(SaveSystemOptionsMenu), new SaveSystemOptionsMenu(Container, ModuleList));
         }
 
         public override void Setup(int player_id)
@@ -442,6 +483,11 @@ namespace SaveSystem_MultiMod
                     DeleteButton = AddButton("Delete", (Action<int>)(_ =>
                     {
                         RequestSubMenu(typeof(SaveSystemDeleteMenu));
+                    }));
+                    New<SpacerElement>();
+                    AddButton("Options", (Action<int>)(_ =>
+                    {
+                        RequestSubMenu(typeof(SaveSystemOptionsMenu));
                     }));
                 }
 
