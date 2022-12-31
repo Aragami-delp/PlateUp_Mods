@@ -19,7 +19,6 @@ namespace SaveSystem
             settingsPath = _settingsPath;
 
             LoadCurrentSettings();
-            SaveCurrentSettings();
         }
 
         public SaveSetting this[string i]

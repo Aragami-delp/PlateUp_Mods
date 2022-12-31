@@ -134,6 +134,9 @@
     <Compile Include="SaveEntry.cs" />
     <Compile Include="SaveSetting.cs" />
     <Compile Include="SaveSettingManager.cs" />
+    <Compile Include="SaveSystemAutosaveAfterSystem.cs" />
+    <Compile Include="SaveSystemAutosaveBeforeSystem.cs" />
+    <Compile Include="SaveSystemFullSaveAtDay.cs" />
     <Compile Include="SaveSystemManager.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

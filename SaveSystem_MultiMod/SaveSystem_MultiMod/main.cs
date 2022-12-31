@@ -113,6 +113,7 @@ namespace SaveSystem_MultiMod
     }
 #endif
     #endregion
+
     public class SaveSystemMod : MonoBehaviour
     {
         public const string Version = "1.3.8";
@@ -259,14 +260,35 @@ namespace SaveSystem_MultiMod
     #endregion
 
     #region Get Day Change Info
-    [HarmonyPatch(typeof(DayDisplayView), "UpdateData")]
-    class DayDisplayView_Patch
+    //[HarmonyPatch(typeof(DayDisplayView), "UpdateData")]
+    //class DayDisplayView_Patch
+    //{
+    //    [HarmonyPostfix]
+    //    static void Postfix(DayDisplayView __instance, DayDisplayView.ViewData view_data) // TODO: Save more info for each save
+    //    {
+    //        SaveSystemManager.Instance.SaveCurrentSave();
+    //        SaveSystemMod.UpdateDisplayVersion();
+    //    }
+    //}
+
+    [HarmonyPatch(typeof(FullSaveAtNight), "OnUpdate")]
+    class FullSaveAtNight_Patch
     {
         [HarmonyPostfix]
-        static void Postfix(DayDisplayView __instance, DayDisplayView.ViewData view_data) // TODO: Save more info for each save
+        static void Postfix(FullSaveAtNight __instance, EntityQuery ____SingletonEntityQuery_SGameTime_10) // TODO: Save more info for each save
         {
-            SaveSystemManager.Instance.SaveCurrentSave();
-            SaveSystemMod.UpdateDisplayVersion();
+            Type typeSHasSaved = typeof(FullSaveAtNight).GetNestedTypes(BindingFlags.NonPublic).First();
+            var mi = typeof(FullSaveAtNight).GetMethod(nameof(FullSaveAtNight.HasSingleton));
+            var hasSingletonRef = mi.MakeGenericMethod(typeSHasSaved);
+            bool retVal = (bool)hasSingletonRef.Invoke(__instance, null);
+            if (__instance.HasSingleton<SIsNightFirstUpdate>() && retVal)
+            { }
+            if (retVal || ____SingletonEntityQuery_SGameTime_10.GetSingleton<SGameTime>().IsPaused)
+                return;
+            SaveSystem_ModLoaderSystem.LogError("Performing a full save");
+            //SaveSystemManager.Instance.SaveCurrentSave();
+            //SaveSystemMod.UpdateDisplayVersion();
+
         }
     }
     #endregion

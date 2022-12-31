@@ -11,7 +11,7 @@ namespace SaveSystem
     public class SaveSetting
     {
         [JsonProperty] public string Name { get; private set; }
-        [JsonProperty] public string StringValue;
+        [JsonProperty] public string StringValue { get; private set; }
         public SaveSetting(string _name, string _stringValue)
         {
             Name = _name;
