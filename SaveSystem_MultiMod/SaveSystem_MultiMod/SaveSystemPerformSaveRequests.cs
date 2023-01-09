@@ -17,6 +17,8 @@ namespace SaveSystem_MultiMod
     {
         private EntityQuery SaveRequests;
         private EntityQuery SaveBlockers;
+        [ReadOnly]
+        private EntityQuery CRenameRestaurantQuery;
 
         protected override void Initialise()
         {
@@ -24,6 +26,7 @@ namespace SaveSystem_MultiMod
             SaveRequests = GetEntityQuery(typeof(CRequestSave));
             SaveBlockers = GetEntityQuery(new QueryHelper().Any(typeof(SPerformSceneTransition), typeof(CSceneFirstFrame)));
             RequireForUpdate(SaveRequests);
+            this.CRenameRestaurantQuery = this.GetEntityQuery(ComponentType.ReadOnly<CRenameRestaurant>());
         }
 
         protected override void OnUpdate()
@@ -40,9 +43,13 @@ namespace SaveSystem_MultiMod
                 case SaveType.AutoFull:
                     Persistence.AutoSave<FullWorldSaveSystem>(World.EntityManager);
                     Persistence.BackupWorld<WorldBackupSystem>(World.EntityManager);
-                    Debug.LogError("AutoFull"); // StartNewDay has AutoSave, but its a direct call, and not for this system
+                    //Debug.LogError("AutoFull"); // StartNewDay has AutoSave, but its a direct call, and not for this system
                     SaveSystemManager.Instance.SaveCurrentSave();
                     SaveSystemMod.UpdateDisplayVersion();
+                    if (this.HasSingleton<CRenameRestaurant>()) // TODO: also in BecomeDay
+                    {
+                        SaveSystemManager.Instance.CurrentNamePlate = CRenameRestaurantQuery.GetSingleton<CRenameRestaurant>().Name.Value;
+                    }
                     break;
             }
             EntityManager.DestroyEntity(entity); // Vanilla system just returns after the first statement
@@ -57,7 +64,7 @@ namespace SaveSystem_MultiMod
         {
             if (!__instance.HasSingleton<SPracticeMode>())
             {
-                Debug.LogError("NewDay Full");
+                //Debug.LogError("NewDay Full");
                 SaveSystemManager.Instance.SaveCurrentSave();
                 SaveSystemMod.UpdateDisplayVersion();
             }
