@@ -9,6 +9,8 @@
 - No loading warning if there is no run loaded - DONE
 - Show "Recover Save" in lobby upon loading - Reloading Lobby - DONE
 - Auto-save exisiting SaveEntry - DONE
+- TODO: Delete old files of current saves to reduce disk space size
+- Error handling for two same entries of saves - maybe guid for each new save
 
 - NTH: name of save - text input like profile names - DONE
 - NTH: delete saved runs - DONE
@@ -17,6 +19,7 @@
 - NTH: close ui while text input - DONE - Bug: wont open up after finishing input is complete
 - NTH: Show names of players in that round
 - NTH: Save name of restaurant and preset that when making a new game
+- NTH: Perform vanilla save at end of day - DONE
 
 - New mod: rebind movement on keyboard
 - New mod: Order Franchise by date

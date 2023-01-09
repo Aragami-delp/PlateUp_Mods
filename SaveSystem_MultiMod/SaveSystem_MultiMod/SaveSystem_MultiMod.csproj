@@ -112,6 +112,10 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
+    <Reference Include="Unity.Collections, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>F:\SteamLibrary\steamapps\common\PlateUp\PlateUp\PlateUp_Data\Managed\Unity.Collections.dll</HintPath>
+    </Reference>
     <Reference Include="Unity.Entities">
       <HintPath>F:\SteamLibrary\steamapps\common\PlateUp\PlateUp\PlateUp_Data\Managed\Unity.Entities.dll</HintPath>
     </Reference>
@@ -134,10 +138,9 @@
     <Compile Include="SaveEntry.cs" />
     <Compile Include="SaveSetting.cs" />
     <Compile Include="SaveSettingManager.cs" />
-    <Compile Include="SaveSystemAutosaveAfterSystem.cs" />
-    <Compile Include="SaveSystemAutosaveBeforeSystem.cs" />
     <Compile Include="SaveSystemFullSaveAtDay.cs" />
     <Compile Include="SaveSystemManager.cs" />
+    <Compile Include="SaveSystemPerformSaveRequests.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

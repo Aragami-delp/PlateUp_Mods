@@ -31,6 +31,7 @@ namespace SaveSystem
         public string SaveFolderPath { get; private set; }
         private readonly string GameSaveFolderPath = Application.persistentDataPath + "/Full";
         public SaveSettingManager Settings;
+        public string CurrentNamePlate;
 
         private void Init()
         {
