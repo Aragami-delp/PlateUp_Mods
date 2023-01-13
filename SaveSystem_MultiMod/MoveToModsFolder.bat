@@ -1,0 +1,1 @@
+xcopy /Y "WorkshopFolder" "F:\SteamLibrary\steamapps\common\PlateUp\PlateUp\Mods\SaveSystem" /s /e /i

@@ -132,7 +132,7 @@ namespace SaveSystem_MultiMod
             if (!(bool)SaveSystemManager.Instance.Settings["hidesaveinfo"].GetValue(SaveSetting.SettingType.boolValue))
             {
                 string currentName = SaveSystemManager.Instance.CurrentRunName;
-                extraText = "\n" + (SaveSystemManager.Instance.CurrentRunAlreadySaved ? "Last save at " + SaveSystemManager.Instance.GetSaveEntryForCurrentlyLoadedRun().GetDateTime + ": " : "UNSAVED: ") + (String.IsNullOrWhiteSpace(currentName) ? "No save selected" : currentName);
+                extraText = "\n" + (SaveSystemManager.Instance.CurrentRunAlreadySaved ? "Last save at " + SaveSystemManager.Instance.GetSaveEntryForCurrentlyLoadedRun().GetDateTime + ": " : "Unsaved: ") + (String.IsNullOrWhiteSpace(currentName) ? "No save selected" : currentName);
             }
             m_DisplayVersion.Text.SetText(m_DisplayVersionDefaultText + extraText);
         }

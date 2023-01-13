@@ -44,12 +44,17 @@ namespace SaveSystem_MultiMod
                     Persistence.AutoSave<FullWorldSaveSystem>(World.EntityManager);
                     Persistence.BackupWorld<WorldBackupSystem>(World.EntityManager);
                     //Debug.LogError("AutoFull"); // StartNewDay has AutoSave, but its a direct call, and not for this system
+                    if (this.HasSingleton<CRenameRestaurant>()) // TODO: also in BecomeDay - not needed right now
+                    {
+                        string restaurantName = CRenameRestaurantQuery.GetSingleton<CRenameRestaurant>().Name.Value;
+                        if (!string.IsNullOrWhiteSpace(restaurantName))
+                        {
+                            SaveSystemManager.Instance.CurrentNamePlate = restaurantName;
+                        }
+                    }
                     SaveSystemManager.Instance.SaveCurrentSave();
                     SaveSystemMod.UpdateDisplayVersion();
-                    if (this.HasSingleton<CRenameRestaurant>()) // TODO: also in BecomeDay
-                    {
-                        SaveSystemManager.Instance.CurrentNamePlate = CRenameRestaurantQuery.GetSingleton<CRenameRestaurant>().Name.Value;
-                    }
+                    
                     break;
             }
             EntityManager.DestroyEntity(entity); // Vanilla system just returns after the first statement
