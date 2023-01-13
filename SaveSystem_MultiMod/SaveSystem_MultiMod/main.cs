@@ -316,7 +316,8 @@ namespace SaveSystem_MultiMod
         {
             AddLabel("Delete this save?");
             AddInfo(SaveSystemMenu.currentlySelectedName);
-            AddInfo(SaveSystemMenu.currentlySelectedDateTime);
+            AddInfo(SaveSystemMenu.m_dicSavesDescription[SaveSystemMenu.currentlySelectedName].DateTime);
+            AddInfo(SaveSystemMenu.m_dicSavesDescription[SaveSystemMenu.currentlySelectedName].NameplateName);
             this.AddButton(this.Localisation["PROFILE_CONFIRM_DELETE"], (Action<int>)(i => this.ConfirmDelete()));
             this.AddButton(this.Localisation["CANCEL_PROFILE"], (Action<int>)(i => this.RequestPreviousMenu()));
         }
@@ -408,10 +409,10 @@ namespace SaveSystem_MultiMod
         private ButtonElement DeleteButton;
         private Option<string> SaveSelectOption;
         private IModule SaveSelectModule;
-        private LabelElement SaveSelectDescription;
+        private LabelElement SaveSelectDateTime;
+        private LabelElement SaveSelectNameplateName;
         public static string currentlySelectedName;
-        public static string currentlySelectedDateTime;
-        private Dictionary<string, string> m_dicSavesToDatetime;
+        public static Dictionary<string, SaveSelectDescription> m_dicSavesDescription;
 
         public override void CreateSubmenus(ref Dictionary<Type, Menu<PauseMenuAction>> menus)
         {
@@ -420,16 +421,30 @@ namespace SaveSystem_MultiMod
             menus.Add(typeof(SaveSystemOptionsMenu), new SaveSystemOptionsMenu(Container, ModuleList));
         }
 
+        [Flags]
+        public enum ShowUIFlags
+        {
+            None = 0,
+            ShowSaveButton = 1,
+            ShowSelection = 2,
+            ShowLoadButton = 4,
+            ShowRenameButton = 8,
+            ShowDeleteButton = 16,
+            ShowOptionsButton = 32,
+        }
+
         public override void Setup(int player_id)
         {
-            #region SaveSelect
+            ShowUIFlags showFlags = ShowUIFlags.None;
+            #region SaveSelectInit
             if (SaveSystemManager.Instance.HasSavedRuns)
             {
                 InitSaveInfo();
                 SaveSelectOption.OnChanged += (EventHandler<string>)((_, f) =>
                 {
                     currentlySelectedName = f;
-                    SaveSelectDescription.SetLabel(m_dicSavesToDatetime[currentlySelectedName]);
+                    SaveSelectDateTime.SetLabel(m_dicSavesDescription[currentlySelectedName].DateTime);
+                    SaveSelectNameplateName.SetLabel(m_dicSavesDescription[currentlySelectedName].NameplateName);
                     SetLoadButtonText();
                 });
             }
@@ -437,6 +452,21 @@ namespace SaveSystem_MultiMod
 
             //AddLabel("Save System");
             if (GameInfo.CurrentScene == SceneType.Kitchen)
+            {
+                showFlags |= ShowUIFlags.ShowSaveButton;
+            }
+            else
+            {
+                if (/*GameInfo.CurrentScene != SceneType.Kitchen && */SaveSystemManager.Instance.HasSavedRuns)
+                {
+                    showFlags |= ShowUIFlags.ShowSelection;
+                    showFlags |= ShowUIFlags.ShowLoadButton;
+                    showFlags |= ShowUIFlags.ShowRenameButton;
+                    showFlags |= ShowUIFlags.ShowDeleteButton;
+                    showFlags |= ShowUIFlags.ShowOptionsButton;
+                }
+            }
+            if (showFlags.HasFlag(ShowUIFlags.ShowSaveButton))
             {
                 if (SaveSystemManager.Instance.CurrentRunAlreadySaved)
                 {
@@ -464,43 +494,49 @@ namespace SaveSystem_MultiMod
                         SaveSystemMod.UpdateDisplayVersion();
                     }));
                 }
-
-                New<SpacerElement>();
-                AddButton(this.Localisation["MENU_BACK_SETTINGS"], (Action<int>)(i => this.RequestPreviousMenu()));
             }
-            else
+            if (showFlags.HasFlag(ShowUIFlags.ShowSelection))
             {
-                if (/*GameInfo.CurrentScene != SceneType.Kitchen && */SaveSystemManager.Instance.HasSavedRuns)
-                {
-                    //New<SpacerElement>();
-                    SaveSelectModule = AddSelect<string>(SaveSelectOption);
-                    SaveSelectDescription = AddInfo(currentlySelectedDateTime);
-                    LoadButton = AddButton("", (Action<int>)(_ =>
-                    {
-                        RequestSubMenu(typeof(SaveSystemLoadConfirmMenu));
-                    }));
-                    SetLoadButtonText();
-                    New<SpacerElement>();
-                    RenameButton = AddButton("Rename", (Action<int>)(_ => // TODO: same name not allowed
-                    {
-                        PlayerID = player_id;
-                        TextInputView.RequestTextInput("Enter new name:", currentlySelectedName, 30, new Action<TextInputView.TextInputState, string>(RenameRun));
-                        this.RequestAction(PauseMenuAction.CloseMenu);
-                    }));
-                    DeleteButton = AddButton("Delete", (Action<int>)(_ =>
-                    {
-                        RequestSubMenu(typeof(SaveSystemDeleteMenu));
-                    }));
-                    New<SpacerElement>();
-                    AddButton("Options", (Action<int>)(_ =>
-                    {
-                        RequestSubMenu(typeof(SaveSystemOptionsMenu));
-                    }));
-                }
-
-                New<SpacerElement>();
-                AddButton(this.Localisation["MENU_BACK_SETTINGS"], (Action<int>)(i => this.RequestPreviousMenu()));
+                SaveSelectModule = AddSelect<string>(SaveSelectOption);
+                SaveSelectDateTime = AddInfo(m_dicSavesDescription[currentlySelectedName].DateTime);
+                SaveSelectNameplateName = AddInfo(m_dicSavesDescription[currentlySelectedName].NameplateName);
             }
+            if (showFlags.HasFlag(ShowUIFlags.ShowLoadButton))
+            {
+                LoadButton = AddButton("", (Action<int>)(_ =>
+                {
+                    RequestSubMenu(typeof(SaveSystemLoadConfirmMenu));
+                }));
+                SetLoadButtonText();
+                New<SpacerElement>();
+            }
+            if (showFlags.HasFlag(ShowUIFlags.ShowRenameButton))
+            {
+                RenameButton = AddButton("Rename", (Action<int>)(_ => // TODO: same name not allowed
+                {
+                    PlayerID = player_id;
+                    TextInputView.RequestTextInput("Enter new name:", currentlySelectedName, 30, new Action<TextInputView.TextInputState, string>(RenameRun));
+                    this.RequestAction(PauseMenuAction.CloseMenu);
+                }));
+            }
+            if (showFlags.HasFlag(ShowUIFlags.ShowDeleteButton))
+            {
+                DeleteButton = AddButton("Delete", (Action<int>)(_ =>
+                {
+                    RequestSubMenu(typeof(SaveSystemDeleteMenu));
+                }));
+                New<SpacerElement>();
+            }
+            if (showFlags.HasFlag(ShowUIFlags.ShowOptionsButton))
+            {
+                AddButton("Options", (Action<int>)(_ =>
+                {
+                    RequestSubMenu(typeof(SaveSystemOptionsMenu));
+                }));
+                New<SpacerElement>();
+            }
+
+            AddButton(this.Localisation["MENU_BACK_SETTINGS"], (Action<int>)(i => this.RequestPreviousMenu()));
         }
 
         private void InitSaveInfo()
@@ -509,8 +545,7 @@ namespace SaveSystem_MultiMod
             string preselectedName = SaveSystemManager.Instance.CurrentRunName != null ? SaveSystemManager.Instance.CurrentRunName : saveNames[0];
             currentlySelectedName = preselectedName;
             List<string> saveDisplayNames = SaveSystemManager.Instance.GetSaveDisplayNamesList();
-            m_dicSavesToDatetime = saveNames.Zip(SaveSystemManager.Instance.GetSaveDateTimeNamesList(), (k, v) => new { k, v }).ToDictionary(x => x.k, x => x.v);
-            currentlySelectedDateTime =  m_dicSavesToDatetime[currentlySelectedName];
+            m_dicSavesDescription = saveNames.Zip(SaveSystemManager.Instance.GetDescriptionList(), (k, v) => new { k, v }).ToDictionary(x => x.k, x => x.v);
             SaveSelectOption = new Option<string>(saveNames, preselectedName, saveDisplayNames);
         }
 

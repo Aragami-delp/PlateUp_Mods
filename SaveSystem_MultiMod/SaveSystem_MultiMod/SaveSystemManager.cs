@@ -31,7 +31,7 @@ namespace SaveSystem
         public string SaveFolderPath { get; private set; }
         private readonly string GameSaveFolderPath = Application.persistentDataPath + "/Full";
         public SaveSettingManager Settings;
-        public string CurrentNamePlate;
+        public string CurrentNamePlate = String.Empty;
 
         private void Init()
         {
@@ -206,6 +206,7 @@ namespace SaveSystem
 
                     File.Copy(GameSaveFolderPath + "/" + _currentLoadedID.ToString() + ".plateupsave", save.FolderPath + "/" + _currentLoadedID.ToString() + ".plateupsave");
                     save.RefreshPreviousIDs();
+                    save.NameplateName = !string.IsNullOrWhiteSpace(CurrentNamePlate) ? CurrentNamePlate : string.Empty;
                     SaveCurrentSetup();
                     return true;
                 }
@@ -219,7 +220,7 @@ namespace SaveSystem
                     }
                     string newFolderName = string.IsNullOrWhiteSpace(_name) ? _currentLoadedID.ToString() : _name;
                     Directory.CreateDirectory(SaveFolderPath + "/" + newFolderName);
-                    SaveEntry newSaveEntry = new SaveEntry(newFolderName, newFolderName);
+                    SaveEntry newSaveEntry = new SaveEntry(newFolderName, newFolderName, !string.IsNullOrWhiteSpace(CurrentNamePlate) ? CurrentNamePlate : string.Empty);
                     File.Copy(GameSaveFolderPath + "/" + _currentLoadedID.ToString() + ".plateupsave", newSaveEntry.FolderPath + "/" + _currentLoadedID.ToString() + ".plateupsave");
                     newSaveEntry.RefreshPreviousIDs();
                     Saves.Add(newSaveEntry);
@@ -393,7 +394,7 @@ namespace SaveSystem
             }
             foreach (string untrackedSaves in allSaveFolderNames)
             {
-                Saves.Add(new SaveEntry(untrackedSaves, untrackedSaves));
+                Saves.Add(new SaveEntry(untrackedSaves, untrackedSaves, String.Empty));
             }
         }
 
@@ -448,18 +449,30 @@ namespace SaveSystem
         /// List of all display names of SaveEntrys;
         /// </summary>
         /// <returns>List of DateTime localized string representation, each with its newset timestamp</returns>
-        public List<string> GetSaveDateTimeNamesList()
+        public List<SaveSelectDescription> GetDescriptionList()
         {
-            List<string> saveDisplayNames = new List<string>();
+            List<SaveSelectDescription> saveDescriptionNames = new List<SaveSelectDescription>();
             foreach (SaveEntry saveEntry in Saves)
             {
-                saveDisplayNames.Add(saveEntry.GetDateTime);
+                saveDescriptionNames.Add(new SaveSelectDescription(saveEntry.GetDateTime, saveEntry.GetNameplateName));
             }
-            return saveDisplayNames;
+            return saveDescriptionNames;
         }
         /// <summary>
         /// Whether there are any runs in the SaveSystem saved
         /// </summary>
         public bool HasSavedRuns => Saves.Count > 0;
+    }
+
+    public struct SaveSelectDescription
+    {
+        public string DateTime;
+        public string NameplateName;
+
+        public SaveSelectDescription(string _dateTime, string _nameplateName)
+        {
+            DateTime = _dateTime;
+            NameplateName = _nameplateName;
+        }
     }
 }

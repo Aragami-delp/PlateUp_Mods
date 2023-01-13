@@ -9,11 +9,13 @@ namespace SaveSystem
     {
         public string FolderName;
         public string Name;
+        public string NameplateName;
         [JsonIgnore] private List<uint> Previous_Save_IDs = new List<uint>();
-        public SaveEntry(string _folderName, string _name)
+        public SaveEntry(string _folderName, string _name, string _nameplateName)
         {
             FolderName = _folderName;
             Name = _name;
+            NameplateName = _nameplateName;
             RefreshPreviousIDs();
         }
 
@@ -25,6 +27,7 @@ namespace SaveSystem
         [JsonIgnore] public bool HasSaves => Previous_Save_IDs.Count > 0;
         [JsonIgnore] public string GetDisplayName => SaveSystemManager.IsUnixTimestamp(Name) ? SaveSystemManager.UnixTimeToLocalDateTimeFormat(Name) : Name;
         [JsonIgnore] public string GetDateTime => SaveSystemManager.UnixTimeToLocalDateTimeFormat(NewestID);
+        [JsonIgnore] public string GetNameplateName => !string.IsNullOrWhiteSpace(NameplateName) ? NameplateName : string.Empty;
 
         public void RefreshPreviousIDs()
         {
