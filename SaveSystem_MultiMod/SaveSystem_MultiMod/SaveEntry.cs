@@ -10,13 +10,15 @@ namespace SaveSystem
         public string FolderName;
         public string Name;
         public string NameplateName;
-        [JsonIgnore] private List<uint> Previous_Save_IDs = new List<uint>();
-        public SaveEntry(string _folderName, string _name, string _nameplateName)
+        public List<string> PlayerNames = new List<string>();
+        [JsonIgnore] private readonly List<uint> Previous_Save_IDs = new List<uint>();
+        public SaveEntry(string _folderName, string _name, string _nameplateName, List<string> _playerNames)
         {
             FolderName = _folderName;
             Name = _name;
             NameplateName = _nameplateName;
             RefreshPreviousIDs();
+            PlayerNames = _playerNames;
         }
 
         [JsonIgnore] public string FolderPath => SaveSystemManager.Instance.SaveFolderPath + "/" + FolderName;

@@ -155,7 +155,7 @@ namespace SaveSystem
         /// <returns>Whether a run was found</returns>
         public static bool GetRunUnixUIntAtPath(string _path, out uint _result)
         {
-            List<string> foundFullPathNames = new List<string>();
+            List<string> foundFullPathNames;
             _result = 0;
             if (Directory.Exists(_path))
             {
@@ -186,6 +186,19 @@ namespace SaveSystem
             return false;
         }
 
+        public List<string> GetCurrentPlayerNames
+        {
+            get
+            {
+                List<string> playerNames = new List<string>();
+                foreach (PlayerInfo info in Players.Main.All())
+                {
+                    playerNames.Add(info.Name);
+                }
+                return playerNames;
+            }
+        }
+
         /// <summary>
         /// Saves the currently loaded save or creates a new SaveEntry if there is no exisitng save yet
         /// </summary>
@@ -207,6 +220,7 @@ namespace SaveSystem
                     File.Copy(GameSaveFolderPath + "/" + _currentLoadedID.ToString() + ".plateupsave", save.FolderPath + "/" + _currentLoadedID.ToString() + ".plateupsave");
                     save.RefreshPreviousIDs();
                     save.NameplateName = !string.IsNullOrWhiteSpace(CurrentNamePlate) ? CurrentNamePlate : string.Empty;
+                    save.PlayerNames = GetCurrentPlayerNames;
                     SaveCurrentSetup();
                     return true;
                 }
@@ -220,7 +234,7 @@ namespace SaveSystem
                     }
                     string newFolderName = string.IsNullOrWhiteSpace(_name) ? _currentLoadedID.ToString() : _name;
                     Directory.CreateDirectory(SaveFolderPath + "/" + newFolderName);
-                    SaveEntry newSaveEntry = new SaveEntry(newFolderName, newFolderName, !string.IsNullOrWhiteSpace(CurrentNamePlate) ? CurrentNamePlate : string.Empty);
+                    SaveEntry newSaveEntry = new SaveEntry(newFolderName, newFolderName, !string.IsNullOrWhiteSpace(CurrentNamePlate) ? CurrentNamePlate : string.Empty, GetCurrentPlayerNames);
                     File.Copy(GameSaveFolderPath + "/" + _currentLoadedID.ToString() + ".plateupsave", newSaveEntry.FolderPath + "/" + _currentLoadedID.ToString() + ".plateupsave");
                     newSaveEntry.RefreshPreviousIDs();
                     Saves.Add(newSaveEntry);
@@ -394,7 +408,7 @@ namespace SaveSystem
             }
             foreach (string untrackedSaves in allSaveFolderNames)
             {
-                Saves.Add(new SaveEntry(untrackedSaves, untrackedSaves, String.Empty));
+                Saves.Add(new SaveEntry(untrackedSaves, untrackedSaves, String.Empty, new List<string>(0)));
             }
         }
 
@@ -454,7 +468,7 @@ namespace SaveSystem
             List<SaveSelectDescription> saveDescriptionNames = new List<SaveSelectDescription>();
             foreach (SaveEntry saveEntry in Saves)
             {
-                saveDescriptionNames.Add(new SaveSelectDescription(saveEntry.GetDateTime, saveEntry.GetNameplateName));
+                saveDescriptionNames.Add(new SaveSelectDescription(saveEntry.GetDateTime, saveEntry.GetNameplateName, (saveEntry.PlayerNames?.Count > 0) ? saveEntry.PlayerNames : new List<string>()));
             }
             return saveDescriptionNames;
         }
@@ -468,11 +482,14 @@ namespace SaveSystem
     {
         public string DateTime;
         public string NameplateName;
+        public List<string> PlayerNames;
+        public string PlayerNamesFormat => PlayerNames.Count > 0 ? string.Join(", ", PlayerNames.ToArray()) : string.Empty;
 
-        public SaveSelectDescription(string _dateTime, string _nameplateName)
+        public SaveSelectDescription(string _dateTime, string _nameplateName, List<string> _playerNames)
         {
             DateTime = _dateTime;
             NameplateName = _nameplateName;
+            PlayerNames = _playerNames;
         }
     }
 }

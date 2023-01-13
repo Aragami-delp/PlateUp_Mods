@@ -411,6 +411,7 @@ namespace SaveSystem_MultiMod
         private IModule SaveSelectModule;
         private LabelElement SaveSelectDateTime;
         private LabelElement SaveSelectNameplateName;
+        private LabelElement SaveSelectPlayerNames;
         public static string currentlySelectedName;
         public static Dictionary<string, SaveSelectDescription> m_dicSavesDescription;
 
@@ -445,6 +446,7 @@ namespace SaveSystem_MultiMod
                     currentlySelectedName = f;
                     SaveSelectDateTime.SetLabel(m_dicSavesDescription[currentlySelectedName].DateTime);
                     SaveSelectNameplateName.SetLabel(m_dicSavesDescription[currentlySelectedName].NameplateName);
+                    SaveSelectPlayerNames.SetLabel(m_dicSavesDescription[currentlySelectedName].PlayerNamesFormat);
                     SetLoadButtonText();
                 });
             }
@@ -498,8 +500,9 @@ namespace SaveSystem_MultiMod
             if (showFlags.HasFlag(ShowUIFlags.ShowSelection))
             {
                 SaveSelectModule = AddSelect<string>(SaveSelectOption);
-                SaveSelectDateTime = AddInfo(m_dicSavesDescription[currentlySelectedName].DateTime);
-                SaveSelectNameplateName = AddInfo(m_dicSavesDescription[currentlySelectedName].NameplateName);
+                SaveSelectDateTime = AddLabel(m_dicSavesDescription[currentlySelectedName].DateTime);
+                SaveSelectNameplateName = AddLabel(m_dicSavesDescription[currentlySelectedName].NameplateName);
+                SaveSelectPlayerNames = AddInfo(m_dicSavesDescription[currentlySelectedName].PlayerNamesFormat);
             }
             if (showFlags.HasFlag(ShowUIFlags.ShowLoadButton))
             {
