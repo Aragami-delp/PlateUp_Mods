@@ -53,6 +53,10 @@
     <Reference Include="Controllers">
       <HintPath>F:\SteamLibrary\steamapps\common\PlateUp\PlateUp\PlateUp_Data\Managed\Controllers.dll</HintPath>
     </Reference>
+    <Reference Include="Facepunch.Steamworks.Win64, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>F:\SteamLibrary\steamapps\common\PlateUp\PlateUp\PlateUp_Data\Managed\Facepunch.Steamworks.Win64.dll</HintPath>
+    </Reference>
     <Reference Include="Kitchen.Common">
       <HintPath>F:\SteamLibrary\steamapps\common\PlateUp\PlateUp\PlateUp_Data\Managed\Kitchen.Common.dll</HintPath>
     </Reference>
@@ -141,6 +145,7 @@
     <Compile Include="SaveSystemFullSaveAtDay.cs" />
     <Compile Include="SaveSystemManager.cs" />
     <Compile Include="SaveSystemPerformSaveRequests.cs" />
+    <Compile Include="SteamWorkshopMods.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

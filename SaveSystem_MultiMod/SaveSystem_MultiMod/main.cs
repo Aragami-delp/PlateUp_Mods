@@ -1,4 +1,4 @@
-﻿#if MelonLoader
+#if MelonLoader
 using MelonLoader;
 #endif
 #if BepInEx
@@ -412,6 +412,7 @@ namespace SaveSystem_MultiMod
         private LabelElement SaveSelectDateTime;
         private LabelElement SaveSelectNameplateName;
         private LabelElement SaveSelectPlayerNames;
+        private LabelElement SaveSelectMods;
         public static string currentlySelectedName;
         public static Dictionary<string, SaveSelectDescription> m_dicSavesDescription;
 
@@ -447,6 +448,7 @@ namespace SaveSystem_MultiMod
                     SaveSelectDateTime.SetLabel(m_dicSavesDescription[currentlySelectedName].DateTime);
                     SaveSelectNameplateName.SetLabel(m_dicSavesDescription[currentlySelectedName].NameplateName);
                     SaveSelectPlayerNames.SetLabel(m_dicSavesDescription[currentlySelectedName].PlayerNamesFormat);
+                    SaveSelectMods.SetLabel(m_dicSavesDescription[currentlySelectedName].ModsFormat);
                     SetLoadButtonText();
                 });
             }
@@ -503,6 +505,7 @@ namespace SaveSystem_MultiMod
                 SaveSelectDateTime = AddLabel(m_dicSavesDescription[currentlySelectedName].DateTime);
                 SaveSelectNameplateName = AddLabel(m_dicSavesDescription[currentlySelectedName].NameplateName);
                 SaveSelectPlayerNames = AddInfo(m_dicSavesDescription[currentlySelectedName].PlayerNamesFormat);
+                SaveSelectMods = AddInfo(m_dicSavesDescription[currentlySelectedName].ModsFormat);
             }
             if (showFlags.HasFlag(ShowUIFlags.ShowLoadButton))
             {

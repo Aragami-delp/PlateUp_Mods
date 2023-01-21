@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 using System.Text.RegularExpressions;
 using System.Globalization;
 using Kitchen;
+using SaveSystem_SteamWorkshop;
 
 namespace SaveSystem
 {
@@ -221,6 +222,7 @@ namespace SaveSystem
                     save.RefreshPreviousIDs();
                     save.NameplateName = !string.IsNullOrWhiteSpace(CurrentNamePlate) ? CurrentNamePlate : string.Empty;
                     save.PlayerNames = GetCurrentPlayerNames;
+                    save.Mods = SteamWorkshopModManager.GetCurrentWorkshopIDs;
                     SaveCurrentSetup();
                     return true;
                 }
@@ -234,7 +236,7 @@ namespace SaveSystem
                     }
                     string newFolderName = string.IsNullOrWhiteSpace(_name) ? _currentLoadedID.ToString() : _name;
                     Directory.CreateDirectory(SaveFolderPath + "/" + newFolderName);
-                    SaveEntry newSaveEntry = new SaveEntry(newFolderName, newFolderName, !string.IsNullOrWhiteSpace(CurrentNamePlate) ? CurrentNamePlate : string.Empty, GetCurrentPlayerNames);
+                    SaveEntry newSaveEntry = new SaveEntry(newFolderName, newFolderName, !string.IsNullOrWhiteSpace(CurrentNamePlate) ? CurrentNamePlate : string.Empty, GetCurrentPlayerNames, SaveSystem_SteamWorkshop.SteamWorkshopModManager.GetCurrentWorkshopIDs);
                     File.Copy(GameSaveFolderPath + "/" + _currentLoadedID.ToString() + ".plateupsave", newSaveEntry.FolderPath + "/" + _currentLoadedID.ToString() + ".plateupsave");
                     newSaveEntry.RefreshPreviousIDs();
                     Saves.Add(newSaveEntry);
@@ -408,7 +410,7 @@ namespace SaveSystem
             }
             foreach (string untrackedSaves in allSaveFolderNames)
             {
-                Saves.Add(new SaveEntry(untrackedSaves, untrackedSaves, String.Empty, new List<string>(0)));
+                Saves.Add(new SaveEntry(untrackedSaves, untrackedSaves, String.Empty, new List<string>(0), new List<long>(0)));
             }
         }
 
@@ -468,7 +470,7 @@ namespace SaveSystem
             List<SaveSelectDescription> saveDescriptionNames = new List<SaveSelectDescription>();
             foreach (SaveEntry saveEntry in Saves)
             {
-                saveDescriptionNames.Add(new SaveSelectDescription(saveEntry.GetDateTime, saveEntry.GetNameplateName, (saveEntry.PlayerNames?.Count > 0) ? saveEntry.PlayerNames : new List<string>()));
+                saveDescriptionNames.Add(new SaveSelectDescription(saveEntry.GetDateTime, saveEntry.GetNameplateName, (saveEntry.PlayerNames?.Count > 0) ? saveEntry.PlayerNames : new List<string>(), (saveEntry.Mods != null && saveEntry.Mods.Count > 0) ? SteamWorkshopModManager.GetWorkshopNames(saveEntry.Mods) : new List<string>()));
             }
             return saveDescriptionNames;
         }
@@ -482,14 +484,17 @@ namespace SaveSystem
     {
         public string DateTime;
         public string NameplateName;
-        public List<string> PlayerNames;
+        private List<string> PlayerNames;
         public string PlayerNamesFormat => PlayerNames.Count > 0 ? string.Join(", ", PlayerNames.ToArray()) : string.Empty;
+        private List<string> Mods;
+        public string ModsFormat => Mods.Count > 0 ? string.Join(", ", Mods.ToArray()) : string.Empty;
 
-        public SaveSelectDescription(string _dateTime, string _nameplateName, List<string> _playerNames)
+        public SaveSelectDescription(string _dateTime, string _nameplateName, List<string> _playerNames, List<string> _mods)
         {
             DateTime = _dateTime;
             NameplateName = _nameplateName;
             PlayerNames = _playerNames;
+            Mods = _mods;
         }
     }
 }
