@@ -16,35 +16,14 @@ Subscribe to Harmony and SaveSystem on the Steam Workshop
 
 Sometimes workshop mods/updates are not up to date. Verifying your game files will also update your mods.
 
-### Install the mod loader (old)
+### Install the SaveSystem (BepInEx)
 
-If you already have other mods, that use BepInEx (like the ones mentioned below) or MelonLoader or the package manager, you can skip installing the mod loader.
-
-1. Download the newest version of BepInEx 5.4.x ([BepInEx Download](https://github.com/BepInEx/BepInEx/releases))   If you are not sure which to choose, download it directly from here: ([Direct Download](https://github.com/BepInEx/BepInEx/releases/download/v5.4.21/BepInEx_x64_5.4.21.0.zip))
-
-1. Find your game installation folder (The folder with `PlateUp.exe` in it). The default installation is located at `C:\Program Files (x86)\Steam\steamapps\common\PlateUp\PlateUp\ `
-
-1. Extract the contents of the downloaded archive into the game folder.
-
-1. Run the game once before installing any mod to initialize the mod loader.
-
-### Install Save System (old)
-
-1. Download the newset version of the mod from here: 
-   [Save System newest BepInEx](https://github.com/Aragami-delp/PlateUp_Mods/releases/latest/download/SaveSystem_BepInEx.dll)
-   [Save System newset MelonLoader](https://github.com/Aragami-delp/PlateUp_Mods/releases/latest/download/SaveSystem_MelonLoader.dll)
-
-1. Find your plugin folder within the game folder. (`\PlateUp\BepInEx\plugins\` or `\PlateUp\Mods\`). If the folder doesn't exists make sure to run the game at least once after installing the mod loader.
-
-1. Put the file `SaveSystem_,,,.dll` into the plugins folder.
-
-   If everything works correctly, there should be a new menu in the options menu, when you are in the game lobby.
-
-   **NOTE**: If you have don't see the `Recover Save` item in the lobby after loading a save, you will have to either start the tutorial and leave it immediately or restart the game
+If you want the BepInEx version get in contact with me. (see below)
 
 ## Other great PlateUp! stuff
 
-* [Modding Discord](https://discord.gg/uPbuYVjJQq) - Unofficial PlateUp Modding Discord - There you can find more mods - not affiliated, associated, endorsed by, or in any way officially connected with the PlateUp Team, or the Yogscast Team.
+* [Modding Discord](https://discord.gg/uPbuYVjJQq) - Unofficial PlateUp Modding Discord - There you can find support for most workshop mods - not affiliated, associated, endorsed by, or in any way officially connected with the PlateUp Team, or the Yogscast Team.
+* [Steam Workshop](https://steamcommunity.com/app/1599600/workshop/) - Choose the mods you want and subscribe to them. They will be installed automatically (No need for BepInEx)
 
 ## Bugs & Help
 
