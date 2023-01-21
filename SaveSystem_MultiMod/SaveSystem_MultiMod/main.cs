@@ -1,4 +1,4 @@
-#if MelonLoader
+﻿#if MelonLoader
 using MelonLoader;
 #endif
 #if BepInEx
@@ -339,6 +339,7 @@ namespace SaveSystem_MultiMod
         }
 
         public Option<bool> HideSaveInfo;
+        public Option<bool> ShowSaveMods;
 
         private Option<bool> GetHideSaveInfoOption() => new Option<bool>(new List<bool>()
         {
@@ -349,10 +350,20 @@ namespace SaveSystem_MultiMod
             this.Localisation["SETTING_DISABLED"],
             this.Localisation["SETTING_ENABLED"]
         });
+        private Option<bool> GetShowSaveModsOption() => new Option<bool>(new List<bool>()
+        {
+            false,
+            true
+            }, (bool)SaveSystemManager.Instance.Settings["showsavemods"].GetValue(SaveSetting.SettingType.boolValue), new List<string>()
+            {
+            this.Localisation["SETTING_DISABLED"],
+            this.Localisation["SETTING_ENABLED"]
+        });
 
         public override void Setup(int player_id)
         {
             HideSaveInfo = GetHideSaveInfoOption();
+            ShowSaveMods = GetShowSaveModsOption();
 
             AddLabel("Hide save info");
             Add<bool>(this.HideSaveInfo).OnChanged += (EventHandler<bool>)((_, value) =>
@@ -361,6 +372,15 @@ namespace SaveSystem_MultiMod
                 SaveSystemManager.Instance.Settings.SaveCurrentSettings();
                 SaveSystemMod.UpdateDisplayVersion();
             });
+            AddInfo("Hides infos about the save state in the bottom right corner of the screen.");
+            AddLabel("Show mods of save");
+            Add<bool>(this.ShowSaveMods).OnChanged += (EventHandler<bool>)((_, value) =>
+            {
+                SaveSystemManager.Instance.Settings["showsavemods"].SetValue(value); // Gets initiallised when first changing this option, but fine for now
+                SaveSystemManager.Instance.Settings.SaveCurrentSettings();
+                SaveSystemMod.UpdateDisplayVersion();
+            });
+            AddInfo("Turning this on might increase the Menu load times.");
             New<SpacerElement>();
             this.AddButton(this.Localisation["CANCEL_PROFILE"], (Action<int>)(i => this.RequestPreviousMenu()));
         }
@@ -448,7 +468,8 @@ namespace SaveSystem_MultiMod
                     SaveSelectDateTime.SetLabel(m_dicSavesDescription[currentlySelectedName].DateTime);
                     SaveSelectNameplateName.SetLabel(m_dicSavesDescription[currentlySelectedName].NameplateName);
                     SaveSelectPlayerNames.SetLabel(m_dicSavesDescription[currentlySelectedName].PlayerNamesFormat);
-                    SaveSelectMods.SetLabel(m_dicSavesDescription[currentlySelectedName].ModsFormat);
+                    if ((bool)SaveSystemManager.Instance.Settings["showsavemods"].GetValue(SaveSetting.SettingType.boolValue))
+                        SaveSelectMods.SetLabel(m_dicSavesDescription[currentlySelectedName].ModsFormat);
                     SetLoadButtonText();
                 });
             }
@@ -505,7 +526,8 @@ namespace SaveSystem_MultiMod
                 SaveSelectDateTime = AddLabel(m_dicSavesDescription[currentlySelectedName].DateTime);
                 SaveSelectNameplateName = AddLabel(m_dicSavesDescription[currentlySelectedName].NameplateName);
                 SaveSelectPlayerNames = AddInfo(m_dicSavesDescription[currentlySelectedName].PlayerNamesFormat);
-                SaveSelectMods = AddInfo(m_dicSavesDescription[currentlySelectedName].ModsFormat);
+                if ((bool)SaveSystemManager.Instance.Settings["showsavemods"].GetValue(SaveSetting.SettingType.boolValue))
+                    SaveSelectMods = AddInfo(m_dicSavesDescription[currentlySelectedName].ModsFormat);
             }
             if (showFlags.HasFlag(ShowUIFlags.ShowLoadButton))
             {

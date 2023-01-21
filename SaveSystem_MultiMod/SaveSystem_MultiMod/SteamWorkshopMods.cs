@@ -53,7 +53,7 @@ namespace SaveSystem_SteamWorkshop
         {
             get
             {
-                return GetCurrentWorkshopMods().Select(o => (long)o.Id.Value).ToList();
+                return GetCurrentWorkshopMods().Select(o => (long)o.Id.Value).ToList(); // TODO: retrive from local mods in case a mod subbed mod is not installed yet
             }
         }
 

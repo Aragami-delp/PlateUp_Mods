@@ -470,7 +470,17 @@ namespace SaveSystem
             List<SaveSelectDescription> saveDescriptionNames = new List<SaveSelectDescription>();
             foreach (SaveEntry saveEntry in Saves)
             {
-                saveDescriptionNames.Add(new SaveSelectDescription(saveEntry.GetDateTime, saveEntry.GetNameplateName, (saveEntry.PlayerNames?.Count > 0) ? saveEntry.PlayerNames : new List<string>(), (saveEntry.Mods != null && saveEntry.Mods.Count > 0) ? SteamWorkshopModManager.GetWorkshopNames(saveEntry.Mods) : new List<string>()));
+                saveDescriptionNames.Add(new SaveSelectDescription(
+                    saveEntry.GetDateTime,
+                    saveEntry.GetNameplateName,
+                    (saveEntry.PlayerNames?.Count > 0)
+                    ? saveEntry.PlayerNames
+                    : new List<string>(),
+                    ((bool)SaveSystemManager.Instance.Settings["showsavemods"].GetValue(SaveSetting.SettingType.boolValue)
+                        && saveEntry.Mods != null
+                        && saveEntry.Mods.Count > 0)
+                    ? SteamWorkshopModManager.GetWorkshopNames(saveEntry.Mods)
+                    : new List<string>()));
             }
             return saveDescriptionNames;
         }
