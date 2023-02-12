@@ -91,12 +91,15 @@ namespace SaveSystem
             }
         }
 
-        public bool SaveAlreadyExists(string _wantedName)
+        public bool SaveAlreadyExists(params string[] _wantedNames)
         {
             foreach (SaveEntry saveEntry in Saves)
             {
-                if (_wantedName == saveEntry.Name || _wantedName == saveEntry.FolderName)
-                    return true;
+                foreach (string _wantedName in _wantedNames)
+                {
+                    if (_wantedName == saveEntry.Name || _wantedName == saveEntry.FolderName)
+                        return true;
+                }
             }
             return false;
         }
@@ -229,14 +232,15 @@ namespace SaveSystem
                 else if (_name != null)
                 {
                     // Test for duplicate name - already tested in main, just to be sure
-                    if (SaveAlreadyExists(_name))
+                    string newFolderName = SaveSystem_MultiMod.Helper.SanitizeUserInput(_name);
+                    newFolderName = string.IsNullOrWhiteSpace(newFolderName) ? _currentLoadedID.ToString() : newFolderName;
+                    if (SaveAlreadyExists(newFolderName, _name))
                     {
                         SaveSystem_MultiMod.SaveSystem_ModLoaderSystem.LogWarning("Save: " + _name + " already exists!\nskipping saving. This should be a duplicate warning");
                         return false;
                     }
-                    string newFolderName = string.IsNullOrWhiteSpace(_name) ? _currentLoadedID.ToString() : _name;
                     Directory.CreateDirectory(SaveFolderPath + "/" + newFolderName);
-                    SaveEntry newSaveEntry = new SaveEntry(newFolderName, newFolderName, !string.IsNullOrWhiteSpace(CurrentNamePlate) ? CurrentNamePlate : string.Empty, GetCurrentPlayerNames, SaveSystem_SteamWorkshop.SteamWorkshopModManager.GetCurrentWorkshopIDs);
+                    SaveEntry newSaveEntry = new SaveEntry(newFolderName, _name, !string.IsNullOrWhiteSpace(CurrentNamePlate) ? CurrentNamePlate : string.Empty, GetCurrentPlayerNames, SaveSystem_SteamWorkshop.SteamWorkshopModManager.GetCurrentWorkshopIDs);
                     File.Copy(GameSaveFolderPath + "/" + _currentLoadedID.ToString() + ".plateupsave", newSaveEntry.FolderPath + "/" + _currentLoadedID.ToString() + ".plateupsave");
                     newSaveEntry.RefreshPreviousIDs();
                     Saves.Add(newSaveEntry);

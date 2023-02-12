@@ -193,6 +193,16 @@ namespace SaveSystem_MultiMod
             return retVal;
         }
 
+        public static string SanitizeUserInput(string _input)
+        {
+            if (!string.IsNullOrWhiteSpace(_input))
+            {
+                string s = string.Join("_", _input.Split(Path.GetInvalidFileNameChars()));
+                return string.Join("_", s.Split(Path.GetInvalidPathChars()));
+            }
+            return _input;
+        }
+
         public static void ChangeScene(SceneType _next)
         {
             EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
