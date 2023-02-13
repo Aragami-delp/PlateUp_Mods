@@ -295,28 +295,28 @@ namespace SaveSystem_MultiMod
     #endregion
 
     #region ReworkUI
-    public class SaveSystemBackToLobby : Menu<PauseMenuAction>
-    {
-        public SaveSystemBackToLobby(Transform container, ModuleList module_list) : base(container, module_list)
-        {
-        }
+    //public class SaveSystemBackToLobby : Menu<PauseMenuAction>
+    //{
+    //    public SaveSystemBackToLobby(Transform container, ModuleList module_list) : base(container, module_list)
+    //    {
+    //    }
 
-        public override void Setup(int player_id)
-        {
-            AddLabel("Back to lobby?");
-            this.AddButton("Confirm", (Action<int>)(i => this.ReturnToLobby()));
-            this.AddButton(this.Localisation["CANCEL_PROFILE"], (Action<int>)(i => this.RequestPreviousMenu()));
-        }
+    //    public override void Setup(int player_id)
+    //    {
+    //        AddLabel("Back to lobby?");
+    //        this.AddButton("Confirm", (Action<int>)(i => this.ReturnToLobby()));
+    //        this.AddButton(this.Localisation["CANCEL_PROFILE"], (Action<int>)(i => this.RequestPreviousMenu()));
+    //    }
 
-        public void ReturnToLobby()
-        {
-            SaveSystem_ModLoaderSystem.LogInfo("Saving current run with previouse one.");
-            SaveSystemManager.Instance.SaveCurrentSave();
-            SaveSystemMod.UpdateDisplayVersion();
-            Helper.ChangeScene(SceneType.Franchise);
-            RequestAction(PauseMenuAction.CloseMenu);
-        }
-    }
+    //    public void ReturnToLobby()
+    //    {
+    //        SaveSystem_ModLoaderSystem.LogInfo("Saving current run with previouse one.");
+    //        SaveSystemManager.Instance.SaveCurrentSave();
+    //        SaveSystemMod.UpdateDisplayVersion();
+    //        Helper.ChangeScene(SceneType.Franchise);
+    //        RequestAction(PauseMenuAction.CloseMenu);
+    //    }
+    //}
 
     public class SaveSystemDeleteMenu : Menu<PauseMenuAction>
     {
