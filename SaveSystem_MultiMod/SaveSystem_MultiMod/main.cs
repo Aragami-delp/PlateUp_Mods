@@ -1,4 +1,4 @@
-﻿#if MelonLoader
+#if MelonLoader
 using MelonLoader;
 #endif
 #if BepInEx
@@ -260,9 +260,9 @@ namespace SaveSystem_MultiMod
     class CreateNewKitchen_Patch
     {
         [HarmonyPostfix]
-        static void Postfix(CreateNewKitchen __instance, EntityQuery ____SingletonEntityQuery_SCreateScene_33)
+        static void Postfix(CreateNewKitchen __instance, EntityQuery ____SingletonEntityQuery_SCreateScene_29)
         {
-            if (____SingletonEntityQuery_SCreateScene_33.GetSingleton<SCreateScene>().Type != SceneType.Kitchen)
+            if (____SingletonEntityQuery_SCreateScene_29.GetSingleton<SCreateScene>().Type != SceneType.Kitchen)
                 return;
             Persistence.ClearSaves<FullWorldSaveSystem>();
         }
