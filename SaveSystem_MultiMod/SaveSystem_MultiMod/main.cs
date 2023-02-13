@@ -1,4 +1,4 @@
-#if MelonLoader
+﻿#if MelonLoader
 using MelonLoader;
 #endif
 #if BepInEx
@@ -225,11 +225,13 @@ namespace SaveSystem_MultiMod
             if (Session.CurrentGameNetworkMode != GameNetworkMode.Host || (GameInfo.CurrentScene != SceneType.Franchise && GameInfo.CurrentScene != SceneType.Kitchen))
                 return;
             MethodInfo m_addButtonMenu = Helper.GetMethod(__instance.GetType(), "AddSubmenuButton");
-            MethodInfo m_addBackToLobbyButton = Helper.GetMethod(__instance.GetType(), "AddSubmenuButton");
-
             m_addButtonMenu.Invoke(__instance, new object[3] { "Save System", typeof(SaveSystemMenu), false });
-            if (GameInfo.CurrentScene == SceneType.Kitchen)
-                m_addBackToLobbyButton.Invoke(__instance, new object[3] { "Back to lobby", typeof(SaveSystemBackToLobby), false }); // TODO: Add voting
+
+            #region BackToLobbyPatch
+            //MethodInfo m_addBackToLobbyButton = Helper.GetMethod(__instance.GetType(), "AddSubmenuButton");
+            //if (GameInfo.CurrentScene == SceneType.Kitchen)
+            //    m_addBackToLobbyButton.Invoke(__instance, new object[3] { "Back to lobby", typeof(SaveSystemBackToLobby), false }); // TODO: Add voting
+            #endregion
         }
 
         static void BackToLobby(MainMenu __instance)
@@ -250,7 +252,7 @@ namespace SaveSystem_MultiMod
             MethodInfo mInfo = Helper.GetMethod(__instance.GetType(), "AddMenu");
 
             mInfo.Invoke(__instance, new object[2] { typeof(SaveSystemMenu), new SaveSystemMenu(__instance.ButtonContainer, moduleList) });
-            mInfo.Invoke(__instance, new object[2] { typeof(SaveSystemBackToLobby), new SaveSystemBackToLobby(__instance.ButtonContainer, moduleList) });
+            //mInfo.Invoke(__instance, new object[2] { typeof(SaveSystemBackToLobby), new SaveSystemBackToLobby(__instance.ButtonContainer, moduleList) });
         }
     }
     #endregion
