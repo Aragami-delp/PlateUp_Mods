@@ -1,4 +1,4 @@
-﻿#if MelonLoader
+#if MelonLoader
 using MelonLoader;
 #endif
 #if BepInEx
@@ -21,10 +21,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text.RegularExpressions;
-using System.Globalization;
+
 using TMPro;
 using Unity.Entities;
+using Steamworks;
+using System.Windows.Forms;
+using Steamworks.Ugc;
+using System.Threading.Tasks;
 #if MelonLoader
 [assembly: MelonInfo(typeof(SaveSystem_MultiMod.SaveSystem_ModLoaderSystem), "SaveSystem", SaveSystemMod.Version, "Aragami"), HarmonyDontPatchAll]
 #endif
@@ -86,20 +89,18 @@ namespace SaveSystem_MultiMod
 
 #if Workshop
     //[BepInPlugin("com.aragami.plateup.mods.savesystem", "SaveSystem", SaveSystemMod.Version)]
-    public class SaveSystem_ModLoaderSystem : GenericSystemBase, IModSystem
+    public class SaveSystem_ModLoaderSystem : GenericSystemBase, IModSystem, IModInitializer
     {
         protected override void Initialise()
         {
-            Debug.LogWarning("Mod: SaveSystemMod in use!"); // For log file output for official support staff
-
-            LogInfo("Workshop mod: SaveSystem v" + SaveSystemMod.Version + " is loaded!"); // Might be unnecessary for Workshop mods
-
             if (GameObject.FindObjectOfType<SaveSystemMod>() == null)
             {
                 GameObject saveSystemMod = new GameObject("SaveSystem");
                 saveSystemMod.AddComponent<SaveSystemMod>();
                 GameObject.DontDestroyOnLoad(saveSystemMod);
             }
+
+            LogInfo("Workshop mod: SaveSystem v" + SaveSystemMod.Version + " is loaded!"); // Might be unnecessary for Workshop mods
         }
 
         protected override void OnUpdate() { }
@@ -110,13 +111,83 @@ namespace SaveSystem_MultiMod
         public static void LogInfo(object _log) { LogInfo(_log.ToString()); }
         public static void LogWarning(object _log) { LogWarning(_log.ToString()); }
         public static void LogError(object _log) { LogError(_log.ToString()); }
+
+        public void PostActivate(Mod mod)
+        {
+            Debug.LogWarning("Mod: SaveSystemMod in use!"); // For log file output for official support staff
+
+            CheckForLaunchAllowed();
+        }
+
+        public void PreInject()
+        {
+            // Nope
+        }
+
+        public void PostInject()
+        {
+            // Nope
+        }
+
+        private void CheckForLaunchAllowed()
+        {
+            if (Helper.GetLoadedAssembly("0Harmony") != null) // Should cover Harmony mod as well as HarmonyX (UnityExplorer)
+            {
+                return;
+            }
+
+            LogError("Mod: SaveSystem not loaded since Harmony was not found");
+
+            bool startGame = true;
+            if (!SteamUtils.IsSteamInBigPictureMode) // If not SteamDeck (or BigPicture) - might even work on SteamDeck
+            {
+                DialogResult result = MessageBox.Show("SaveSystem needs Harmony installed to work.\n\nPress \"Yes\" to close the game and install automatically.\nPress \"No\" to close the game and open the workshop page.\nPress \"Cancel\" to start anyways.", "SaveSystem Error", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Information);
+                if (result == DialogResult.Yes)
+                {
+                    Task.Run(async () => await SubscribeToHarmony()).GetAwaiter().GetResult();
+                    startGame = false;
+                }
+                else if (result == DialogResult.No)
+                {
+                    UnityEngine.Application.OpenURL(@"steam://openurl/https://steamcommunity.com/sharedfiles/filedetails/?id=2898033283");
+                    startGame = false;
+                }
+                else if (result == DialogResult.Cancel)
+                {
+                    startGame = true;
+                }
+            }
+            else
+            {
+                UnityEngine.Application.OpenURL(@"steam://openurl/https://steamcommunity.com/sharedfiles/filedetails/?id=2898033283");
+                // startGame = false; // Not sure how it behaves on SteamDeck, so start game anyways
+            }
+            if (!startGame) { Session.SoftExit(); }
+            return;
+        }
+
+        private static async Task<int> SubscribeToHarmony()
+        {
+            Query harmonyItemQuery = Query.ItemsReadyToUse.WithFileId(2898033283);
+            ResultPage? ugcResult = await harmonyItemQuery.GetPageAsync(1); // TODO: multiple pages? - how many?
+            if (ugcResult != null)
+            {
+                foreach (Item harmonyItem in ugcResult.Value.Entries)
+                {
+                    await harmonyItem.Subscribe();
+                    harmonyItem.Download(true);
+                    return 0;
+                }
+            }
+            return -1;
+        }
     }
 #endif
     #endregion
 
     public class SaveSystemMod : MonoBehaviour
     {
-        public const string Version = "1.3.12";
+        public const string Version = "1.3.13";
         private readonly HarmonyLib.Harmony m_harmony = new HarmonyLib.Harmony("com.aragami.plateup.mods.harmony");
         public static DisplayVersion m_DisplayVersion;
         public static string m_DisplayVersionDefaultText;
@@ -212,6 +283,28 @@ namespace SaveSystem_MultiMod
             {
                 NextScene = _next
             });
+        }
+
+        //  http://www.java2s.com/Code/CSharp/Reflection/Getsanassemblybyitsnameifitiscurrentlyloaded.htm
+        /// <summary>
+        /// Gets an assembly by its name if it is currently loaded
+        /// </summary>
+        /// <param name="Name">Name of the assembly to return</param>
+        /// <returns>The assembly specified if it exists, otherwise it returns null</returns>
+        public static System.Reflection.Assembly GetLoadedAssembly(string Name)
+        {
+            try
+            {
+                foreach (Assembly TempAssembly in AppDomain.CurrentDomain.GetAssemblies())
+                {
+                    if (TempAssembly.GetName().Name.Equals(Name, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        return TempAssembly;
+                    }
+                }
+                return null;
+            }
+            catch { throw; }
         }
     }
     #endregion
