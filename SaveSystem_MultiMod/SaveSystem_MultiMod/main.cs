@@ -330,7 +330,7 @@ namespace SaveSystem_MultiMod
         static void BackToLobby(Kitchen.MainMenu __instance)
         {
             Helper.ChangeScene(SceneType.Franchise);
-            MethodInfo closeMenuEvent = Helper.GetMethod(typeof(MainMenu), "RequestAction");
+            MethodInfo closeMenuEvent = Helper.GetMethod(typeof(Kitchen.MainMenu), "RequestAction");
             closeMenuEvent.Invoke(__instance, new object[1] { PauseMenuAction.CloseMenu });
         }
     }
