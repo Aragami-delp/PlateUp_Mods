@@ -310,10 +310,10 @@ namespace SaveSystem_MultiMod
     #endregion
 
     #region Add SaveSystem to pause menu
-    [HarmonyPatch(typeof(MainMenu), nameof(MainMenu.Setup))]
+    [HarmonyPatch(typeof(Kitchen.MainMenu), nameof(Kitchen.MainMenu.Setup))]
     public static class MainMenuSetupPatch
     {
-        static void Prefix(MainMenu __instance, int player_id)
+        static void Prefix(Kitchen.MainMenu __instance, int player_id)
         {
             if (Session.CurrentGameNetworkMode != GameNetworkMode.Host || (GameInfo.CurrentScene != SceneType.Franchise && GameInfo.CurrentScene != SceneType.Kitchen))
                 return;
@@ -327,11 +327,11 @@ namespace SaveSystem_MultiMod
             #endregion
         }
 
-        static void BackToLobby(MainMenu __instance)
+        static void BackToLobby(Kitchen.MainMenu __instance)
         {
             Helper.ChangeScene(SceneType.Franchise);
-            //MethodInfo closeMenuEvent = Helper.GetMethod(typeof(MainMenu), "RequestAction");
-            //closeMenuEvent.Invoke(__instance, new object[1] { PauseMenuAction.CloseMenu });
+            MethodInfo closeMenuEvent = Helper.GetMethod(typeof(MainMenu), "RequestAction");
+            closeMenuEvent.Invoke(__instance, new object[1] { PauseMenuAction.CloseMenu });
         }
     }
 
