@@ -47,9 +47,6 @@
     <Reference Include="0Harmony">
       <HintPath>..\..\ModLoaders\Melon\MelonLoader\0Harmony.dll</HintPath>
     </Reference>
-    <Reference Include="BepInEx">
-      <HintPath>..\..\ModLoaders\BepInEx\BepInEx\core\BepInEx.dll</HintPath>
-    </Reference>
     <Reference Include="Controllers">
       <HintPath>F:\SteamLibrary\steamapps\common\PlateUp\PlateUp\PlateUp_Data\Managed\Controllers.dll</HintPath>
     </Reference>
@@ -95,9 +92,6 @@
     </Reference>
     <Reference Include="KitchenMods">
       <HintPath>F:\SteamLibrary\steamapps\common\PlateUp\PlateUp\PlateUp_Data\Managed\KitchenMods.dll</HintPath>
-    </Reference>
-    <Reference Include="MelonLoader">
-      <HintPath>..\..\ModLoaders\Melon\MelonLoader\MelonLoader.dll</HintPath>
     </Reference>
     <Reference Include="NavMeshComponents">
       <HintPath>F:\SteamLibrary\steamapps\common\PlateUp\PlateUp\PlateUp_Data\Managed\NavMeshComponents.dll</HintPath>

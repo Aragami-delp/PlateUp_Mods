@@ -1,13 +1,4 @@
-#if MelonLoader
-using MelonLoader;
-#endif
-#if BepInEx
-using BepInEx;
-using BepInEx.Logging;
-#endif
-#if Workshop
 using KitchenMods;
-#endif
 
 using UnityEngine;
 using HarmonyLib;
@@ -28,67 +19,9 @@ using Steamworks;
 using System.Windows.Forms;
 using Steamworks.Ugc;
 using System.Threading.Tasks;
-#if MelonLoader
-[assembly: MelonInfo(typeof(SaveSystem_MultiMod.SaveSystem_ModLoaderSystem), "SaveSystem", SaveSystemMod.Version, "Aragami"), HarmonyDontPatchAll]
-#endif
+
 namespace SaveSystem_MultiMod
 {
-    #region ModLoader
-#if MelonLoader
-    public class SaveSystem_ModLoaderSystem : MelonMod
-    {
-        private static MelonLogger.Instance Log;
-        public override void OnInitializeMelon()
-        {
-            Debug.LogWarning("Mod: SaveSystemMod in use!"); // For log file output for official support staff
-
-            Log = LoggerInstance;
-            LogInfo("Melon Mod: SaveSystem is loaded!");
-
-            GameObject saveSystemMod = new GameObject("SaveSystem");
-            saveSystemMod.AddComponent<SaveSystemMod>();
-            UnityEngine.Object.DontDestroyOnLoad(saveSystemMod);
-        }
-
-        public static void LogInfo(string _log) { Log.Msg("SaveSystem: " + _log); }
-        public static void LogWarning(string _log) { Log.Warning("SaveSystem: " + _log); }
-        public static void LogError(string _log) { Log.Error("SaveSystem: " + _log); }
-        public static void LogInfo(object _log) { LogInfo(_log.ToString()); }
-        public static void LogWarning(object _log) { LogWarning(_log.ToString()); }
-        public static void LogError(object _log) { LogError(_log.ToString()); }
-    }
-#endif
-
-#if BepInEx
-    [BepInPlugin("com.aragami.plateup.mods.savesystem", "SaveSystem", SaveSystemMod.Version)]
-    [BepInProcess("PlateUp.exe")]
-    public class SaveSystem_ModLoaderSystem : BaseUnityPlugin
-    {
-        internal static ManualLogSource Log;
-
-        private void Awake()
-        {
-            Debug.LogWarning("Mod: SaveSystemMod in use!"); // For log file output for official support staff
-
-            Log = base.Logger;
-            LogInfo("BepInEx Plugin: SaveSystem is loaded!");
-
-            GameObject saveSystemMod = new GameObject("SaveSystem");
-            saveSystemMod.AddComponent<SaveSystemMod>();
-            DontDestroyOnLoad(saveSystemMod);
-        }
-
-        public static void LogInfo(string _log) { Log.LogInfo("SaveSystem: " + _log); }
-        public static void LogWarning(string _log) { Log.LogWarning("SaveSystem: " + _log); }
-        public static void LogError(string _log) { Log.LogError("SaveSystem: " + _log); }
-        public static void LogInfo(object _log) { LogInfo(_log.ToString()); }
-        public static void LogWarning(object _log) { LogWarning(_log.ToString()); }
-        public static void LogError(object _log) { LogError(_log.ToString()); }
-    }
-#endif
-
-#if Workshop
-    //[BepInPlugin("com.aragami.plateup.mods.savesystem", "SaveSystem", SaveSystemMod.Version)]
     public class SaveSystem_ModLoaderSystem : GenericSystemBase, IModSystem, IModInitializer
     {
         protected override void Initialise()
@@ -182,8 +115,6 @@ namespace SaveSystem_MultiMod
             return -1;
         }
     }
-#endif
-    #endregion
 
     public class SaveSystemMod : MonoBehaviour
     {
