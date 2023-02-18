@@ -118,7 +118,7 @@ namespace SaveSystem_MultiMod
 
     public class SaveSystemMod : MonoBehaviour
     {
-        public const string Version = "1.3.13";
+        public const string Version = "1.3.14";
         private readonly HarmonyLib.Harmony m_harmony = new HarmonyLib.Harmony("com.aragami.plateup.mods.harmony");
         public static DisplayVersion m_DisplayVersion;
         public static string m_DisplayVersionDefaultText;
@@ -252,9 +252,9 @@ namespace SaveSystem_MultiMod
             m_addButtonMenu.Invoke(__instance, new object[3] { "Save System", typeof(SaveSystemMenu), false });
 
             #region BackToLobbyPatch
-            //MethodInfo m_addBackToLobbyButton = Helper.GetMethod(__instance.GetType(), "AddSubmenuButton");
-            //if (GameInfo.CurrentScene == SceneType.Kitchen)
-            //    m_addBackToLobbyButton.Invoke(__instance, new object[3] { "Back to lobby", typeof(SaveSystemBackToLobby), false }); // TODO: Add voting
+            MethodInfo m_addBackToLobbyButton = Helper.GetMethod(__instance.GetType(), "AddSubmenuButton");
+            if (GameInfo.CurrentScene == SceneType.Kitchen)
+                m_addBackToLobbyButton.Invoke(__instance, new object[3] { "Back to lobby", typeof(SaveSystemBackToLobby), false }); // TODO: Add voting
             #endregion
         }
 
@@ -276,7 +276,7 @@ namespace SaveSystem_MultiMod
             MethodInfo mInfo = Helper.GetMethod(__instance.GetType(), "AddMenu");
 
             mInfo.Invoke(__instance, new object[2] { typeof(SaveSystemMenu), new SaveSystemMenu(__instance.ButtonContainer, moduleList) });
-            //mInfo.Invoke(__instance, new object[2] { typeof(SaveSystemBackToLobby), new SaveSystemBackToLobby(__instance.ButtonContainer, moduleList) });
+            mInfo.Invoke(__instance, new object[2] { typeof(SaveSystemBackToLobby), new SaveSystemBackToLobby(__instance.ButtonContainer, moduleList) });
         }
     }
     #endregion
@@ -319,28 +319,28 @@ namespace SaveSystem_MultiMod
     #endregion
 
     #region ReworkUI
-    //public class SaveSystemBackToLobby : Menu<PauseMenuAction>
-    //{
-    //    public SaveSystemBackToLobby(Transform container, ModuleList module_list) : base(container, module_list)
-    //    {
-    //    }
+    public class SaveSystemBackToLobby : Menu<PauseMenuAction>
+    {
+        public SaveSystemBackToLobby(Transform container, ModuleList module_list) : base(container, module_list)
+        {
+        }
 
-    //    public override void Setup(int player_id)
-    //    {
-    //        AddLabel("Back to lobby?");
-    //        this.AddButton("Confirm", (Action<int>)(i => this.ReturnToLobby()));
-    //        this.AddButton(this.Localisation["CANCEL_PROFILE"], (Action<int>)(i => this.RequestPreviousMenu()));
-    //    }
+        public override void Setup(int player_id)
+        {
+            AddLabel("Back to lobby?");
+            this.AddButton("Confirm", (Action<int>)(i => this.ReturnToLobby()));
+            this.AddButton(this.Localisation["CANCEL_PROFILE"], (Action<int>)(i => this.RequestPreviousMenu()));
+        }
 
-    //    public void ReturnToLobby()
-    //    {
-    //        SaveSystem_ModLoaderSystem.LogInfo("Saving current run with previouse one.");
-    //        SaveSystemManager.Instance.SaveCurrentSave();
-    //        SaveSystemMod.UpdateDisplayVersion();
-    //        Helper.ChangeScene(SceneType.Franchise);
-    //        RequestAction(PauseMenuAction.CloseMenu);
-    //    }
-    //}
+        public void ReturnToLobby()
+        {
+            SaveSystem_ModLoaderSystem.LogInfo("Saving current run with previouse one.");
+            SaveSystemManager.Instance.SaveCurrentSave();
+            SaveSystemMod.UpdateDisplayVersion();
+            Helper.ChangeScene(SceneType.Franchise);
+            RequestAction(PauseMenuAction.CloseMenu);
+        }
+    }
 
     public class SaveSystemDeleteMenu : Menu<PauseMenuAction>
     {
