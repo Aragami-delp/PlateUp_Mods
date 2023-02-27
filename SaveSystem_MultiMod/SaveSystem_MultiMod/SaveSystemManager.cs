@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using System.Globalization;
 using Kitchen;
 using SaveSystem_SteamWorkshop;
+using SaveSystem_MultiMod;
 
 namespace SaveSystem
 {
@@ -32,7 +33,6 @@ namespace SaveSystem
         public string SaveFolderPath { get; private set; }
         private readonly string GameSaveFolderPath = Application.persistentDataPath + "/Full";
         public SaveSettingManager Settings;
-        public string CurrentNamePlate = String.Empty;
 
         private void Init()
         {
@@ -223,7 +223,8 @@ namespace SaveSystem
 
                     File.Copy(GameSaveFolderPath + "/" + _currentLoadedID.ToString() + ".plateupsave", save.FolderPath + "/" + _currentLoadedID.ToString() + ".plateupsave");
                     save.RefreshPreviousIDs();
-                    save.NameplateName = !string.IsNullOrWhiteSpace(CurrentNamePlate) ? CurrentNamePlate : string.Empty;
+                    string NameplateName = Helper.GetNameplateName;
+                    save.NameplateName = !string.IsNullOrWhiteSpace(NameplateName) ? NameplateName : string.Empty;
                     save.PlayerNames = GetCurrentPlayerNames;
                     save.Mods = SteamWorkshopModManager.GetCurrentWorkshopIDs;
                     SaveCurrentSetup();
@@ -240,7 +241,8 @@ namespace SaveSystem
                         return false;
                     }
                     Directory.CreateDirectory(SaveFolderPath + "/" + newFolderName);
-                    SaveEntry newSaveEntry = new SaveEntry(newFolderName, _name, !string.IsNullOrWhiteSpace(CurrentNamePlate) ? CurrentNamePlate : string.Empty, GetCurrentPlayerNames, SaveSystem_SteamWorkshop.SteamWorkshopModManager.GetCurrentWorkshopIDs);
+                    string NameplateName = Helper.GetNameplateName;
+                    SaveEntry newSaveEntry = new SaveEntry(newFolderName, _name, !string.IsNullOrWhiteSpace(NameplateName) ? NameplateName : string.Empty, GetCurrentPlayerNames, SaveSystem_SteamWorkshop.SteamWorkshopModManager.GetCurrentWorkshopIDs);
                     File.Copy(GameSaveFolderPath + "/" + _currentLoadedID.ToString() + ".plateupsave", newSaveEntry.FolderPath + "/" + _currentLoadedID.ToString() + ".plateupsave");
                     newSaveEntry.RefreshPreviousIDs();
                     Saves.Add(newSaveEntry);

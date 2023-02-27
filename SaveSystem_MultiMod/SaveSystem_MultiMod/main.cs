@@ -118,7 +118,7 @@ namespace SaveSystem_MultiMod
 
     public class SaveSystemMod : MonoBehaviour
     {
-        public const string Version = "1.3.14";
+        public const string Version = "1.3.15";
         private readonly HarmonyLib.Harmony m_harmony = new HarmonyLib.Harmony("com.aragami.plateup.mods.harmony");
         public static DisplayVersion m_DisplayVersion;
         public static string m_DisplayVersionDefaultText;
@@ -139,106 +139,6 @@ namespace SaveSystem_MultiMod
             m_DisplayVersion.Text.SetText(m_DisplayVersionDefaultText + extraText);
         }
     }
-    #region Reflection/Helper
-    public static class Helper
-    {
-        /// <summary>
-        /// Gets a MethodInfo of a given class using Reflection, that doesn't have parameters
-        /// </summary>
-        /// <param name="_typeOfOriginal">Type of class to find a Method on</param>
-        /// <param name="_name">Name of the Method to find</param>
-        /// <param name="_genericT">Type of Method</param>
-        /// <returns>MethodInfo if found</returns>
-        public static MethodInfo GetMethod(Type _typeOfOriginal, string _name, Type _genericT = null)
-        {
-            MethodInfo retVal = _typeOfOriginal.GetMethod(_name, BindingFlags.NonPublic | BindingFlags.Instance);
-            if (_genericT != null)
-            {
-                retVal = retVal.MakeGenericMethod(_genericT);
-            }
-            return retVal;
-        }
-
-        /// <summary>
-        /// Gets a MethodInfo of a given class using Reflection, that has Parameters
-        /// </summary>
-        /// <param name="_typeOfOriginal">Type of class to find a Method on</param>
-        /// <param name="_name">Name of the Method to find</param>
-        /// <param name="_paramTypes">Types of parameters of the Method in right order</param>
-        /// <param name="_genericT">Type of Method</param>
-        /// <returns>MethodInfo if found</returns>
-        public static MethodInfo GetMethod(Type _typeOfOriginal, string _name, Type[] _paramTypes, Type _genericT = null)
-        {
-            MethodInfo retVal = _typeOfOriginal.GetMethod(_name, BindingFlags.NonPublic | BindingFlags.Instance, null, _paramTypes, null);
-            if (_genericT != null)
-            {
-                retVal = retVal.MakeGenericMethod(_genericT);
-            }
-            return retVal;
-        }
-
-        /// <summary>
-        /// Gets a MethodInfo of a given class using Reflection, that has Parameters
-        /// </summary>
-        /// <param name="_typeOfOriginal">Type of class to find a Method on</param>
-        /// <param name="_name">Name of the Method to find</param>
-        /// <param name="_paramTypes">Types of parameters of the Method in right order</param>
-        /// <param name="_genericT">Type of Method</param>
-        /// <returns>MethodInfo if found</returns>
-        public static MethodInfo GetStaticMethod(Type _typeOfOriginal, string _name, Type[] _paramTypes, Type _genericT = null)
-        {
-            MethodInfo retVal = _typeOfOriginal.GetMethod(_name, BindingFlags.Static, null, _paramTypes, null);
-            if (_genericT != null)
-            {
-                retVal = retVal.MakeGenericMethod(_genericT);
-            }
-            return retVal;
-        }
-
-        public static string SanitizeUserInput(string _input)
-        {
-            if (!string.IsNullOrWhiteSpace(_input))
-            {
-                string s = string.Join("_", _input.Split(Path.GetInvalidFileNameChars()));
-                return string.Join("_", s.Split(Path.GetInvalidPathChars()));
-            }
-            return _input;
-        }
-
-        public static void ChangeScene(SceneType _next)
-        {
-            EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
-            Entity entity = entityManager.CreateEntity((ComponentType)typeof(SPerformSceneTransition), (ComponentType)typeof(CDoNotPersist));
-            entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
-            entityManager.AddComponentData<SPerformSceneTransition>(entity, new SPerformSceneTransition()
-            {
-                NextScene = _next
-            });
-        }
-
-        //  http://www.java2s.com/Code/CSharp/Reflection/Getsanassemblybyitsnameifitiscurrentlyloaded.htm
-        /// <summary>
-        /// Gets an assembly by its name if it is currently loaded
-        /// </summary>
-        /// <param name="Name">Name of the assembly to return</param>
-        /// <returns>The assembly specified if it exists, otherwise it returns null</returns>
-        public static System.Reflection.Assembly GetLoadedAssembly(string Name)
-        {
-            try
-            {
-                foreach (Assembly TempAssembly in AppDomain.CurrentDomain.GetAssemblies())
-                {
-                    if (TempAssembly.GetName().Name.Equals(Name, StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        return TempAssembly;
-                    }
-                }
-                return null;
-            }
-            catch { throw; }
-        }
-    }
-    #endregion
 
     #region Add SaveSystem to pause menu
     [HarmonyPatch(typeof(Kitchen.MainMenu), nameof(Kitchen.MainMenu.Setup))]
@@ -327,9 +227,17 @@ namespace SaveSystem_MultiMod
 
         public override void Setup(int player_id)
         {
-            AddLabel("Back to lobby?");
-            this.AddButton("Confirm", (Action<int>)(i => this.ReturnToLobby()));
-            this.AddButton(this.Localisation["CANCEL_PROFILE"], (Action<int>)(i => this.RequestPreviousMenu()));
+            AddLabel(Helper.GetNameplateName);
+            if (Helper.IsInCardSelection)
+            {
+                AddLabel("Please select a card first");
+            }
+            else
+            {
+                AddLabel("Back to lobby?");
+                AddButton("Confirm", (Action<int>)(i => ReturnToLobby()));
+            }
+            AddButton(Localisation["CANCEL_PROFILE"], (Action<int>)(i => RequestPreviousMenu()));
         }
 
         public void ReturnToLobby()
@@ -354,8 +262,8 @@ namespace SaveSystem_MultiMod
             AddInfo(SaveSystemMenu.currentlySelectedName);
             AddInfo(SaveSystemMenu.m_dicSavesDescription[SaveSystemMenu.currentlySelectedName].DateTime);
             AddInfo(SaveSystemMenu.m_dicSavesDescription[SaveSystemMenu.currentlySelectedName].NameplateName);
-            this.AddButton(this.Localisation["PROFILE_CONFIRM_DELETE"], (Action<int>)(i => this.ConfirmDelete()));
-            this.AddButton(this.Localisation["CANCEL_PROFILE"], (Action<int>)(i => this.RequestPreviousMenu()));
+            AddButton(Localisation["PROFILE_CONFIRM_DELETE"], (Action<int>)(i => ConfirmDelete()));
+            AddButton(Localisation["CANCEL_PROFILE"], (Action<int>)(i => RequestPreviousMenu()));
         }
 
         public void ConfirmDelete()
@@ -363,7 +271,7 @@ namespace SaveSystem_MultiMod
             SaveSystem_ModLoaderSystem.LogInfo("Deleting run: " + SaveSystemMenu.currentlySelectedName);
             SaveSystemManager.Instance.DeleteSave(SaveSystemMenu.currentlySelectedName);
             SaveSystemMenu.currentlySelectedName = null;
-            this.RequestPreviousMenu();
+            RequestPreviousMenu();
             SaveSystemMod.UpdateDisplayVersion();
         }
     }
@@ -383,8 +291,8 @@ namespace SaveSystem_MultiMod
             true
             }, (bool)SaveSystemManager.Instance.Settings["hidesaveinfo"].GetValue(SaveSetting.SettingType.boolValue), new List<string>()
             {
-            this.Localisation["SETTING_DISABLED"],
-            this.Localisation["SETTING_ENABLED"]
+            Localisation["SETTING_DISABLED"],
+            Localisation["SETTING_ENABLED"]
         });
         private Option<bool> GetShowSaveModsOption() => new Option<bool>(new List<bool>()
         {
@@ -392,8 +300,8 @@ namespace SaveSystem_MultiMod
             true
             }, (bool)SaveSystemManager.Instance.Settings["showsavemods"].GetValue(SaveSetting.SettingType.boolValue), new List<string>()
             {
-            this.Localisation["SETTING_DISABLED"],
-            this.Localisation["SETTING_ENABLED"]
+            Localisation["SETTING_DISABLED"],
+            Localisation["SETTING_ENABLED"]
         });
 
         public override void Setup(int player_id)
