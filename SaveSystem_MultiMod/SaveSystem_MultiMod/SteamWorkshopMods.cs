@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Steamworks.Ugc;
 using Steamworks;
+using Steamworks.Data;
 
 namespace SaveSystem_SteamWorkshop
 {
@@ -21,31 +22,16 @@ namespace SaveSystem_SteamWorkshop
         }
 
         #region GetWorkshopNames
-        private static async Task<List<string>> GetWorkshopNamesTask(params long[] _iDs)
+        private static List<string> GetWorkshopNames(params long[] _iDs)
         {
             List<ulong> paramValues = _iDs.Select(o => (ulong)o).ToList();
-            List<Item> retVal = new List<Item>();
-            List<Steamworks.Data.PublishedFileId> workshopIds = new List<Steamworks.Data.PublishedFileId>();
-            foreach (ulong i in paramValues)
-            {
-                Steamworks.Data.PublishedFileId publishedId = new Steamworks.Data.PublishedFileId();
-                publishedId.Value = i;
-                workshopIds.Add(publishedId);
-            }
-            Query subedItemsQuery = Query.Items.WithFileId(workshopIds.ToArray());
-            ResultPage? ugcResult = await subedItemsQuery.GetPageAsync(1); // TODO: multiple pages? - how many?
-            if (ugcResult != null)
-            {
-                foreach (Item workshopItem in ugcResult.Value.Entries)
-                {
-                    retVal.Add(workshopItem);
-                }
-            }
+            HashSet<PublishedFileId> workshopIds = new HashSet<PublishedFileId>();
+            List<Item> retVal = Task.Run(() => GetModItems(workshopIds)).GetAwaiter().GetResult();
             return retVal.Select(o => o.Title).ToList();
         }
         public static List<string> GetWorkshopNames(List<long> _iDs)
         {
-            return Task.Run(async () => await GetWorkshopNamesTask(_iDs.ToArray())).Result;
+            return GetWorkshopNames(_iDs.ToArray());
         }
         #endregion
 
@@ -63,20 +49,60 @@ namespace SaveSystem_SteamWorkshop
             return m_workshopMods;
         }
 
-        private static async void UpdateModsList()
+        private static void UpdateModsList()
         {
             if (m_workshopMods.Count == 0) // Don't update after the first execution (in case the user subscribes to mods while the game is opened)
             {
-                Query subedItemsQuery = Query.ItemsReadyToUse.WhereUserSubscribed(SteamClient.SteamId.AccountId);
-                ResultPage? ugcResult = await subedItemsQuery.GetPageAsync(1); // TODO: multiple pages? - how many?
-                if (ugcResult != null)
-                {
-                    foreach (Item workshopItem in ugcResult.Value.Entries)
-                    {
-                        m_workshopMods.Add(workshopItem);
-                    }
-                }
+                m_workshopMods = Task.Run(() => GetSubscribedModItems()).GetAwaiter().GetResult();
             }
+        }
+
+        public static async Task<List<Item>> GetSubscribedModItems()
+        {
+            List<Item> items = new List<Item>();
+            int page_number = 1;
+            int result_count = 0;
+            ResultPage value;
+            do
+            {
+                ResultPage? page = await Query.Items.WhereUserSubscribed().GetPageAsync(page_number);
+                if (!page.HasValue)
+                {
+                    break;
+                }
+
+                value = page.Value;
+                items.AddRange(value.Entries);
+                result_count += value.ResultCount;
+                page_number++;
+            }
+            while (value.ResultCount != 0 && result_count < value.TotalCount);
+
+            return items;
+        }
+
+        public static async Task<List<Item>> GetModItems(HashSet<PublishedFileId> _ids)
+        {
+            List<Item> items = new List<Item>();
+            int page_number = 1;
+            int result_count = 0;
+            ResultPage value;
+            do
+            {
+                ResultPage? page = await Query.Items.WithFileId(_ids.ToArray()).GetPageAsync(page_number);
+                if (!page.HasValue)
+                {
+                    break;
+                }
+
+                value = page.Value;
+                items.AddRange(value.Entries);
+                result_count += value.ResultCount;
+                page_number++;
+            }
+            while (value.ResultCount != 0 && result_count < value.TotalCount);
+
+            return items;
         }
     }
 }

@@ -9,6 +9,8 @@ using System.Globalization;
 using Kitchen;
 using SaveSystem_SteamWorkshop;
 using SaveSystem_MultiMod;
+using System.Reflection;
+using System.Xml.Linq;
 
 namespace SaveSystem
 {
@@ -32,6 +34,7 @@ namespace SaveSystem
         public List<SaveEntry> Saves = new List<SaveEntry>();
         public string SaveFolderPath { get; private set; }
         private readonly string GameSaveFolderPath = Application.persistentDataPath + "/Full";
+        private string GameSaveFolderPathSlot(int _slot) => GameSaveFolderPath + "/" + _slot.ToString();
         public SaveSettingManager Settings;
 
         private void Init()
@@ -48,47 +51,38 @@ namespace SaveSystem
         /// <summary>
         /// Whether the currently loaded run is already saved in the SaveSystem
         /// </summary>
-        public bool CurrentRunAlreadySaved
+        public bool GetCurrentRunAlreadySaved(int _slot)
         {
-            get
+            if (GetLoadedSaveID(_slot, out uint _id))
             {
-                if (GetLoadedSaveID(out uint _id))
+                SaveEntry tmp = GetSaveEntryForCurrentlyLoadedRun(_slot);
+                if (tmp != null)
                 {
-                    SaveEntry tmp = GetSaveEntryForCurrentlyLoadedRun();
-                    if (tmp != null)
-                    {
-                        return tmp.HasID(_id);
-                    }
+                    return tmp.HasID(_id);
                 }
-                return false;
             }
+            return false;
         }
-        public bool CurrentRunHasPreviousSaves
+
+        public bool GetCurrentRunHasPreviousSaves(int _slot)
         {
-            get
-            {
-                return GetSaveEntryForCurrentlyLoadedRun() != null;
-            }
+            return GetSaveEntryForCurrentlyLoadedRun(_slot) != null;
         }
+
         /// <summary>
         /// Name of the current run; if no run currently loaded its null
         /// </summary>
-        public string CurrentRunName
+        public string GetCurrentRunName(int _slot)
         {
-            get
-            {
-                return GetSaveEntryForCurrentlyLoadedRun()?.Name;
-            }
+            return GetSaveEntryForCurrentlyLoadedRun(_slot)?.Name;
         }
+
         /// <summary>
         /// Localized DateTime string representation of unix timestamp of current run; if no run currently loaded its null
         /// </summary>
-        public string CurrentRunDateTime
+        public string GetCurrentRunDateTime(int _slot)
         {
-            get
-            {
-                return GetSaveEntryForCurrentlyLoadedRun()?.GetDateTime;
-            }
+            return GetSaveEntryForCurrentlyLoadedRun(_slot)?.GetDateTime;
         }
 
         public bool SaveAlreadyExists(params string[] _wantedNames)
@@ -109,9 +103,9 @@ namespace SaveSystem
         /// </summary>
         /// <param name="_result">ID of the run</param>
         /// <returns>Whether there is currently a run</returns>
-        private bool GetLoadedSaveID(out uint _result)
+        private bool GetLoadedSaveID(int _slot, out uint _result)
         {
-            bool retVal = GetRunUnixUIntAtPath(GameSaveFolderPath, out uint result);
+            bool retVal = GetRunUnixUIntAtPath(GameSaveFolderPathSlot(_slot), out uint result);
             _result = result;
             return retVal;
         }
@@ -190,29 +184,18 @@ namespace SaveSystem
             return false;
         }
 
-        public List<string> GetCurrentPlayerNames
-        {
-            get
-            {
-                List<string> playerNames = new List<string>();
-                foreach (PlayerInfo info in Players.Main.All())
-                {
-                    playerNames.Add(info.Name);
-                }
-                return playerNames;
-            }
-        }
+        public List<string> GetCurrentPlayerNames => Players.Main.All().Select(x => x.Name).ToList();
 
         /// <summary>
         /// Saves the currently loaded save or creates a new SaveEntry if there is no exisitng save yet
         /// </summary>
         /// <param name="_name">Name of new save; If adding to existing save, this will be ignored</param>
         /// <returns>True if already saved or already exisiting identical save id; Otherwise false</returns>
-        public bool SaveCurrentSave(string _name = null)
+        public bool SaveCurrentSave(int _slot, string _name = null)
         {
-            if (GetLoadedSaveID(out uint _currentLoadedID)) // if any run loaded
+            if (GetLoadedSaveID(_slot, out uint _currentLoadedID)) // if any run loaded
             {
-                SaveEntry save = GetSaveEntryForCurrentlyLoadedRun();
+                SaveEntry save = GetSaveEntryForCurrentlyLoadedRun(_slot);
                 if (save != null)
                 {
                     if (save.NewestID == _currentLoadedID)
@@ -221,9 +204,9 @@ namespace SaveSystem
                         return true;
                     }
 
-                    File.Copy(GameSaveFolderPath + "/" + _currentLoadedID.ToString() + ".plateupsave", save.FolderPath + "/" + _currentLoadedID.ToString() + ".plateupsave");
+                    File.Copy(GameSaveFolderPathSlot(_slot) + "/" + _currentLoadedID.ToString() + ".plateupsave", save.FolderPath + "/" + _currentLoadedID.ToString() + ".plateupsave");
                     save.RefreshPreviousIDs();
-                    string NameplateName = Helper.GetNameplateName;
+                    string NameplateName = Helper.GetNameplateName; // TODO: Cant be done in lobby
                     save.NameplateName = !string.IsNullOrWhiteSpace(NameplateName) ? NameplateName : string.Empty;
                     save.PlayerNames = GetCurrentPlayerNames;
                     save.Mods = SteamWorkshopModManager.GetCurrentWorkshopIDs;
@@ -233,8 +216,7 @@ namespace SaveSystem
                 else if (_name != null)
                 {
                     // Test for duplicate name - already tested in main, just to be sure
-                    string newFolderName = SaveSystem_MultiMod.Helper.SanitizeUserInput(_name);
-                    newFolderName = string.IsNullOrWhiteSpace(newFolderName) ? _currentLoadedID.ToString() : newFolderName;
+                    string newFolderName = _currentLoadedID.ToString();
                     if (SaveAlreadyExists(newFolderName, _name))
                     {
                         SaveSystem_MultiMod.SaveSystem_ModLoaderSystem.LogWarning("Save: " + _name + " already exists!\nskipping saving. This should be a duplicate warning");
@@ -243,7 +225,7 @@ namespace SaveSystem
                     Directory.CreateDirectory(SaveFolderPath + "/" + newFolderName);
                     string NameplateName = Helper.GetNameplateName;
                     SaveEntry newSaveEntry = new SaveEntry(newFolderName, _name, !string.IsNullOrWhiteSpace(NameplateName) ? NameplateName : string.Empty, GetCurrentPlayerNames, SaveSystem_SteamWorkshop.SteamWorkshopModManager.GetCurrentWorkshopIDs);
-                    File.Copy(GameSaveFolderPath + "/" + _currentLoadedID.ToString() + ".plateupsave", newSaveEntry.FolderPath + "/" + _currentLoadedID.ToString() + ".plateupsave");
+                    File.Copy(GameSaveFolderPathSlot(_slot) + "/" + _currentLoadedID.ToString() + ".plateupsave", newSaveEntry.FolderPath + "/" + _currentLoadedID.ToString() + ".plateupsave");
                     newSaveEntry.RefreshPreviousIDs();
                     Saves.Add(newSaveEntry);
                     SaveCurrentSetup();
@@ -257,9 +239,9 @@ namespace SaveSystem
         /// Finds the SaveEntry that is currently associated with the current run that is in the game, if available
         /// </summary>
         /// <returns>SaveEntry associated with the current run, otherwise null</returns>
-        public SaveEntry GetSaveEntryForCurrentlyLoadedRun()
+        public SaveEntry GetSaveEntryForCurrentlyLoadedRun(int _slot)
         {
-            string[] currentFiles = Directory.GetFiles(GameSaveFolderPath, "*.plateupsave");
+            string[] currentFiles = Directory.GetFiles(GameSaveFolderPathSlot(_slot), "*.plateupsave");
             foreach (SaveEntry save in Saves)
             {
                 foreach (string currentFile in currentFiles)
@@ -310,7 +292,7 @@ namespace SaveSystem
         /// Loads a specific save and removes all already existing previously loaded run files
         /// </summary>
         /// <param name="_name">Save to load</param>
-        public void LoadSave(string _name)
+        public void LoadSave(int _slot, string _name)
         {
             // TODO: Check for already loaded
             foreach (SaveEntry saveEntry in Saves)
@@ -319,11 +301,14 @@ namespace SaveSystem
                 if (saveEntry.Name == _name)
                 {
                     // TODO: maybe put all removed files inside a "deleted" folder which get cleaned up on game start
-                    RemoveAllFiles(GameSaveFolderPath, false); // TODO: Persistence.ClearSaves<FullWorldSaveSystem>();
-                    WorldBackupSystem.ClearBackup();
+                    RemoveAllFiles(GameSaveFolderPathSlot(_slot), false); // TODO: Persistence.ClearSaves<FullWorldSaveSystem>();
+                    //Type type = typeof(Persistence);
+                    //PropertyInfo info = type.GetProperty("WorldBackup", BindingFlags.NonPublic | BindingFlags.Static);
+                    //WorldBackupSystem value = (WorldBackupSystem)info.GetValue(null);
+                    //value.ClearBackup();
                     try
                     {
-                        File.Copy(saveEntry.NewsetFilePath, Path.Combine(GameSaveFolderPath, Path.GetFileName(saveEntry.NewsetFilePath)));
+                        File.Copy(saveEntry.NewsetFilePath, Path.Combine(GameSaveFolderPathSlot(_slot), Path.GetFileName(saveEntry.NewsetFilePath)));
                     }
                     catch (DirectoryNotFoundException _dirEx)
                     {
@@ -357,7 +342,7 @@ namespace SaveSystem
         /// Removes all files at a given path including the directory itself
         /// </summary>
         /// <param name="_path">Path to delete files from</param>
-        private void RemoveAllFiles(string _path, bool _folderAsWell = true)
+        private static void RemoveAllFiles(string _path, bool _folderAsWell = true)
         {
             try
             {

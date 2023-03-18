@@ -19,6 +19,7 @@ using Steamworks;
 using System.Windows.Forms;
 using Steamworks.Ugc;
 using System.Threading.Tasks;
+using Kitchen.Components;
 
 namespace SaveSystem_MultiMod
 {
@@ -118,26 +119,27 @@ namespace SaveSystem_MultiMod
 
     public class SaveSystemMod : MonoBehaviour
     {
-        public const string Version = "1.3.15";
+        public const string Version = "1.4.0";
         private readonly HarmonyLib.Harmony m_harmony = new HarmonyLib.Harmony("com.aragami.plateup.mods.harmony");
-        public static DisplayVersion m_DisplayVersion;
-        public static string m_DisplayVersionDefaultText;
+        //public static DisplayVersion m_DisplayVersion;
+        //public static string m_DisplayVersionDefaultText;
+        public static int m_selectedSaveSlot = 1;
 
         private void Awake()
         {
             m_harmony.PatchAll(Assembly.GetExecutingAssembly());
         }
 
-        public static void UpdateDisplayVersion()
-        {
-            string extraText = String.Empty;
-            if (!(bool)SaveSystemManager.Instance.Settings["hidesaveinfo"].GetValue(SaveSetting.SettingType.boolValue))
-            {
-                string currentName = SaveSystemManager.Instance.CurrentRunName;
-                extraText = "\n" + (SaveSystemManager.Instance.CurrentRunAlreadySaved ? "Last save at " + SaveSystemManager.Instance.GetSaveEntryForCurrentlyLoadedRun().GetDateTime + ": " : "Unsaved: ") + (String.IsNullOrWhiteSpace(currentName) ? "No save selected" : currentName);
-            }
-            m_DisplayVersion.Text.SetText(m_DisplayVersionDefaultText + extraText);
-        }
+        //public static void UpdateDisplayVersion()
+        //{
+        //    string extraText = String.Empty;
+        //    if (!(bool)SaveSystemManager.Instance.Settings["hidesaveinfo"].GetValue(SaveSetting.SettingType.boolValue))
+        //    {
+        //        string currentName = SaveSystemManager.Instance.GetCurrentRunName();
+        //        extraText = "\n" + (SaveSystemManager.Instance.GetCurrentRunAlreadySaved() ? "Last save at " + SaveSystemManager.Instance.GetSaveEntryForCurrentlyLoadedRun().GetDateTime + ": " : "Unsaved: ") + (String.IsNullOrWhiteSpace(currentName) ? "No save selected" : currentName);
+        //    }
+        //    m_DisplayVersion.Text.SetText(m_DisplayVersionDefaultText + extraText);
+        //}
     }
 
     #region Add SaveSystem to pause menu
@@ -149,13 +151,13 @@ namespace SaveSystem_MultiMod
             if (Session.CurrentGameNetworkMode != GameNetworkMode.Host || (GameInfo.CurrentScene != SceneType.Franchise && GameInfo.CurrentScene != SceneType.Kitchen))
                 return;
             MethodInfo m_addButtonMenu = Helper.GetMethod(__instance.GetType(), "AddSubmenuButton");
-            m_addButtonMenu.Invoke(__instance, new object[3] { "Save System", typeof(SaveSystemMenu), false });
+            m_addButtonMenu.Invoke(__instance, new object[3] { "Save System", typeof(SaveSystemSelectSlotMenu), false });
 
-            #region BackToLobbyPatch
-            MethodInfo m_addBackToLobbyButton = Helper.GetMethod(__instance.GetType(), "AddSubmenuButton");
-            if (GameInfo.CurrentScene == SceneType.Kitchen)
-                m_addBackToLobbyButton.Invoke(__instance, new object[3] { "Back to lobby", typeof(SaveSystemBackToLobby), false }); // TODO: Add voting
-            #endregion
+            //#region BackToLobbyPatch
+            //MethodInfo m_addBackToLobbyButton = Helper.GetMethod(__instance.GetType(), "AddSubmenuButton");
+            //if (GameInfo.CurrentScene == SceneType.Kitchen)
+            //    m_addBackToLobbyButton.Invoke(__instance, new object[3] { "Back to lobby", typeof(SaveSystemBackToLobby), false }); // TODO: Add voting
+            //#endregion
         }
 
         static void BackToLobby(Kitchen.MainMenu __instance)
@@ -175,8 +177,8 @@ namespace SaveSystem_MultiMod
             ModuleList moduleList = (ModuleList)__instance.GetType().GetField("ModuleList", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(__instance);
             MethodInfo mInfo = Helper.GetMethod(__instance.GetType(), "AddMenu");
 
-            mInfo.Invoke(__instance, new object[2] { typeof(SaveSystemMenu), new SaveSystemMenu(__instance.ButtonContainer, moduleList) });
-            mInfo.Invoke(__instance, new object[2] { typeof(SaveSystemBackToLobby), new SaveSystemBackToLobby(__instance.ButtonContainer, moduleList) });
+            mInfo.Invoke(__instance, new object[2] { typeof(SaveSystemSelectSlotMenu), new SaveSystemSelectSlotMenu(__instance.ButtonContainer, moduleList) });
+            //mInfo.Invoke(__instance, new object[2] { typeof(SaveSystemBackToLobby), new SaveSystemBackToLobby(__instance.ButtonContainer, moduleList) });
         }
     }
     #endregion
@@ -186,11 +188,11 @@ namespace SaveSystem_MultiMod
     class CreateNewKitchen_Patch
     {
         [HarmonyPostfix]
-        static void Postfix(CreateNewKitchen __instance, EntityQuery ____SingletonEntityQuery_SCreateScene_29)
+        static void Postfix(CreateNewKitchen __instance, EntityQuery ____SingletonEntityQuery_SCreateScene_29, WorldBackupSystem ___WorldBackup)
         {
             if (____SingletonEntityQuery_SCreateScene_29.GetSingleton<SCreateScene>().Type != SceneType.Kitchen)
                 return;
-            Persistence.ClearSaves<FullWorldSaveSystem>();
+            ___WorldBackup.ClearBackup(); //TODO: ClearFullWorldSaves(int slot) delete slot as well
         }
     }
     #endregion
@@ -219,36 +221,36 @@ namespace SaveSystem_MultiMod
     #endregion
 
     #region ReworkUI
-    public class SaveSystemBackToLobby : Menu<PauseMenuAction>
-    {
-        public SaveSystemBackToLobby(Transform container, ModuleList module_list) : base(container, module_list)
-        {
-        }
+    //public class SaveSystemBackToLobby : Menu<PauseMenuAction>
+    //{
+    //    public SaveSystemBackToLobby(Transform container, ModuleList module_list) : base(container, module_list)
+    //    {
+    //    }
 
-        public override void Setup(int player_id)
-        {
-            AddLabel(Helper.GetNameplateName);
-            if (Helper.IsInCardSelection)
-            {
-                AddLabel("Please select a card first");
-            }
-            else
-            {
-                AddLabel("Back to lobby?");
-                AddButton("Confirm", (Action<int>)(i => ReturnToLobby()));
-            }
-            AddButton(Localisation["CANCEL_PROFILE"], (Action<int>)(i => RequestPreviousMenu()));
-        }
+    //    public override void Setup(int player_id)
+    //    {
+    //        AddLabel(Helper.GetNameplateName);
+    //        if (Helper.IsInCardSelection)
+    //        {
+    //            AddLabel("Please select a card first");
+    //        }
+    //        else
+    //        {
+    //            AddLabel("Back to lobby?");
+    //            AddButton("Confirm", (Action<int>)(i => ReturnToLobby()));
+    //        }
+    //        AddButton(Localisation["CANCEL_PROFILE"], (Action<int>)(i => RequestPreviousMenu()));
+    //    }
 
-        public void ReturnToLobby()
-        {
-            SaveSystem_ModLoaderSystem.LogInfo("Saving current run with previouse one.");
-            SaveSystemManager.Instance.SaveCurrentSave();
-            SaveSystemMod.UpdateDisplayVersion();
-            Helper.ChangeScene(SceneType.Franchise);
-            RequestAction(PauseMenuAction.CloseMenu);
-        }
-    }
+    //    public void ReturnToLobby()
+    //    {
+    //        SaveSystem_ModLoaderSystem.LogInfo("Saving current run with previouse one.");
+    //        SaveSystemManager.Instance.SaveCurrentSave();
+    //        SaveSystemMod.UpdateDisplayVersion();
+    //        Helper.ChangeScene(SceneType.Franchise);
+    //        RequestAction(PauseMenuAction.CloseMenu);
+    //    }
+    //}
 
     public class SaveSystemDeleteMenu : Menu<PauseMenuAction>
     {
@@ -272,7 +274,7 @@ namespace SaveSystem_MultiMod
             SaveSystemManager.Instance.DeleteSave(SaveSystemMenu.currentlySelectedName);
             SaveSystemMenu.currentlySelectedName = null;
             RequestPreviousMenu();
-            SaveSystemMod.UpdateDisplayVersion();
+            //SaveSystemMod.UpdateDisplayVersion();
         }
     }
 
@@ -314,7 +316,7 @@ namespace SaveSystem_MultiMod
             {
                 SaveSystemManager.Instance.Settings["hidesaveinfo"].SetValue(value);
                 SaveSystemManager.Instance.Settings.SaveCurrentSettings();
-                SaveSystemMod.UpdateDisplayVersion();
+                //SaveSystemMod.UpdateDisplayVersion();
             });
             AddInfo("Hides infos about the save state in the bottom right corner of the screen.");
             AddLabel("Show mods of save");
@@ -322,7 +324,7 @@ namespace SaveSystem_MultiMod
             {
                 SaveSystemManager.Instance.Settings["showsavemods"].SetValue(value); // Gets initiallised when first changing this option, but fine for now
                 SaveSystemManager.Instance.Settings.SaveCurrentSettings();
-                SaveSystemMod.UpdateDisplayVersion();
+                //SaveSystemMod.UpdateDisplayVersion();
             });
             AddInfo("Turning this on might increase the Menu load times.");
             New<SpacerElement>();
@@ -338,11 +340,11 @@ namespace SaveSystem_MultiMod
 
         public override void Setup(int player_id)
         {
-            if (!SaveSystemManager.Instance.CurrentRunAlreadySaved)
+            if (!SaveSystemManager.Instance.GetCurrentRunAlreadySaved(SaveSystemMod.m_selectedSaveSlot))
             {
                 AddLabel("Overwrite currently loaded save?");
-                AddInfo(SaveSystemManager.Instance.CurrentRunName);
-                AddInfo(SaveSystemManager.Instance.CurrentRunDateTime);
+                AddInfo(SaveSystemManager.Instance.GetCurrentRunName(SaveSystemMod.m_selectedSaveSlot));
+                AddInfo(SaveSystemManager.Instance.GetCurrentRunDateTime(SaveSystemMod.m_selectedSaveSlot));
                 New<SpacerElement>();
             }
             this.AddButton("Confirm loading", (Action<int>)(i => this.LoadAndGoBack()));
@@ -352,12 +354,44 @@ namespace SaveSystem_MultiMod
         public void LoadAndGoBack()
         {
             SaveSystem_ModLoaderSystem.LogInfo("Loading run: " + SaveSystemMenu.currentlySelectedName);
-            SaveSystemManager.Instance.LoadSave(SaveSystemMenu.currentlySelectedName);
+            SaveSystemManager.Instance.LoadSave(SaveSystemMod.m_selectedSaveSlot, SaveSystemMenu.currentlySelectedName);
             SaveSystemMenu.currentlySelectedName = null;
             this.RequestAction(PauseMenuAction.CloseMenu);
-            SaveSystemMod.UpdateDisplayVersion();
+            //SaveSystemMod.UpdateDisplayVersion();
             Helper.ChangeScene(SceneType.Franchise); // Reload scene
         }
+    }
+
+    public class SaveSystemSelectSlotMenu : Menu<PauseMenuAction>
+    {
+        
+
+        public SaveSystemSelectSlotMenu(Transform container, ModuleList module_list) : base(container, module_list)
+        {
+        }
+
+        public override void CreateSubmenus(ref Dictionary<Type, Menu<PauseMenuAction>> menus)
+        {
+            menus.Add(typeof(SaveSystemMenu), new SaveSystemMenu(Container, ModuleList));
+        }
+
+        public override void Setup(int player_id)
+        {
+            SaveSlotSelection = new Option<int>(new List<int>() { 1, 2, 3, 4, 5 }, SaveSystemMod.m_selectedSaveSlot, SlotSelection);
+            SaveSlotSelection.OnChanged += (_, newSlot) => ChangeSlot(newSlot);
+
+            AddLabel("Select Slot to modify");
+            AddSelect(SaveSlotSelection);
+            SelectSlotButton = AddSubmenuButton("Select Slot " + SaveSystemMod.m_selectedSaveSlot.ToString(), typeof(SaveSystemMenu), false);
+            //SelectSlotButton = AddButton("Select Slot " + SaveSystemMod.m_selectedSaveSlot.ToString(), (Action<int>)(_ =>
+            //{
+            //    RequestSubMenu(typeof(SaveSystemMenu));
+            //}));
+            New<SpacerElement>();
+            AddButton(this.Localisation["CANCEL_PROFILE"], (Action<int>)(i => this.RequestPreviousMenu()));
+        }
+
+        
     }
 
     public class SaveSystemMenu : Menu<PauseMenuAction>
@@ -367,11 +401,13 @@ namespace SaveSystem_MultiMod
         }
 
         private static int PlayerID;
+        private ButtonElement SelectSlotButton;
         private ButtonElement SaveButton;
         private ButtonElement LoadButton;
         private ButtonElement RenameButton;
         private ButtonElement DeleteButton;
         private Option<string> SaveSelectOption;
+        private Option<int> SaveSlotSelection;
         private IModule SaveSelectModule;
         private LabelElement SaveSelectDateTime;
         private LabelElement SaveSelectNameplateName;
@@ -382,6 +418,7 @@ namespace SaveSystem_MultiMod
 
         public override void CreateSubmenus(ref Dictionary<Type, Menu<PauseMenuAction>> menus)
         {
+            Debug.LogError("Sub");
             menus.Add(typeof(SaveSystemDeleteMenu), new SaveSystemDeleteMenu(Container, ModuleList));
             menus.Add(typeof(SaveSystemLoadConfirmMenu), new SaveSystemLoadConfirmMenu(Container, ModuleList));
             menus.Add(typeof(SaveSystemOptionsMenu), new SaveSystemOptionsMenu(Container, ModuleList));
@@ -392,11 +429,12 @@ namespace SaveSystem_MultiMod
         {
             None = 0,
             ShowSaveButton = 1,
-            ShowSelection = 2,
+            ShowSaveSelection = 2,
             ShowLoadButton = 4,
             ShowRenameButton = 8,
             ShowDeleteButton = 16,
             ShowOptionsButton = 32,
+            ShowSlotSelection = 64,
         }
 
         public override void Setup(int player_id)
@@ -417,6 +455,7 @@ namespace SaveSystem_MultiMod
                     SetLoadButtonText();
                 });
             }
+            SaveSlotSelection.OnChanged += (_, newSlot) => ChangeSlot(newSlot);
             #endregion
 
             //AddLabel("Save System");
@@ -426,18 +465,26 @@ namespace SaveSystem_MultiMod
             }
             else
             {
+                showFlags |= ShowUIFlags.ShowSlotSelection;
                 if (/*GameInfo.CurrentScene != SceneType.Kitchen && */SaveSystemManager.Instance.HasSavedRuns)
                 {
-                    showFlags |= ShowUIFlags.ShowSelection;
+                    showFlags |= ShowUIFlags.ShowSaveSelection;
                     showFlags |= ShowUIFlags.ShowLoadButton;
                     showFlags |= ShowUIFlags.ShowRenameButton;
                     showFlags |= ShowUIFlags.ShowDeleteButton;
                     showFlags |= ShowUIFlags.ShowOptionsButton;
+                    showFlags |= ShowUIFlags.ShowSaveButton;
                 }
+            }
+            if (showFlags.HasFlag(ShowUIFlags.ShowSlotSelection))
+            {
+                AddLabel("Select Slot to modify");
+                AddSelect(SaveSlotSelection);
+                SelectSlotButton = AddSubmenuButton("Select Slot " + SaveSystemMod.m_selectedSaveSlot.ToString(), typeof(SaveSystemMenu), false);
             }
             if (showFlags.HasFlag(ShowUIFlags.ShowSaveButton))
             {
-                if (SaveSystemManager.Instance.CurrentRunAlreadySaved)
+                if (SaveSystemManager.Instance.GetCurrentRunAlreadySaved(SaveSystemMod.m_selectedSaveSlot))
                 {
                     SaveButton = AddButton("Already saved", (Action<int>)(_ =>
                     {
@@ -449,22 +496,22 @@ namespace SaveSystem_MultiMod
                     SaveButton = AddButton("Save now", (Action<int>)(_ =>
                     {
                         PlayerID = player_id;
-                        if (!SaveSystemManager.Instance.CurrentRunHasPreviousSaves)
+                        if (!SaveSystemManager.Instance.GetCurrentRunHasPreviousSaves(SaveSystemMod.m_selectedSaveSlot))
                         {
                             TextInputView.RequestTextInput("Enter save name:", /*TODO: Preset with franchise name*/"", 30, new Action<TextInputView.TextInputState, string>(SaveRun));
-                            SaveSystemMod.UpdateDisplayVersion();
+                            //SaveSystemMod.UpdateDisplayVersion();
                         }
                         else
                         {
                             SaveRun();
-                            SaveSystemMod.UpdateDisplayVersion();
+                            //SaveSystemMod.UpdateDisplayVersion();
                         }
                         this.RequestAction(PauseMenuAction.CloseMenu);
-                        SaveSystemMod.UpdateDisplayVersion();
+                        //SaveSystemMod.UpdateDisplayVersion();
                     }));
                 }
             }
-            if (showFlags.HasFlag(ShowUIFlags.ShowSelection))
+            if (showFlags.HasFlag(ShowUIFlags.ShowSaveSelection))
             {
                 SaveSelectModule = AddSelect<string>(SaveSelectOption);
                 SaveSelectDateTime = AddLabel(m_dicSavesDescription[currentlySelectedName].DateTime);
@@ -503,6 +550,7 @@ namespace SaveSystem_MultiMod
             {
                 AddButton("Options", (Action<int>)(_ =>
                 {
+                    Debug.LogError("WHAT");
                     RequestSubMenu(typeof(SaveSystemOptionsMenu));
                 }));
                 New<SpacerElement>();
@@ -514,16 +562,39 @@ namespace SaveSystem_MultiMod
         private void InitSaveInfo()
         {
             List<string> saveNames = SaveSystemManager.Instance.GetSaveNamesList();
-            string preselectedName = SaveSystemManager.Instance.CurrentRunName != null ? SaveSystemManager.Instance.CurrentRunName : saveNames[0];
+            string preselectedName = SaveSystemManager.Instance.GetCurrentRunName(SaveSystemMod.m_selectedSaveSlot) != null ? SaveSystemManager.Instance.GetCurrentRunName(SaveSystemMod.m_selectedSaveSlot) : saveNames[0];
             currentlySelectedName = preselectedName;
             List<string> saveDisplayNames = SaveSystemManager.Instance.GetSaveDisplayNamesList();
             m_dicSavesDescription = saveNames.Zip(SaveSystemManager.Instance.GetDescriptionList(), (k, v) => new { k, v }).ToDictionary(x => x.k, x => x.v);
             SaveSelectOption = new Option<string>(saveNames, preselectedName, saveDisplayNames);
+
+            SaveSlotSelection = new Option<int>(new List<int>() { 1, 2, 3, 4, 5 }, SaveSystemMod.m_selectedSaveSlot, SlotSelection);
+        }
+
+        private void ChangeSlot(int _slot)
+        {
+            SaveSystemMod.m_selectedSaveSlot = _slot;
+            SelectSlotButton?.SetLabel("Select Slot " + _slot.ToString());
+        }
+
+        private static List<string> SlotSelection
+        {
+            get
+            {
+                List<string> stringList = new List<string>();
+                for (int i = 0; i < 5; ++i)
+                {
+                    string str1 = string.Concat(Enumerable.Repeat<string>("<sprite name=\"pip_filled\"> ", i + 1));
+                    string str2 = string.Concat(Enumerable.Repeat<string>("<sprite name=\"pip_empty\"> ", 5 - i - 1));
+                    stringList.Add("<size=1.7><voffset=-0.5><mspace=1em>" + str1 + str2);
+                }
+                return stringList;
+            }
         }
 
         private void SetLoadButtonText()
         {
-            if (SaveSystemManager.Instance.CurrentRunName == currentlySelectedName)
+            if (SaveSystemManager.Instance.GetCurrentRunName(SaveSystemMod.m_selectedSaveSlot) == currentlySelectedName)
             {
                 LoadButton?.SetLabel("Already loaded");
             }
@@ -541,8 +612,8 @@ namespace SaveSystem_MultiMod
         public void SaveRun()
         {
             SaveSystem_ModLoaderSystem.LogInfo("Saving current run with previouse one.");
-            SaveSystemManager.Instance.SaveCurrentSave();
-            SaveSystemMod.UpdateDisplayVersion();
+            SaveSystemManager.Instance.SaveCurrentSave(SaveSystemMod.m_selectedSaveSlot);
+            //SaveSystemMod.UpdateDisplayVersion();
             ReloadMenu(SaveButton);
         }
 
@@ -557,8 +628,8 @@ namespace SaveSystem_MultiMod
                 return;
             }
             SaveSystem_ModLoaderSystem.LogInfo("Saving current run: " + _name);
-            SaveSystemManager.Instance.SaveCurrentSave(_name);
-            SaveSystemMod.UpdateDisplayVersion();
+            SaveSystemManager.Instance.SaveCurrentSave(SaveSystemMod.m_selectedSaveSlot, _name);
+            //SaveSystemMod.UpdateDisplayVersion();
             ReloadMenu(SaveButton);
         }
 
@@ -569,22 +640,22 @@ namespace SaveSystem_MultiMod
             SaveSystem_ModLoaderSystem.LogInfo("Renaming current run: " + currentlySelectedName + " to: " + _name);
             SaveSystemManager.Instance.RenameSave(currentlySelectedName, _name);
             RequestSubMenu(this.GetType(), true); // Doesnt work for some reason
-            SaveSystemMod.UpdateDisplayVersion();
+            //SaveSystemMod.UpdateDisplayVersion();
         }
     }
     #endregion
 
-    [HarmonyPatch(typeof(DisplayVersion), "Awake")]
-    public static class DisplayVersionPatch
-    {
-        // ReSharper disable once UnusedMember.Local
-        static void Postfix(ref DisplayVersion __instance)
-        {
-            if (Session.CurrentGameNetworkMode != GameNetworkMode.Host/* || GameInfo.CurrentScene != SceneType.Franchise*/)
-                return;
-            SaveSystemMod.m_DisplayVersion = __instance;
-            SaveSystemMod.m_DisplayVersionDefaultText = __instance.Text.text;
-            SaveSystemMod.UpdateDisplayVersion();
-        }
-    }
+    //[HarmonyPatch(typeof(DisplayVersion), "Awake")]
+    //public static class DisplayVersionPatch
+    //{
+    //    // ReSharper disable once UnusedMember.Local
+    //    static void Postfix(ref DisplayVersion __instance)
+    //    {
+    //        if (Session.CurrentGameNetworkMode != GameNetworkMode.Host/* || GameInfo.CurrentScene != SceneType.Franchise*/)
+    //            return;
+    //        SaveSystemMod.m_DisplayVersion = __instance;
+    //        SaveSystemMod.m_DisplayVersionDefaultText = __instance.Text.text;
+    //        SaveSystemMod.UpdateDisplayVersion();
+    //    }
+    //}
 }
