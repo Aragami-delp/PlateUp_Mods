@@ -103,7 +103,7 @@ namespace SaveSystem_MultiMod
         private static async Task<int> SubscribeToHarmony()
         {
             Query harmonyItemQuery = Query.ItemsReadyToUse.WithFileId(2898033283);
-            ResultPage? ugcResult = await harmonyItemQuery.GetPageAsync(1); // TODO: multiple pages? - how many?
+            ResultPage? ugcResult = await harmonyItemQuery.GetPageAsync(1); // TODO: multiple pages? - how many? - take a look at DependencyChecker - not needed since with this fileid there is always only 1 page
             if (ugcResult != null)
             {
                 foreach (Item harmonyItem in ugcResult.Value.Entries)
@@ -151,7 +151,7 @@ namespace SaveSystem_MultiMod
             if (Session.CurrentGameNetworkMode != GameNetworkMode.Host || (GameInfo.CurrentScene != SceneType.Franchise && GameInfo.CurrentScene != SceneType.Kitchen))
                 return;
             MethodInfo m_addButtonMenu = Helper.GetMethod(__instance.GetType(), "AddSubmenuButton");
-            m_addButtonMenu.Invoke(__instance, new object[3] { "Save System", typeof(SaveSystemSelectSlotMenu), false });
+            m_addButtonMenu.Invoke(__instance, new object[3] { "Save System", typeof(SaveSystemMenu), false });
 
             //#region BackToLobbyPatch
             //MethodInfo m_addBackToLobbyButton = Helper.GetMethod(__instance.GetType(), "AddSubmenuButton");
@@ -177,7 +177,7 @@ namespace SaveSystem_MultiMod
             ModuleList moduleList = (ModuleList)__instance.GetType().GetField("ModuleList", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(__instance);
             MethodInfo mInfo = Helper.GetMethod(__instance.GetType(), "AddMenu");
 
-            mInfo.Invoke(__instance, new object[2] { typeof(SaveSystemSelectSlotMenu), new SaveSystemSelectSlotMenu(__instance.ButtonContainer, moduleList) });
+            mInfo.Invoke(__instance, new object[2] { typeof(SaveSystemMenu), new SaveSystemMenu(__instance.ButtonContainer, moduleList) });
             //mInfo.Invoke(__instance, new object[2] { typeof(SaveSystemBackToLobby), new SaveSystemBackToLobby(__instance.ButtonContainer, moduleList) });
         }
     }
@@ -340,9 +340,9 @@ namespace SaveSystem_MultiMod
 
         public override void Setup(int player_id)
         {
-            if (!SaveSystemManager.Instance.GetCurrentRunAlreadySaved(SaveSystemMod.m_selectedSaveSlot))
+            if (SaveSystemManager.Instance.SlotHasRun(SaveSystemMod.m_selectedSaveSlot) && !SaveSystemManager.Instance.GetCurrentRunAlreadySaved(SaveSystemMod.m_selectedSaveSlot))
             {
-                AddLabel("Overwrite currently loaded save?");
+                AddLabel("Overwrite currently loaded save in slot " + SaveSystemMod.m_selectedSaveSlot.ToString() + "?");
                 AddInfo(SaveSystemManager.Instance.GetCurrentRunName(SaveSystemMod.m_selectedSaveSlot));
                 AddInfo(SaveSystemManager.Instance.GetCurrentRunDateTime(SaveSystemMod.m_selectedSaveSlot));
                 New<SpacerElement>();
@@ -351,7 +351,7 @@ namespace SaveSystem_MultiMod
             this.AddButton(this.Localisation["CANCEL_PROFILE"], (Action<int>)(i => this.RequestPreviousMenu()));
         }
 
-        public void LoadAndGoBack()
+        public void LoadAndGoBack() // TODO: NTH - Not reload lobby when loading
         {
             SaveSystem_ModLoaderSystem.LogInfo("Loading run: " + SaveSystemMenu.currentlySelectedName);
             SaveSystemManager.Instance.LoadSave(SaveSystemMod.m_selectedSaveSlot, SaveSystemMenu.currentlySelectedName);
@@ -362,38 +362,6 @@ namespace SaveSystem_MultiMod
         }
     }
 
-    public class SaveSystemSelectSlotMenu : Menu<PauseMenuAction>
-    {
-        
-
-        public SaveSystemSelectSlotMenu(Transform container, ModuleList module_list) : base(container, module_list)
-        {
-        }
-
-        public override void CreateSubmenus(ref Dictionary<Type, Menu<PauseMenuAction>> menus)
-        {
-            menus.Add(typeof(SaveSystemMenu), new SaveSystemMenu(Container, ModuleList));
-        }
-
-        public override void Setup(int player_id)
-        {
-            SaveSlotSelection = new Option<int>(new List<int>() { 1, 2, 3, 4, 5 }, SaveSystemMod.m_selectedSaveSlot, SlotSelection);
-            SaveSlotSelection.OnChanged += (_, newSlot) => ChangeSlot(newSlot);
-
-            AddLabel("Select Slot to modify");
-            AddSelect(SaveSlotSelection);
-            SelectSlotButton = AddSubmenuButton("Select Slot " + SaveSystemMod.m_selectedSaveSlot.ToString(), typeof(SaveSystemMenu), false);
-            //SelectSlotButton = AddButton("Select Slot " + SaveSystemMod.m_selectedSaveSlot.ToString(), (Action<int>)(_ =>
-            //{
-            //    RequestSubMenu(typeof(SaveSystemMenu));
-            //}));
-            New<SpacerElement>();
-            AddButton(this.Localisation["CANCEL_PROFILE"], (Action<int>)(i => this.RequestPreviousMenu()));
-        }
-
-        
-    }
-
     public class SaveSystemMenu : Menu<PauseMenuAction>
     {
         public SaveSystemMenu(Transform container, ModuleList module_list) : base(container, module_list)
@@ -401,7 +369,6 @@ namespace SaveSystem_MultiMod
         }
 
         private static int PlayerID;
-        private ButtonElement SelectSlotButton;
         private ButtonElement SaveButton;
         private ButtonElement LoadButton;
         private ButtonElement RenameButton;
@@ -418,7 +385,6 @@ namespace SaveSystem_MultiMod
 
         public override void CreateSubmenus(ref Dictionary<Type, Menu<PauseMenuAction>> menus)
         {
-            Debug.LogError("Sub");
             menus.Add(typeof(SaveSystemDeleteMenu), new SaveSystemDeleteMenu(Container, ModuleList));
             menus.Add(typeof(SaveSystemLoadConfirmMenu), new SaveSystemLoadConfirmMenu(Container, ModuleList));
             menus.Add(typeof(SaveSystemOptionsMenu), new SaveSystemOptionsMenu(Container, ModuleList));
@@ -455,7 +421,7 @@ namespace SaveSystem_MultiMod
                     SetLoadButtonText();
                 });
             }
-            SaveSlotSelection.OnChanged += (_, newSlot) => ChangeSlot(newSlot);
+            SaveSlotSelection.OnChanged += (_, newSlot) => ChangeSlot(newSlot, player_id);
             #endregion
 
             //AddLabel("Save System");
@@ -480,36 +446,11 @@ namespace SaveSystem_MultiMod
             {
                 AddLabel("Select Slot to modify");
                 AddSelect(SaveSlotSelection);
-                SelectSlotButton = AddSubmenuButton("Select Slot " + SaveSystemMod.m_selectedSaveSlot.ToString(), typeof(SaveSystemMenu), false);
             }
             if (showFlags.HasFlag(ShowUIFlags.ShowSaveButton))
             {
-                if (SaveSystemManager.Instance.GetCurrentRunAlreadySaved(SaveSystemMod.m_selectedSaveSlot))
-                {
-                    SaveButton = AddButton("Already saved", (Action<int>)(_ =>
-                    {
-
-                    }));
-                }
-                else
-                {
-                    SaveButton = AddButton("Save now", (Action<int>)(_ =>
-                    {
-                        PlayerID = player_id;
-                        if (!SaveSystemManager.Instance.GetCurrentRunHasPreviousSaves(SaveSystemMod.m_selectedSaveSlot))
-                        {
-                            TextInputView.RequestTextInput("Enter save name:", /*TODO: Preset with franchise name*/"", 30, new Action<TextInputView.TextInputState, string>(SaveRun));
-                            //SaveSystemMod.UpdateDisplayVersion();
-                        }
-                        else
-                        {
-                            SaveRun();
-                            //SaveSystemMod.UpdateDisplayVersion();
-                        }
-                        this.RequestAction(PauseMenuAction.CloseMenu);
-                        //SaveSystemMod.UpdateDisplayVersion();
-                    }));
-                }
+                AddSaveButton(player_id);
+                New<SpacerElement>();
             }
             if (showFlags.HasFlag(ShowUIFlags.ShowSaveSelection))
             {
@@ -531,7 +472,7 @@ namespace SaveSystem_MultiMod
             }
             if (showFlags.HasFlag(ShowUIFlags.ShowRenameButton))
             {
-                RenameButton = AddButton("Rename", (Action<int>)(_ => // TODO: same name not allowed
+                RenameButton = AddButton("Rename", (Action<int>)(_ => // TODO: same name not allowed - fixed? by saving using timestamp (name may be same still)
                 {
                     PlayerID = player_id;
                     TextInputView.RequestTextInput("Enter new name:", currentlySelectedName, 30, new Action<TextInputView.TextInputState, string>(RenameRun));
@@ -550,13 +491,58 @@ namespace SaveSystem_MultiMod
             {
                 AddButton("Options", (Action<int>)(_ =>
                 {
-                    Debug.LogError("WHAT");
                     RequestSubMenu(typeof(SaveSystemOptionsMenu));
                 }));
                 New<SpacerElement>();
             }
 
             AddButton(this.Localisation["MENU_BACK_SETTINGS"], (Action<int>)(i => this.RequestPreviousMenu()));
+        }
+
+        private static int GetContextSaveSlot
+        {
+            get
+            {
+                if (GameInfo.CurrentScene == SceneType.Kitchen)
+                    return new EntityContext(World.DefaultGameObjectInjectionWorld.EntityManager).Get<SSelectedLocation>().Selected.Slot;
+                else
+                    return SaveSystemMod.m_selectedSaveSlot;
+            }
+        }
+
+        private void AddSaveButton(int _playerID)
+        {
+            if (SaveButton == null)
+            {
+                SaveButton = AddButton("Save now", (Action<int>)(_ =>
+                {
+                    if (!SaveSystemManager.Instance.GetCurrentRunAlreadySaved(GetContextSaveSlot))
+                    {
+                        PlayerID = _playerID;
+                        if (!SaveSystemManager.Instance.GetCurrentRunHasPreviousSaves(GetContextSaveSlot))
+                        {
+                            string NameplateName = Helper.GetNameplateName; // returns string.empty when not possible (for example in lobby)
+                            TextInputView.RequestTextInput("Enter save name:", !string.IsNullOrWhiteSpace(NameplateName) ? NameplateName : string.Empty, 30, new Action<TextInputView.TextInputState, string>(SaveRun));
+                            //SaveSystemMod.UpdateDisplayVersion();
+                        }
+                        else
+                        {
+                            SaveRun();
+                            //SaveSystemMod.UpdateDisplayVersion();
+                        }
+                        this.RequestAction(PauseMenuAction.CloseMenu);
+                        //SaveSystemMod.UpdateDisplayVersion();
+                    }
+                }));
+            }
+            if (!SaveSystemManager.Instance.GetCurrentRunAlreadySaved(GetContextSaveSlot))
+            {
+                SaveButton.SetLabel("Save now");
+            }
+            else
+            {
+                SaveButton.SetLabel("Already saved");
+            }
         }
 
         private void InitSaveInfo()
@@ -568,13 +554,14 @@ namespace SaveSystem_MultiMod
             m_dicSavesDescription = saveNames.Zip(SaveSystemManager.Instance.GetDescriptionList(), (k, v) => new { k, v }).ToDictionary(x => x.k, x => x.v);
             SaveSelectOption = new Option<string>(saveNames, preselectedName, saveDisplayNames);
 
-            SaveSlotSelection = new Option<int>(new List<int>() { 1, 2, 3, 4, 5 }, SaveSystemMod.m_selectedSaveSlot, SlotSelection);
+            SaveSlotSelection = new Option<int>(new List<int>() { 1, 2, 3, 4, 5 }, SaveSystemMod.m_selectedSaveSlot, SlotSelection); // NTH: Same selection for saves if within a limit of save amounts
         }
 
-        private void ChangeSlot(int _slot)
+        private void ChangeSlot(int _slot, int _playerID)
         {
+            SaveSystem_ModLoaderSystem.LogInfo("Changing selected save slot to: " + _slot.ToString());
             SaveSystemMod.m_selectedSaveSlot = _slot;
-            SelectSlotButton?.SetLabel("Select Slot " + _slot.ToString());
+            AddSaveButton(_playerID);
         }
 
         private static List<string> SlotSelection
@@ -612,7 +599,7 @@ namespace SaveSystem_MultiMod
         public void SaveRun()
         {
             SaveSystem_ModLoaderSystem.LogInfo("Saving current run with previouse one.");
-            SaveSystemManager.Instance.SaveCurrentSave(SaveSystemMod.m_selectedSaveSlot);
+            SaveSystemManager.Instance.SaveCurrentSave(GetContextSaveSlot);
             //SaveSystemMod.UpdateDisplayVersion();
             ReloadMenu(SaveButton);
         }
@@ -628,7 +615,7 @@ namespace SaveSystem_MultiMod
                 return;
             }
             SaveSystem_ModLoaderSystem.LogInfo("Saving current run: " + _name);
-            SaveSystemManager.Instance.SaveCurrentSave(SaveSystemMod.m_selectedSaveSlot, _name);
+            SaveSystemManager.Instance.SaveCurrentSave(GetContextSaveSlot, _name);
             //SaveSystemMod.UpdateDisplayVersion();
             ReloadMenu(SaveButton);
         }

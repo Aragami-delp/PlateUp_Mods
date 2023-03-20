@@ -61,7 +61,7 @@ namespace SaveSystem
                 default:
                     throw new SaveSettingParseException("No type");
             }
-            // TODO: This method looks like a sorted mess
+            // NOTTODO: This method looks like a sorted mess
         }
 
         public void SetValue(object _value)

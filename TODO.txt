@@ -20,6 +20,8 @@
 - NTH: Show names of players in that round
 - NTH: Save name of restaurant and preset that when making a new game
 - NTH: Perform vanilla save at end of day - DONE
+- NTH: Keybind to open SaveSystem menu
+- NTH: Pause game during text input
 
 - New mod: rebind movement on keyboard
 - New mod: Order Franchise by date

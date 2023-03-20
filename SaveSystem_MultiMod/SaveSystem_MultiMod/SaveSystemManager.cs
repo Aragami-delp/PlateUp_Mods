@@ -110,6 +110,15 @@ namespace SaveSystem
             return retVal;
         }
 
+        public bool SlotHasRun(int _slot)
+        {
+            if (Directory.GetFiles(GameSaveFolderPathSlot(_slot)).Length == 0)
+            {
+                return false;
+            }
+            return true;
+        }
+
         /// <summary>
         /// Checks whether the given timestamp is a vaild unix timestamp
         /// </summary>
@@ -206,7 +215,7 @@ namespace SaveSystem
 
                     File.Copy(GameSaveFolderPathSlot(_slot) + "/" + _currentLoadedID.ToString() + ".plateupsave", save.FolderPath + "/" + _currentLoadedID.ToString() + ".plateupsave");
                     save.RefreshPreviousIDs();
-                    string NameplateName = Helper.GetNameplateName; // TODO: Cant be done in lobby
+                    string NameplateName = Helper.GetNameplateName; // NOTTODO: Cant be done in lobby - shouldn't matter
                     save.NameplateName = !string.IsNullOrWhiteSpace(NameplateName) ? NameplateName : string.Empty;
                     save.PlayerNames = GetCurrentPlayerNames;
                     save.Mods = SteamWorkshopModManager.GetCurrentWorkshopIDs;
@@ -367,7 +376,7 @@ namespace SaveSystem
         /// </summary>
         /// <param name="_oldName">Save to rename</param>
         /// <param name="_newName">New name for save</param>
-        public void RenameSave(string _oldName, string _newName) // TODO: Also rename folder, so a new save can have its name
+        public void RenameSave(string _oldName, string _newName) // NOTTODO: Also rename folder, so a new save can have its name, folder now determined by timestamp
         {
             foreach (SaveEntry save in Saves)
             {

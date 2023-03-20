@@ -94,7 +94,7 @@ namespace SaveSystem_MultiMod
                 catch (Exception _ex)
                 {
                     SaveSystem_ModLoaderSystem.LogError(_ex.Message);
-                    return null;
+                    return String.Empty;
                 }
             }
         }
