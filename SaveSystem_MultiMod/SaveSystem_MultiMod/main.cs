@@ -119,7 +119,7 @@ namespace SaveSystem_MultiMod
 
     public class SaveSystemMod : MonoBehaviour
     {
-        public const string Version = "1.4.0";
+        public const string Version = "1.4.1";
         private readonly HarmonyLib.Harmony m_harmony = new HarmonyLib.Harmony("com.aragami.plateup.mods.harmony");
         //public static DisplayVersion m_DisplayVersion;
         //public static string m_DisplayVersionDefaultText;
@@ -183,19 +183,19 @@ namespace SaveSystem_MultiMod
     }
     #endregion
 
-    #region Delete Remaining SaveFiles On New Kitchen
-    [HarmonyPatch(typeof(CreateNewKitchen), "OnUpdate")]
-    class CreateNewKitchen_Patch
-    {
-        [HarmonyPostfix]
-        static void Postfix(CreateNewKitchen __instance, EntityQuery ____SingletonEntityQuery_SCreateScene_29, WorldBackupSystem ___WorldBackup)
-        {
-            if (____SingletonEntityQuery_SCreateScene_29.GetSingleton<SCreateScene>().Type != SceneType.Kitchen)
-                return;
-            ___WorldBackup.ClearBackup(); //TODO: ClearFullWorldSaves(int slot) delete slot as well
-        }
-    }
-    #endregion
+    //#region Delete Remaining SaveFiles On New Kitchen
+    //[HarmonyPatch(typeof(CreateNewKitchen), "OnUpdate")]
+    //class CreateNewKitchen_Patch
+    //{
+    //    [HarmonyPostfix]
+    //    static void Postfix(CreateNewKitchen __instance, EntityQuery ____SingletonEntityQuery_SCreateScene_29, WorldBackupSystem ___WorldBackup)
+    //    {
+    //        if (____SingletonEntityQuery_SCreateScene_29.GetSingleton<SCreateScene>().Type != SceneType.Kitchen)
+    //            return;
+    //        ___WorldBackup.ClearBackup(); //TODO: ClearFullWorldSaves(int slot) delete slot as well
+    //    }
+    //}
+    //#endregion
 
     #region Get Day Change Info
     //[HarmonyPatch(typeof(FullSaveAtNight), "OnUpdate")]
@@ -308,18 +308,18 @@ namespace SaveSystem_MultiMod
 
         public override void Setup(int player_id)
         {
-            HideSaveInfo = GetHideSaveInfoOption();
+            //HideSaveInfo = GetHideSaveInfoOption();
             ShowSaveMods = GetShowSaveModsOption();
 
-            AddLabel("Hide save info");
-            Add<bool>(this.HideSaveInfo).OnChanged += (EventHandler<bool>)((_, value) =>
-            {
-                SaveSystemManager.Instance.Settings["hidesaveinfo"].SetValue(value);
-                SaveSystemManager.Instance.Settings.SaveCurrentSettings();
-                //SaveSystemMod.UpdateDisplayVersion();
-            });
-            AddInfo("Hides infos about the save state in the bottom right corner of the screen.");
-            AddLabel("Show mods of save");
+            //AddLabel("Hide save info");
+            //Add<bool>(this.HideSaveInfo).OnChanged += (EventHandler<bool>)((_, value) =>
+            //{
+            //    SaveSystemManager.Instance.Settings["hidesaveinfo"].SetValue(value);
+            //    SaveSystemManager.Instance.Settings.SaveCurrentSettings();
+            //    //SaveSystemMod.UpdateDisplayVersion();
+            //});
+            //AddInfo("Hides infos about the save state in the bottom right corner of the screen.");
+            AddLabel("Show mods of save (out of order)");
             Add<bool>(this.ShowSaveMods).OnChanged += (EventHandler<bool>)((_, value) =>
             {
                 SaveSystemManager.Instance.Settings["showsavemods"].SetValue(value); // Gets initiallised when first changing this option, but fine for now
@@ -421,7 +421,14 @@ namespace SaveSystem_MultiMod
                     SetLoadButtonText();
                 });
             }
-            SaveSlotSelection.OnChanged += (_, newSlot) => ChangeSlot(newSlot, player_id);
+            // Not in InitSaveInfo, since it needs to always happen
+            SaveSlotSelection = new Option<int>(new List<int>() { 1, 2, 3, 4, 5 }, SaveSystemMod.m_selectedSaveSlot, SlotSelection); // NTH: Same selection for saves if within a limit of save amounts
+
+            SaveSlotSelection.OnChanged += (_, newSlot) =>
+            {
+                ChangeSlot(newSlot, player_id);
+                //SetSaveInfoAccordingToSlot();
+            };
             #endregion
 
             //AddLabel("Save System");
@@ -432,15 +439,15 @@ namespace SaveSystem_MultiMod
             else
             {
                 showFlags |= ShowUIFlags.ShowSlotSelection;
+                showFlags |= ShowUIFlags.ShowSaveButton;
                 if (/*GameInfo.CurrentScene != SceneType.Kitchen && */SaveSystemManager.Instance.HasSavedRuns)
                 {
                     showFlags |= ShowUIFlags.ShowSaveSelection;
                     showFlags |= ShowUIFlags.ShowLoadButton;
                     showFlags |= ShowUIFlags.ShowRenameButton;
                     showFlags |= ShowUIFlags.ShowDeleteButton;
-                    showFlags |= ShowUIFlags.ShowOptionsButton;
-                    showFlags |= ShowUIFlags.ShowSaveButton;
                 }
+                showFlags |= ShowUIFlags.ShowOptionsButton;
             }
             if (showFlags.HasFlag(ShowUIFlags.ShowSlotSelection))
             {
@@ -545,6 +552,16 @@ namespace SaveSystem_MultiMod
             }
         }
 
+        //private void SetSaveInfoAccordingToSlot()
+        //{
+        //    List<string> saveNames = SaveSystemManager.Instance.GetSaveNamesList();
+        //    if (SaveSelectOption.TryGetChosen(out string _saveName))
+        //    {
+        //        string preselectedName = SaveSystemManager.Instance.GetCurrentRunName(SaveSystemMod.m_selectedSaveSlot) != null ? SaveSystemManager.Instance.GetCurrentRunName(SaveSystemMod.m_selectedSaveSlot) : _saveName;
+        //        SaveSelectOption.SetChosen(SaveSelectOption.GetBestIndex(preselectedName));
+        //    }
+        //}
+
         private void InitSaveInfo()
         {
             List<string> saveNames = SaveSystemManager.Instance.GetSaveNamesList();
@@ -553,8 +570,6 @@ namespace SaveSystem_MultiMod
             List<string> saveDisplayNames = SaveSystemManager.Instance.GetSaveDisplayNamesList();
             m_dicSavesDescription = saveNames.Zip(SaveSystemManager.Instance.GetDescriptionList(), (k, v) => new { k, v }).ToDictionary(x => x.k, x => x.v);
             SaveSelectOption = new Option<string>(saveNames, preselectedName, saveDisplayNames);
-
-            SaveSlotSelection = new Option<int>(new List<int>() { 1, 2, 3, 4, 5 }, SaveSystemMod.m_selectedSaveSlot, SlotSelection); // NTH: Same selection for saves if within a limit of save amounts
         }
 
         private void ChangeSlot(int _slot, int _playerID)

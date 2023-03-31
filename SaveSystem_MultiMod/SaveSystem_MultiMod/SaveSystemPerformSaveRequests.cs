@@ -56,10 +56,10 @@ namespace SaveSystem_MultiMod
     [HarmonyPatch(typeof(Persistence), nameof(Persistence.SaveFullWorld))]
     class Persistence_Patch
     {
-        [HarmonyPrefix]
-        static void Postfix(int ___slot)
+        [HarmonyPostfix]
+        static void Postfix(int slot)
         {
-                SaveSystemManager.Instance.SaveCurrentSave(___slot);
+            SaveSystemManager.Instance.SaveCurrentSave(slot);
         }
     }
 }
