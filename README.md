@@ -18,7 +18,12 @@ Sometimes workshop mods/updates are not up to date. Verifying your game files wi
 
 ### Install the SaveSystem (BepInEx)
 
-If you want the BepInEx version get in contact with me. (see below)
+Not available anymore due to official Steam workshop support. If you want the BepInEx version get in contact with me. (see below)
+
+## My other plateup mods
+
+* [Mod Updater](https://steamcommunity.com/sharedfiles/filedetails/?id=2916093422) - A mod that checks if all other mods are updated whenever you start your game</br>
+* [Dependency Checker](https://steamcommunity.com/sharedfiles/filedetails/?id=2941583284) - Whenever you subscribe or unsubscribe to any mod in the steam workshop, this mod will make sure you have all needed steam workshop mod dependencies installed and offers to automatically install them. 
 
 ## Other great PlateUp! stuff
 
