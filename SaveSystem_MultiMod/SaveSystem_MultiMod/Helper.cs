@@ -83,6 +83,7 @@ namespace SaveSystem_MultiMod
         {
             get
             {
+                if (GameInfo.CurrentScene != SceneType.Kitchen) return String.Empty;
                 try
                 {
                     EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
@@ -95,6 +96,25 @@ namespace SaveSystem_MultiMod
                 {
                     SaveSystem_ModLoaderSystem.LogError(_ex.Message);
                     return String.Empty;
+                }
+            }
+        }
+
+        public static int GetCurrentGameSaveSlot
+        {
+            get
+            {
+                try
+                {
+                    EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+                    EntityQuery entityQuery = entityManager.CreateEntityQuery(typeof(SSelectedLocation));
+                    int slot = entityQuery.GetSingleton<SSelectedLocation>().Selected.Slot;
+                    return slot;
+                }
+                catch (Exception _ex)
+                {
+                    SaveSystem_ModLoaderSystem.LogError("GetCurrentGameSaveSlot: " + _ex.Message);
+                    return -1;
                 }
             }
         }

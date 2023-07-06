@@ -119,7 +119,7 @@ namespace SaveSystem_MultiMod
 
     public class SaveSystemMod : MonoBehaviour
     {
-        public const string Version = "1.4.1";
+        public const string Version = "1.4.2";
         private readonly HarmonyLib.Harmony m_harmony = new HarmonyLib.Harmony("com.aragami.plateup.mods.harmony");
         //public static DisplayVersion m_DisplayVersion;
         //public static string m_DisplayVersionDefaultText;

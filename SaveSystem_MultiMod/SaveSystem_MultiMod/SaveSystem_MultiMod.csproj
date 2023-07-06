@@ -96,6 +96,7 @@
     <Reference Include="NavMeshComponents">
       <HintPath>F:\SteamLibrary\steamapps\common\PlateUp\PlateUp\PlateUp_Data\Managed\NavMeshComponents.dll</HintPath>
     </Reference>
+    <Reference Include="netstandard" />
     <Reference Include="Newtonsoft.Json">
       <HintPath>F:\SteamLibrary\steamapps\common\PlateUp\PlateUp\PlateUp_Data\Managed\Newtonsoft.Json.dll</HintPath>
     </Reference>

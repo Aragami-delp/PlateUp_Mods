@@ -46,20 +46,29 @@ namespace SaveSystem_MultiMod
     //                //Debug.LogError("AutoFull"); // StartNewDay has AutoSave, but its a direct call, and not for this system
     //                SaveSystemManager.Instance.SaveCurrentSave();
     //                SaveSystemMod.UpdateDisplayVersion();
-                    
+
     //                break;
     //        }
     //        EntityManager.DestroyEntity(entity); // Vanilla system just returns after the first statement
     //    }
     //}
 
-    [HarmonyPatch(typeof(Persistence), nameof(Persistence.SaveFullWorld))]
+    [HarmonyPatch(typeof(FullWorldSaveSystem), nameof(FullWorldSaveSystem.SerialiseWorld))]
     class Persistence_Patch
     {
         [HarmonyPostfix]
-        static void Postfix(int slot)
+        static void Postfix(bool __result)
         {
-            SaveSystemManager.Instance.SaveCurrentSave(slot);
+            if (__result)
+            {
+                int slot = Helper.GetCurrentGameSaveSlot;
+                if (slot != -1)
+                {
+                    SaveSystemManager.Instance.SaveCurrentSave(slot);
+                    return;
+                }
+                SaveSystem_ModLoaderSystem.LogError("Could not auto-save since slot is not known");
+            }
         }
     }
 }
