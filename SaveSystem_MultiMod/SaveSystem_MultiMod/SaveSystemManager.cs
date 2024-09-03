@@ -233,7 +233,7 @@ namespace SaveSystem
                     }
                     Directory.CreateDirectory(SaveFolderPath + "/" + newFolderName);
                     string NameplateName = Helper.GetNameplateName;
-                    SaveEntry newSaveEntry = new SaveEntry(newFolderName, _name, !string.IsNullOrWhiteSpace(NameplateName) ? NameplateName : string.Empty, GetCurrentPlayerNames, SaveSystem_SteamWorkshop.SteamWorkshopModManager.GetCurrentWorkshopIDs);
+                    SaveEntry newSaveEntry = new SaveEntry(newFolderName, _name, !string.IsNullOrWhiteSpace(NameplateName) ? NameplateName : string.Empty, GetCurrentPlayerNames, SteamWorkshopModManager.GetCurrentWorkshopIDs);
                     File.Copy(GameSaveFolderPathSlot(_slot) + "/" + _currentLoadedID.ToString() + ".plateupsave", newSaveEntry.FolderPath + "/" + _currentLoadedID.ToString() + ".plateupsave");
                     newSaveEntry.RefreshPreviousIDs();
                     Saves.Add(newSaveEntry);

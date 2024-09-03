@@ -119,7 +119,7 @@ namespace SaveSystem_MultiMod
 
     public class SaveSystemMod : MonoBehaviour
     {
-        public const string Version = "1.4.3";
+        public const string Version = "1.4.4";
         private readonly HarmonyLib.Harmony m_harmony = new HarmonyLib.Harmony("com.aragami.plateup.mods.harmony");
         //public static DisplayVersion m_DisplayVersion;
         //public static string m_DisplayVersionDefaultText;
@@ -529,7 +529,7 @@ namespace SaveSystem_MultiMod
                         if (!SaveSystemManager.Instance.GetCurrentRunHasPreviousSaves(GetContextSaveSlot))
                         {
                             string NameplateName = Helper.GetNameplateName; // returns string.empty when not possible (for example in lobby)
-                            TextInputView.RequestTextInput("Enter save name:", !string.IsNullOrWhiteSpace(NameplateName) ? NameplateName : string.Empty, 30, new Action<TextInputView.TextInputState, string>(SaveRun));
+                            TextInputView.RequestTextInput("Enter save name:", !string.IsNullOrWhiteSpace(NameplateName) ? NameplateName : string.Empty, 30, SaveRun);
                             //SaveSystemMod.UpdateDisplayVersion();
                         }
                         else

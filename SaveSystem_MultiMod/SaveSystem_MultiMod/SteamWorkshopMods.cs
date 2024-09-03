@@ -1,4 +1,6 @@
-﻿using System;
+﻿#define DONTUSEWORKSHOP
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,6 +8,7 @@ using System.Threading.Tasks;
 using Steamworks.Ugc;
 using Steamworks;
 using Steamworks.Data;
+
 
 namespace SaveSystem_SteamWorkshop
 {
@@ -24,6 +27,9 @@ namespace SaveSystem_SteamWorkshop
         #region GetWorkshopNames
         private static List<string> GetWorkshopNames(params long[] _iDs)
         {
+#if DONTUSEWORKSHOP
+            return new List<string>();
+#endif
             List<ulong> paramValues = _iDs.Select(o => (ulong)o).ToList();
             HashSet<PublishedFileId> workshopIds = new HashSet<PublishedFileId>();
             List<Item> retVal = Task.Run(() => GetModItems(workshopIds)).GetAwaiter().GetResult();
@@ -59,6 +65,9 @@ namespace SaveSystem_SteamWorkshop
 
         public static async Task<List<Item>> GetSubscribedModItems()
         {
+#if DONTUSEWORKSHOP
+            return new List<Item>();
+#endif
             List<Item> items = new List<Item>();
             int page_number = 1;
             int result_count = 0;
@@ -83,6 +92,9 @@ namespace SaveSystem_SteamWorkshop
 
         public static async Task<List<Item>> GetModItems(HashSet<PublishedFileId> _ids)
         {
+#if DONTUSEWORKSHOP
+            return new List<Item>();
+#endif
             List<Item> items = new List<Item>();
             int page_number = 1;
             int result_count = 0;
