@@ -119,7 +119,7 @@ namespace SaveSystem_MultiMod
 
     public class SaveSystemMod : MonoBehaviour
     {
-        public const string Version = "1.4.2";
+        public const string Version = "1.4.3";
         private readonly HarmonyLib.Harmony m_harmony = new HarmonyLib.Harmony("com.aragami.plateup.mods.harmony");
         //public static DisplayVersion m_DisplayVersion;
         //public static string m_DisplayVersionDefaultText;
@@ -164,7 +164,7 @@ namespace SaveSystem_MultiMod
         {
             Helper.ChangeScene(SceneType.Franchise);
             MethodInfo closeMenuEvent = Helper.GetMethod(typeof(Kitchen.MainMenu), "RequestAction");
-            closeMenuEvent.Invoke(__instance, new object[1] { PauseMenuAction.CloseMenu });
+            closeMenuEvent.Invoke(__instance, new object[1] { (MenuAction) PauseMenuAction.CloseMenu });
         }
     }
 
@@ -221,7 +221,7 @@ namespace SaveSystem_MultiMod
     #endregion
 
     #region ReworkUI
-    //public class SaveSystemBackToLobby : Menu<PauseMenuAction>
+    //public class SaveSystemBackToLobby : Menu<MenuAction>
     //{
     //    public SaveSystemBackToLobby(Transform container, ModuleList module_list) : base(container, module_list)
     //    {
@@ -248,11 +248,11 @@ namespace SaveSystem_MultiMod
     //        SaveSystemManager.Instance.SaveCurrentSave();
     //        SaveSystemMod.UpdateDisplayVersion();
     //        Helper.ChangeScene(SceneType.Franchise);
-    //        RequestAction(PauseMenuAction.CloseMenu);
+    //        RequestAction(MenuAction.CloseMenu);
     //    }
     //}
 
-    public class SaveSystemDeleteMenu : Menu<PauseMenuAction>
+    public class SaveSystemDeleteMenu : Menu<MenuAction>
     {
         public SaveSystemDeleteMenu(Transform container, ModuleList module_list) : base(container, module_list)
         {
@@ -278,7 +278,7 @@ namespace SaveSystem_MultiMod
         }
     }
 
-    public class SaveSystemOptionsMenu : Menu<PauseMenuAction>
+    public class SaveSystemOptionsMenu : Menu<MenuAction>
     {
         public SaveSystemOptionsMenu(Transform container, ModuleList module_list) : base(container, module_list)
         {
@@ -332,7 +332,7 @@ namespace SaveSystem_MultiMod
         }
     }
 
-    public class SaveSystemLoadConfirmMenu : Menu<PauseMenuAction>
+    public class SaveSystemLoadConfirmMenu : Menu<MenuAction>
     {
         public SaveSystemLoadConfirmMenu(Transform container, ModuleList module_list) : base(container, module_list)
         {
@@ -356,13 +356,13 @@ namespace SaveSystem_MultiMod
             SaveSystem_ModLoaderSystem.LogInfo("Loading run: " + SaveSystemMenu.currentlySelectedName);
             SaveSystemManager.Instance.LoadSave(SaveSystemMod.m_selectedSaveSlot, SaveSystemMenu.currentlySelectedName);
             SaveSystemMenu.currentlySelectedName = null;
-            this.RequestAction(PauseMenuAction.CloseMenu);
+            this.RequestAction((MenuAction)PauseMenuAction.CloseMenu);
             //SaveSystemMod.UpdateDisplayVersion();
             Helper.ChangeScene(SceneType.Franchise); // Reload scene
         }
     }
 
-    public class SaveSystemMenu : Menu<PauseMenuAction>
+    public class SaveSystemMenu : Menu<MenuAction>
     {
         public SaveSystemMenu(Transform container, ModuleList module_list) : base(container, module_list)
         {
@@ -383,7 +383,7 @@ namespace SaveSystem_MultiMod
         public static string currentlySelectedName;
         public static Dictionary<string, SaveSelectDescription> m_dicSavesDescription;
 
-        public override void CreateSubmenus(ref Dictionary<Type, Menu<PauseMenuAction>> menus)
+        public override void CreateSubmenus(ref Dictionary<Type, Menu<MenuAction>> menus)
         {
             menus.Add(typeof(SaveSystemDeleteMenu), new SaveSystemDeleteMenu(Container, ModuleList));
             menus.Add(typeof(SaveSystemLoadConfirmMenu), new SaveSystemLoadConfirmMenu(Container, ModuleList));
@@ -483,7 +483,7 @@ namespace SaveSystem_MultiMod
                 {
                     PlayerID = player_id;
                     TextInputView.RequestTextInput("Enter new name:", currentlySelectedName, 30, new Action<TextInputView.TextInputState, string>(RenameRun));
-                    this.RequestAction(PauseMenuAction.CloseMenu);
+                    this.RequestAction((MenuAction)PauseMenuAction.CloseMenu);
                 }));
             }
             if (showFlags.HasFlag(ShowUIFlags.ShowDeleteButton))
@@ -537,7 +537,7 @@ namespace SaveSystem_MultiMod
                             SaveRun();
                             //SaveSystemMod.UpdateDisplayVersion();
                         }
-                        this.RequestAction(PauseMenuAction.CloseMenu);
+                        this.RequestAction((MenuAction)PauseMenuAction.CloseMenu);
                         //SaveSystemMod.UpdateDisplayVersion();
                     }
                 }));
