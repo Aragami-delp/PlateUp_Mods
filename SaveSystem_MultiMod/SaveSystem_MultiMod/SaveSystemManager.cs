@@ -78,6 +78,22 @@ namespace SaveSystem
         }
 
         /// <summary>
+        /// Folder name of the current run; if no run currently loaded its null
+        /// </summary>
+        public string GetCurrentRunFolderName(int _slot)
+        {
+            return GetSaveEntryForCurrentlyLoadedRun(_slot)?.FolderName;
+        }
+
+        /// <summary>
+        /// SaveEntry of the current run; if no run currently loaded its null
+        /// </summary>
+        public SaveEntry GetCurrentRun(int _slot)
+        {
+            return GetSaveEntryForCurrentlyLoadedRun(_slot);
+        }
+
+        /// <summary>
         /// Localized DateTime string representation of unix timestamp of current run; if no run currently loaded its null
         /// </summary>
         public string GetCurrentRunDateTime(int _slot)
@@ -300,14 +316,14 @@ namespace SaveSystem
         /// <summary>
         /// Loads a specific save and removes all already existing previously loaded run files
         /// </summary>
-        /// <param name="_name">Save to load</param>
-        public void LoadSave(int _slot, string _name)
+        /// <param name="_entry">Save to load</param>
+        public void LoadSave(int _slot, SaveEntry _entry)
         {
             // TODO: Check for already loaded
             foreach (SaveEntry saveEntry in Saves)
             {
                 if (!saveEntry.HasSaves) continue;
-                if (saveEntry.Name == _name)
+                if (saveEntry == _entry)
                 {
                     // TODO: maybe put all removed files inside a "deleted" folder which get cleaned up on game start
                     RemoveAllFiles(GameSaveFolderPathSlot(_slot), false); // TODO: Persistence.ClearSaves<FullWorldSaveSystem>();
@@ -330,13 +346,13 @@ namespace SaveSystem
         /// <summary>
         /// Deletes a save (Entry and files)
         /// </summary>
-        /// <param name="_name">Save to delete</param>
-        public void DeleteSave(string _name)
+        /// <param name="_entry">Save to delete</param>
+        public void DeleteSave(SaveEntry _entry)
         {
             SaveEntry entryToRemove = null;
             foreach (SaveEntry saveEntry in Saves)
             {
-                if (saveEntry.Name == _name)
+                if (saveEntry == _entry)
                 {
                     // TODO: maybe put all removed files inside a "deleted" folder which get cleaned up on game start
                     RemoveAllFiles(saveEntry.FolderPath);
@@ -374,13 +390,13 @@ namespace SaveSystem
         /// <summary>
         /// Renames a save
         /// </summary>
-        /// <param name="_oldName">Save to rename</param>
+        /// <param name="_renamedEntry">Save to rename</param>
         /// <param name="_newName">New name for save</param>
-        public void RenameSave(string _oldName, string _newName) // NOTTODO: Also rename folder, so a new save can have its name, folder now determined by timestamp
+        public void RenameSave(SaveEntry _renamedEntry, string _newName) // NOTTODO: Also rename folder, so a new save can have its name, folder now determined by timestamp
         {
             foreach (SaveEntry save in Saves)
             {
-                if (save.Name == _oldName)
+                if (save == _renamedEntry)
                 {
                     save.ChangeName(_newName);
                     SaveCurrentSetup();
@@ -439,14 +455,9 @@ namespace SaveSystem
         /// List of all names of SaveEntrys
         /// </summary>
         /// <returns></returns>
-        public List<string> GetSaveNamesList()
+        public List<SaveEntry> GetSaveList()
         {
-            List<string> saveNames = new List<string>();
-            foreach (SaveEntry saveEntry in Saves)
-            {
-                saveNames.Add(saveEntry.Name);
-            }
-            return saveNames;
+            return Saves;
         }
         /// <summary>
         /// List of all display names of SaveEntrys;

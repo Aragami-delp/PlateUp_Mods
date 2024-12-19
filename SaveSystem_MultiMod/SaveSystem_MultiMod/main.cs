@@ -119,7 +119,7 @@ namespace SaveSystem_MultiMod
 
     public class SaveSystemMod : MonoBehaviour
     {
-        public const string Version = "1.4.4";
+        public const string Version = "1.4.5";
         private readonly HarmonyLib.Harmony m_harmony = new HarmonyLib.Harmony("com.aragami.plateup.mods.harmony");
         //public static DisplayVersion m_DisplayVersion;
         //public static string m_DisplayVersionDefaultText;
@@ -261,18 +261,18 @@ namespace SaveSystem_MultiMod
         public override void Setup(int player_id)
         {
             AddLabel("Delete this save?");
-            AddInfo(SaveSystemMenu.currentlySelectedName);
-            AddInfo(SaveSystemMenu.m_dicSavesDescription[SaveSystemMenu.currentlySelectedName].DateTime);
-            AddInfo(SaveSystemMenu.m_dicSavesDescription[SaveSystemMenu.currentlySelectedName].NameplateName);
+            AddInfo(SaveSystemMenu.currentlySelectedEntry.Name);
+            AddInfo(SaveSystemMenu.m_dicSavesDescription[SaveSystemMenu.currentlySelectedEntry].DateTime);
+            AddInfo(SaveSystemMenu.m_dicSavesDescription[SaveSystemMenu.currentlySelectedEntry].NameplateName);
             AddButton(Localisation["PROFILE_CONFIRM_DELETE"], (Action<int>)(i => ConfirmDelete()));
             AddButton(Localisation["CANCEL_PROFILE"], (Action<int>)(i => RequestPreviousMenu()));
         }
 
         public void ConfirmDelete()
         {
-            SaveSystem_ModLoaderSystem.LogInfo("Deleting run: " + SaveSystemMenu.currentlySelectedName);
-            SaveSystemManager.Instance.DeleteSave(SaveSystemMenu.currentlySelectedName);
-            SaveSystemMenu.currentlySelectedName = null;
+            SaveSystem_ModLoaderSystem.LogInfo("Deleting run: " + SaveSystemMenu.currentlySelectedEntry);
+            SaveSystemManager.Instance.DeleteSave(SaveSystemMenu.currentlySelectedEntry);
+            SaveSystemMenu.currentlySelectedEntry = null;
             RequestPreviousMenu();
             //SaveSystemMod.UpdateDisplayVersion();
         }
@@ -353,9 +353,9 @@ namespace SaveSystem_MultiMod
 
         public void LoadAndGoBack() // TODO: NTH - Not reload lobby when loading
         {
-            SaveSystem_ModLoaderSystem.LogInfo("Loading run: " + SaveSystemMenu.currentlySelectedName);
-            SaveSystemManager.Instance.LoadSave(SaveSystemMod.m_selectedSaveSlot, SaveSystemMenu.currentlySelectedName);
-            SaveSystemMenu.currentlySelectedName = null;
+            SaveSystem_ModLoaderSystem.LogInfo("Loading run: " + SaveSystemMenu.currentlySelectedEntry);
+            SaveSystemManager.Instance.LoadSave(SaveSystemMod.m_selectedSaveSlot, SaveSystemMenu.currentlySelectedEntry);
+            SaveSystemMenu.currentlySelectedEntry = null;
             this.RequestAction((MenuAction)PauseMenuAction.CloseMenu);
             //SaveSystemMod.UpdateDisplayVersion();
             Helper.ChangeScene(SceneType.Franchise); // Reload scene
@@ -373,15 +373,15 @@ namespace SaveSystem_MultiMod
         private ButtonElement LoadButton;
         private ButtonElement RenameButton;
         private ButtonElement DeleteButton;
-        private Option<string> SaveSelectOption;
+        private Option<SaveEntry> SaveSelectOption;
         private Option<int> SaveSlotSelection;
         private IModule SaveSelectModule;
         private LabelElement SaveSelectDateTime;
         private LabelElement SaveSelectNameplateName;
         private LabelElement SaveSelectPlayerNames;
         private LabelElement SaveSelectMods;
-        public static string currentlySelectedName;
-        public static Dictionary<string, SaveSelectDescription> m_dicSavesDescription;
+        public static SaveEntry currentlySelectedEntry;
+        public static Dictionary<SaveEntry, SaveSelectDescription> m_dicSavesDescription;
 
         public override void CreateSubmenus(ref Dictionary<Type, Menu<MenuAction>> menus)
         {
@@ -410,14 +410,14 @@ namespace SaveSystem_MultiMod
             if (SaveSystemManager.Instance.HasSavedRuns)
             {
                 InitSaveInfo();
-                SaveSelectOption.OnChanged += (EventHandler<string>)((_, f) =>
+                SaveSelectOption.OnChanged += (EventHandler<SaveEntry>)((_, f) =>
                 {
-                    currentlySelectedName = f;
-                    SaveSelectDateTime.SetLabel(m_dicSavesDescription[currentlySelectedName].DateTime);
-                    SaveSelectNameplateName.SetLabel(m_dicSavesDescription[currentlySelectedName].NameplateName);
-                    SaveSelectPlayerNames.SetLabel(m_dicSavesDescription[currentlySelectedName].PlayerNamesFormat);
+                    currentlySelectedEntry = f;
+                    SaveSelectDateTime.SetLabel(m_dicSavesDescription[currentlySelectedEntry].DateTime);
+                    SaveSelectNameplateName.SetLabel(m_dicSavesDescription[currentlySelectedEntry].NameplateName);
+                    SaveSelectPlayerNames.SetLabel(m_dicSavesDescription[currentlySelectedEntry].PlayerNamesFormat);
                     if ((bool)SaveSystemManager.Instance.Settings["showsavemods"].GetValue(SaveSetting.SettingType.boolValue))
-                        SaveSelectMods.SetLabel(m_dicSavesDescription[currentlySelectedName].ModsFormat);
+                        SaveSelectMods.SetLabel(m_dicSavesDescription[currentlySelectedEntry].ModsFormat);
                     SetLoadButtonText();
                 });
             }
@@ -461,12 +461,12 @@ namespace SaveSystem_MultiMod
             }
             if (showFlags.HasFlag(ShowUIFlags.ShowSaveSelection))
             {
-                SaveSelectModule = AddSelect<string>(SaveSelectOption);
-                SaveSelectDateTime = AddLabel(m_dicSavesDescription[currentlySelectedName].DateTime);
-                SaveSelectNameplateName = AddLabel(m_dicSavesDescription[currentlySelectedName].NameplateName);
-                SaveSelectPlayerNames = AddInfo(m_dicSavesDescription[currentlySelectedName].PlayerNamesFormat);
+                SaveSelectModule = AddSelect<SaveEntry>(SaveSelectOption);
+                SaveSelectDateTime = AddLabel(m_dicSavesDescription[currentlySelectedEntry].DateTime);
+                SaveSelectNameplateName = AddLabel(m_dicSavesDescription[currentlySelectedEntry].NameplateName);
+                SaveSelectPlayerNames = AddInfo(m_dicSavesDescription[currentlySelectedEntry].PlayerNamesFormat);
                 if ((bool)SaveSystemManager.Instance.Settings["showsavemods"].GetValue(SaveSetting.SettingType.boolValue))
-                    SaveSelectMods = AddInfo(m_dicSavesDescription[currentlySelectedName].ModsFormat);
+                    SaveSelectMods = AddInfo(m_dicSavesDescription[currentlySelectedEntry].ModsFormat);
             }
             if (showFlags.HasFlag(ShowUIFlags.ShowLoadButton))
             {
@@ -482,7 +482,7 @@ namespace SaveSystem_MultiMod
                 RenameButton = AddButton("Rename", (Action<int>)(_ => // TODO: same name not allowed - fixed? by saving using timestamp (name may be same still)
                 {
                     PlayerID = player_id;
-                    TextInputView.RequestTextInput("Enter new name:", currentlySelectedName, 30, new Action<TextInputView.TextInputState, string>(RenameRun));
+                    TextInputView.RequestTextInput("Enter new name:", currentlySelectedEntry.Name, 30, new Action<TextInputView.TextInputState, string>(RenameRun));
                     this.RequestAction((MenuAction)PauseMenuAction.CloseMenu);
                 }));
             }
@@ -564,12 +564,16 @@ namespace SaveSystem_MultiMod
 
         private void InitSaveInfo()
         {
-            List<string> saveNames = SaveSystemManager.Instance.GetSaveNamesList();
-            string preselectedName = SaveSystemManager.Instance.GetCurrentRunName(SaveSystemMod.m_selectedSaveSlot) != null ? SaveSystemManager.Instance.GetCurrentRunName(SaveSystemMod.m_selectedSaveSlot) : saveNames[0];
-            currentlySelectedName = preselectedName;
+            SaveSystem_ModLoaderSystem.LogInfo("Hi");
+            List<SaveEntry> saves = SaveSystemManager.Instance.GetSaveList();
+            SaveEntry preselectedSave = SaveSystemManager.Instance.GetCurrentRun(SaveSystemMod.m_selectedSaveSlot) ?? saves[0];
+            currentlySelectedEntry = preselectedSave;
             List<string> saveDisplayNames = SaveSystemManager.Instance.GetSaveDisplayNamesList();
-            m_dicSavesDescription = saveNames.Zip(SaveSystemManager.Instance.GetDescriptionList(), (k, v) => new { k, v }).ToDictionary(x => x.k, x => x.v);
-            SaveSelectOption = new Option<string>(saveNames, preselectedName, saveDisplayNames);
+            SaveSystem_ModLoaderSystem.LogInfo("SaveName: " + string.Join(",", saves.Select(x => x.FolderName).ToList()));
+            SaveSystem_ModLoaderSystem.LogInfo("PreselectedName: " + preselectedSave.FolderName);
+            SaveSystem_ModLoaderSystem.LogInfo("SaveDisplayName: " + string.Join(",", saveDisplayNames));
+            m_dicSavesDescription = saves.Zip(SaveSystemManager.Instance.GetDescriptionList(), (k, v) => new { k, v }).ToDictionary(x => x.k, x => x.v);
+            SaveSelectOption = new Option<SaveEntry>(saves, preselectedSave, saves.Select(x => x.GetDisplayName).ToList());
         }
 
         private void ChangeSlot(int _slot, int _playerID)
@@ -596,7 +600,7 @@ namespace SaveSystem_MultiMod
 
         private void SetLoadButtonText()
         {
-            if (SaveSystemManager.Instance.GetCurrentRunName(SaveSystemMod.m_selectedSaveSlot) == currentlySelectedName)
+            if (SaveSystemManager.Instance.GetCurrentRun(SaveSystemMod.m_selectedSaveSlot) == currentlySelectedEntry)
             {
                 LoadButton?.SetLabel("Already loaded");
             }
@@ -639,8 +643,8 @@ namespace SaveSystem_MultiMod
         {
             if (_result != TextInputView.TextInputState.TextEntryComplete && _result != TextInputView.TextInputState.TextEntryCancelled)
                 return;
-            SaveSystem_ModLoaderSystem.LogInfo("Renaming current run: " + currentlySelectedName + " to: " + _name);
-            SaveSystemManager.Instance.RenameSave(currentlySelectedName, _name);
+            SaveSystem_ModLoaderSystem.LogInfo("Renaming current run: " + currentlySelectedEntry + " to: " + _name);
+            SaveSystemManager.Instance.RenameSave(currentlySelectedEntry, _name);
             RequestSubMenu(this.GetType(), true); // Doesnt work for some reason
             //SaveSystemMod.UpdateDisplayVersion();
         }
