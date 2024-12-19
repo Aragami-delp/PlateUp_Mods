@@ -16,7 +16,6 @@ using System.Reflection;
 using TMPro;
 using Unity.Entities;
 using Steamworks;
-using System.Windows.Forms;
 using Steamworks.Ugc;
 using System.Threading.Tasks;
 using Kitchen.Components;
@@ -75,18 +74,18 @@ namespace SaveSystem_MultiMod
             bool startGame = true;
             if (!SteamUtils.IsSteamInBigPictureMode) // If not SteamDeck (or BigPicture) - might even work on SteamDeck
             {
-                DialogResult result = MessageBox.Show("SaveSystem needs Harmony installed to work.\n\nPress \"Yes\" to close the game and install automatically.\nPress \"No\" to close the game and open the workshop page.\nPress \"Cancel\" to start anyways.", "SaveSystem Error", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Information);
-                if (result == DialogResult.Yes)
+                System.Windows.Forms.DialogResult result = System.Windows.Forms.MessageBox.Show("SaveSystem needs Harmony installed to work.\n\nPress \"Yes\" to close the game and install automatically.\nPress \"No\" to close the game and open the workshop page.\nPress \"Cancel\" to start anyways.", "SaveSystem Error", System.Windows.Forms.MessageBoxButtons.YesNoCancel, System.Windows.Forms.MessageBoxIcon.Information);
+                if (result == System.Windows.Forms.DialogResult.Yes)
                 {
                     Task.Run(async () => await SubscribeToHarmony()).GetAwaiter().GetResult();
                     startGame = false;
                 }
-                else if (result == DialogResult.No)
+                else if (result == System.Windows.Forms.DialogResult.No)
                 {
                     UnityEngine.Application.OpenURL(@"steam://openurl/https://steamcommunity.com/sharedfiles/filedetails/?id=2898033283");
                     startGame = false;
                 }
-                else if (result == DialogResult.Cancel)
+                else if (result == System.Windows.Forms.DialogResult.Cancel)
                 {
                     startGame = true;
                 }
@@ -119,7 +118,7 @@ namespace SaveSystem_MultiMod
 
     public class SaveSystemMod : MonoBehaviour
     {
-        public const string Version = "1.4.5";
+        public const string Version = "1.4.6";
         private readonly HarmonyLib.Harmony m_harmony = new HarmonyLib.Harmony("com.aragami.plateup.mods.harmony");
         //public static DisplayVersion m_DisplayVersion;
         //public static string m_DisplayVersionDefaultText;
@@ -631,6 +630,7 @@ namespace SaveSystem_MultiMod
             {
                 SaveSystem_ModLoaderSystem.LogWarning("Save: " + _name + " already exists!\n skipping saving.");
                 ReloadMenu(SaveButton);
+                System.Windows.Forms.MessageBox.Show("Not saved due to the following error: A save with that name already exists!", "Error saving", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
                 return;
             }
             SaveSystem_ModLoaderSystem.LogInfo("Saving current run: " + _name);

@@ -244,7 +244,8 @@ namespace SaveSystem
                     string newFolderName = _currentLoadedID.ToString();
                     if (SaveAlreadyExists(newFolderName, _name))
                     {
-                        SaveSystem_MultiMod.SaveSystem_ModLoaderSystem.LogWarning("Save: " + _name + " already exists!\nskipping saving. This should be a duplicate warning");
+                        SaveSystem_ModLoaderSystem.LogWarning("Save: " + _name + " already exists!\nskipping saving. This should be a duplicate warning");
+                        System.Windows.Forms.MessageBox.Show("Not saved due to the following error: A save with that name already exists!", "Error saving", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
                         return false;
                     }
                     Directory.CreateDirectory(SaveFolderPath + "/" + newFolderName);
