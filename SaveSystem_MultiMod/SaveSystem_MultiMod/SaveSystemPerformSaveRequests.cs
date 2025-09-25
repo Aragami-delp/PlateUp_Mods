@@ -53,7 +53,7 @@ namespace SaveSystem_MultiMod
     //    }
     //}
 
-    [HarmonyPatch(typeof(FullWorldSaveSystem), nameof(FullWorldSaveSystem.SerialiseWorld))]
+    [HarmonyPatch(typeof(FullWorldSaveSystem), nameof(FullWorldSaveSystem.Save))]
     class Persistence_Patch
     {
         [HarmonyPostfix]

@@ -118,7 +118,7 @@ namespace SaveSystem_MultiMod
 
     public class SaveSystemMod : MonoBehaviour
     {
-        public const string Version = "1.4.6";
+        public const string Version = "1.4.7";
         private readonly HarmonyLib.Harmony m_harmony = new HarmonyLib.Harmony("com.aragami.plateup.mods.harmony");
         //public static DisplayVersion m_DisplayVersion;
         //public static string m_DisplayVersionDefaultText;
@@ -147,7 +147,15 @@ namespace SaveSystem_MultiMod
     {
         static void Prefix(Kitchen.MainMenu __instance, int player_id)
         {
-            if (Session.CurrentGameNetworkMode != GameNetworkMode.Host || (GameInfo.CurrentScene != SceneType.Franchise && GameInfo.CurrentScene != SceneType.Kitchen))
+            if (
+                (Session.NetworkedPlayState != Platforms.NetworkedPlayState.Host 
+                    && Session.NetworkedPlayState != Platforms.NetworkedPlayState.NotNetworked
+                    )
+                ||
+                (GameInfo.CurrentScene != SceneType.Franchise
+                    && GameInfo.CurrentScene != SceneType.Kitchen
+                    )
+                )
                 return;
             MethodInfo m_addButtonMenu = Helper.GetMethod(__instance.GetType(), "AddSubmenuButton");
             m_addButtonMenu.Invoke(__instance, new object[3] { "Save System", typeof(SaveSystemMenu), false });

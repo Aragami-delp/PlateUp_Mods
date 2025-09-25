@@ -100,6 +100,9 @@
     <Reference Include="Newtonsoft.Json">
       <HintPath>F:\SteamLibrary\steamapps\common\PlateUp\PlateUp\PlateUp_Data\Managed\Newtonsoft.Json.dll</HintPath>
     </Reference>
+    <Reference Include="PlatformSettings">
+      <HintPath>D:\SteamLibrary\steamapps\common\PlateUp\PlateUp\PlateUp_Data\Managed\PlatformSettings.dll</HintPath>
+    </Reference>
     <Reference Include="Sirenix.Serialization">
       <HintPath>D:\SteamLibrary\steamapps\common\PlateUp\PlateUp\PlateUp_Data\Managed\Sirenix.Serialization.dll</HintPath>
     </Reference>
